@@ -1,25 +1,20 @@
 {
-  "name": "@repo/ui",
+  "name": "@repo/auth",
   "version": "0.1.0",
   "private": true,
-  "main": "./index.tsx",
-  "types": "./index.tsx",
-  "exports": {
-    "./button": "./src/button.tsx"
-  },
+  "main": "./index.ts",
+  "types": "./index.ts",
   "scripts": {
     "lint": "eslint .",
     "build": "tsup"
+  },
+  "dependencies": {
+    "next-auth": "^4.24.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
-  },
-  "dependencies": {
-    "class-variance-authority": "^0.7.0",
-    "clsx": "^2.0.0",
-    "tailwind-merge": "^2.0.0"
   }
-}
+} 

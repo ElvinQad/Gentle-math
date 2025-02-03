@@ -28,8 +28,8 @@ export function AuthModals({
     setIsLoading(true)
 
     const formData = new FormData(e.currentTarget)
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
+    const email = (formData.get('email') as string)?.trim().toLowerCase();
+    const password = (formData.get('password') as string)?.trim();
 
     try {
       const result = await signIn('credentials', {
@@ -56,14 +56,26 @@ export function AuthModals({
     setIsLoading(true)
 
     const formData = new FormData(e.currentTarget)
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
-    const name = formData.get('name') as string
+    const email = (formData.get('email') as string)?.trim().toLowerCase()
+    const password = (formData.get('password') as string)?.trim()
+    const name = (formData.get('name') as string)?.trim()
 
     try {
-      // TODO: Implement registration API
-      console.log('Register:', { email, password, name })
-      // After registration, sign in the user
+      // Call registration API
+      const registerResponse = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, name }),
+      })
+
+      if (!registerResponse.ok) {
+        const data = await registerResponse.json()
+        throw new Error(data.error || 'Registration failed')
+      }
+
+      // After successful registration, sign in the user
       const result = await signIn('credentials', {
         email,
         password,
@@ -71,12 +83,12 @@ export function AuthModals({
       })
 
       if (result?.error) {
-        setError('Registration failed. Please try again.')
+        setError('Registration successful but sign in failed. Please try logging in.')
       } else {
         onRegisterClose()
       }
     } catch (err) {
-      setError('Registration failed. Please try again.')
+      setError(err instanceof Error ? err.message : 'Registration failed. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -85,7 +97,9 @@ export function AuthModals({
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
     try {
-      await signIn('google', { callbackUrl: '/dashboard' })
+      // Use the current URL as callback URL if available
+      const callbackUrl = window.location.href || '/dashboard'
+      await signIn('google', { callbackUrl })
     } catch (err) {
       setError('Google sign in failed. Please try again.')
       setIsLoading(false)

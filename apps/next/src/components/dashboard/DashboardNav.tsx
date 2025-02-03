@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
-import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { useState } from 'react'
 
 const navItems = [
@@ -80,11 +79,6 @@ export function DashboardNav() {
 
       {/* User Profile & Settings */}
       <div className={`p-4 border-t border-border space-y-4 ${isExpanded ? '' : 'items-center'}`}>
-        {/* Theme Toggle */}
-        <div className={`px-3 py-2 rounded-lg hover:bg-accent transition-colors ${isExpanded ? '' : 'text-center'}`}>
-          <ThemeToggle />
-        </div>
-
         {/* User Profile */}
         <div className="px-3 py-2 space-y-3">
           <Link

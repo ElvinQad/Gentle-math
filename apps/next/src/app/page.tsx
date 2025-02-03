@@ -1,15 +1,22 @@
 'use client'
 
+// TODO: Complete google auth
+// TODO: Add redux toolkit
+// TODO: Find out how to add admin panel
+
+
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { AuthModals } from '@/components/auth/AuthModals'
+import { useTranslation } from '@/lib/i18n'
 
 export default function LandingPage() {
   const { data: session } = useSession()
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const [isRegisterOpen, setIsRegisterOpen] = useState(false)
+  const { t } = useTranslation()
 
   const handleGetStarted = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (!session) {
@@ -35,26 +42,27 @@ export default function LandingPage() {
         <div className="relative z-20 max-w-5xl mx-auto px-6">
           <div className="space-y-6 animate-fade-in">
             <h1 className="text-7xl font-bold text-white mb-6 leading-tight">
-              AI-Powered Fashion
+              {t('landing.hero.title')}
               <span className="block bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
-                Trend Analysis
+                {t('landing.hero.subtitle')}
               </span>
             </h1>
             <p className="text-xl text-white/90 mb-8 max-w-2xl animate-slide-up">
-              Discover emerging trends, analyze color patterns, and predict fashion movements with our advanced AI platform.
+              {t('landing.hero.description')}
             </p>
             <div className="space-x-4 animate-slide-up">
               <Link 
                 href="/trends" 
                 className="inline-block bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg"
+                onClick={handleGetStarted}
               >
-                Get Started
+                {t('common.getStarted')}
               </Link>
               <Link 
                 href="/about" 
                 className="inline-block text-white border-2 border-white/80 px-8 py-3 rounded-lg font-semibold hover:bg-white/20 transition-all duration-300"
               >
-                Learn More
+                {t('common.learnMore')}
               </Link>
             </div>
           </div>
@@ -64,7 +72,7 @@ export default function LandingPage() {
       <section className="py-32 bg-background">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-4xl font-bold text-center mb-20 text-foreground">
-            Platform Features
+            {t('landing.features.title')}
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="group bg-card p-8 rounded-xl shadow-lg border hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
@@ -73,9 +81,9 @@ export default function LandingPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-card-foreground">Real-time Analysis</h3>
+              <h3 className="text-xl font-semibold mb-4 text-card-foreground">{t('landing.features.realtime.title')}</h3>
               <p className="text-muted-foreground">
-                Get instant insights into emerging fashion trends and market movements.
+                {t('landing.features.realtime.description')}
               </p>
             </div>
             <div className="group bg-card p-8 rounded-xl shadow-lg border hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
@@ -84,9 +92,9 @@ export default function LandingPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-card-foreground">Predictive Analytics</h3>
+              <h3 className="text-xl font-semibold mb-4 text-card-foreground">{t('landing.features.predictive.title')}</h3>
               <p className="text-muted-foreground">
-                Forecast future trends with our advanced machine learning models.
+                {t('landing.features.predictive.description')}
               </p>
             </div>
             <div className="group bg-card p-8 rounded-xl shadow-lg border hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
@@ -96,9 +104,9 @@ export default function LandingPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-card-foreground">Market Insights</h3>
+              <h3 className="text-xl font-semibold mb-4 text-card-foreground">{t('landing.features.market.title')}</h3>
               <p className="text-muted-foreground">
-                Deep dive into market segments and consumer behavior patterns.
+                {t('landing.features.market.description')}
               </p>
             </div>
           </div>

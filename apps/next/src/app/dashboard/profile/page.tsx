@@ -1,11 +1,105 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { useState } from 'react'
+import { useTheme } from 'next-themes'
+import { toast } from 'sonner'
 
 export default function ProfilePage() {
-  const { data: session } = useSession()
+  const { data: session, update: updateSession } = useSession()
   const [isEditing, setIsEditing] = useState(false)
+  const [name, setName] = useState(session?.user?.name || '')
+  const [emailNotifications, setEmailNotifications] = useState(false)
+  const { theme, setTheme } = useTheme()
+  const [isLoading, setIsLoading] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+
+  const handleProfileUpdate = async () => {
+    setIsLoading(true)
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile')
+      }
+
+      await updateSession()
+      setIsEditing(false)
+      toast.success('Profile updated successfully')
+    } catch (error) {
+      toast.error('Failed to update profile')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handlePasswordUpdate = async () => {
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await fetch('/api/user/password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update password')
+      }
+
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      toast.success('Password updated successfully')
+    } catch (error) {
+      toast.error('Failed to update password')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await fetch('/api/user', {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete account')
+      }
+
+      // Sign out and redirect to home page
+      await signOut({ 
+        callbackUrl: '/',
+        redirect: true 
+      })
+    } catch (error) {
+      toast.error('Failed to delete account')
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -37,7 +131,8 @@ export default function ProfilePage() {
                 <input
                   type="text"
                   disabled={!isEditing}
-                  defaultValue={session?.user?.name || ''}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all disabled:opacity-50"
                 />
               </div>
@@ -46,15 +141,22 @@ export default function ProfilePage() {
                 <input
                   type="email"
                   disabled
-                  defaultValue={session?.user?.email || ''}
+                  value={session?.user?.email || ''}
                   className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all disabled:opacity-50"
                 />
               </div>
               <button
-                onClick={() => setIsEditing(!isEditing)}
-                className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+                onClick={() => {
+                  if (isEditing) {
+                    handleProfileUpdate()
+                  } else {
+                    setIsEditing(true)
+                  }
+                }}
+                disabled={isLoading}
+                className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
-                {isEditing ? 'Save Changes' : 'Edit Profile'}
+                {isLoading ? 'Saving...' : isEditing ? 'Save Changes' : 'Edit Profile'}
               </button>
             </div>
           </div>
@@ -70,7 +172,12 @@ export default function ProfilePage() {
                 <p className="text-sm text-muted-foreground">Receive email updates about your account</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" />
+                <input
+                  type="checkbox"
+                  checked={emailNotifications}
+                  onChange={(e) => setEmailNotifications(e.target.checked)}
+                  className="sr-only peer"
+                />
                 <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
               </label>
             </div>
@@ -81,7 +188,12 @@ export default function ProfilePage() {
                 <p className="text-sm text-muted-foreground">Toggle between light and dark mode</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" />
+                <input
+                  type="checkbox"
+                  checked={theme === 'dark'}
+                  onChange={(e) => setTheme(e.target.checked ? 'dark' : 'light')}
+                  className="sr-only peer"
+                />
                 <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
               </label>
             </div>
@@ -99,6 +211,8 @@ export default function ProfilePage() {
                   <label className="text-sm font-medium block mb-1">Current Password</label>
                   <input
                     type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
                   />
                 </div>
@@ -106,6 +220,8 @@ export default function ProfilePage() {
                   <label className="text-sm font-medium block mb-1">New Password</label>
                   <input
                     type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
                   />
                 </div>
@@ -113,13 +229,17 @@ export default function ProfilePage() {
                   <label className="text-sm font-medium block mb-1">Confirm New Password</label>
                   <input
                     type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
                   />
                 </div>
                 <button
-                  className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+                  onClick={handlePasswordUpdate}
+                  disabled={isLoading || !currentPassword || !newPassword || !confirmPassword}
+                  className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
                 >
-                  Update Password
+                  {isLoading ? 'Updating...' : 'Update Password'}
                 </button>
               </div>
             </div>
@@ -145,7 +265,10 @@ export default function ProfilePage() {
                   <p className="text-sm text-muted-foreground">Connected</p>
                 </div>
               </div>
-              <button className="text-sm text-destructive hover:text-destructive-foreground hover:bg-destructive/10 px-3 py-1 rounded-lg transition-colors">
+              <button
+                onClick={() => toast.info('Google account disconnection not implemented yet')}
+                className="text-sm text-destructive hover:text-destructive-foreground hover:bg-destructive/10 px-3 py-1 rounded-lg transition-colors"
+              >
                 Disconnect
               </button>
             </div>
@@ -157,9 +280,11 @@ export default function ProfilePage() {
           <h2 className="text-2xl font-bold mb-6 text-destructive">Danger Zone</h2>
           <div className="space-y-4">
             <button
-              className="w-full px-4 py-2 text-sm text-destructive hover:text-destructive-foreground hover:bg-destructive rounded-lg transition-colors"
+              onClick={handleDeleteAccount}
+              disabled={isLoading}
+              className="w-full px-4 py-2 text-sm text-destructive hover:text-destructive-foreground hover:bg-destructive rounded-lg transition-colors disabled:opacity-50"
             >
-              Delete Account
+              {isLoading ? 'Deleting...' : 'Delete Account'}
             </button>
           </div>
         </section>

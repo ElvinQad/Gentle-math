@@ -1,0 +1,104 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "home": "Home",
+    "about": "About",
+    "login": "Login",
+    "register": "Register",
+    "profile": "Profile",
+    "dashboard": "Dashboard",
+    "logout": "Logout",
+    "trends": "Trends",
+    "getStarted": "Get Started",
+    "learnMore": "Learn More"
+  },
+  "landing": {
+    "hero": {
+      "title": "AI-Powered Fashion",
+      "subtitle": "Trend Analysis",
+      "description": "Discover emerging trends, analyze color patterns, and predict fashion movements with our advanced AI platform."
+    },
+    "features": {
+      "title": "Platform Features",
+      "realtime": {
+        "title": "Real-time Analysis",
+        "description": "Get instant insights into emerging fashion trends and market movements."
+      },
+      "predictive": {
+        "title": "Predictive Analytics",
+        "description": "Forecast future trends with our advanced machine learning models."
+      },
+      "market": {
+        "title": "Market Insights",
+        "description": "Deep dive into market segments and consumer behavior patterns."
+      }
+    }
+  },
+  "about": {
+    "hero": {
+      "title": "About",
+      "subtitle": "Gentle-math",
+      "description": "We're revolutionizing fashion trend analysis through advanced AI and machine learning technologies."
+    },
+    "mission": {
+      "title": "Our Mission",
+      "description1": "At Gentle-math, we believe in the power of data-driven decision making in the fashion industry. Our platform combines cutting-edge AI technology with comprehensive market analysis to provide actionable insights for fashion professionals.",
+      "description2": "We're committed to helping brands, designers, and retailers stay ahead of trends and make informed decisions about their collections and inventory."
+    },
+    "stats": {
+      "accuracy": "Prediction Accuracy",
+      "brands": "Active Brands"
+    },
+    "features": {
+      "title": "What Sets Us Apart",
+      "ai": {
+        "title": "Advanced AI Models",
+        "description": "Our proprietary AI models analyze millions of data points to predict upcoming trends with high accuracy."
+      },
+      "realtime": {
+        "title": "Real-time Updates",
+        "description": "Stay current with real-time trend analysis and market insights updated continuously."
+      },
+      "analytics": {
+        "title": "Customizable Analytics",
+        "description": "Tailor your analytics dashboard to focus on the metrics that matter most to your business."
+      }
+    },
+    "team": {
+      "title": "Our Team"
+    }
+  },
+  "trends": {
+    "hero": {
+      "title": "Fashion",
+      "subtitle": "Trends",
+      "description": "Discover the latest trends and insights powered by our AI analysis."
+    },
+    "currentTrends": {
+      "title": "Current Trends",
+      "trendStrength": "Trend Strength",
+      "sustainable": {
+        "title": "Sustainable Fashion",
+        "description": "Eco-friendly materials and sustainable production methods are gaining momentum."
+      },
+      "digital": {
+        "title": "Digital Fashion",
+        "description": "Virtual clothing and digital fashion experiences are reshaping the industry."
+      },
+      "athleisure": {
+        "title": "Athleisure Evolution",
+        "description": "Performance wear continues to influence everyday fashion choices."
+      }
+    },
+    "colorTrends": {
+      "title": "Color Trends",
+      "popularity": "Popularity"
+    },
+    "cta": {
+      "title": "Want More Detailed Analysis?",
+      "description": "Get access to our full range of AI-powered analytics and trend predictions with a dashboard account.",
+      "loginButton": "Login to Dashboard",
+      "registerButton": "Create Account"
+    }
+  }
+} 

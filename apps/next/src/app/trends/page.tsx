@@ -4,10 +4,12 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import { AuthModals } from '@/components/auth/AuthModals'
+import { useTranslation } from '@/lib/i18n'
 
 export default function TrendsPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const [isRegisterOpen, setIsRegisterOpen] = useState(false)
+  const { t } = useTranslation()
 
   const handleLoginClick = () => {
     setIsLoginOpen(true)
@@ -31,22 +33,22 @@ export default function TrendsPage() {
 
   const trends = [
     {
-      title: 'Sustainable Fashion',
-      description: 'Eco-friendly materials and sustainable production methods are gaining momentum.',
+      title: t('trends.currentTrends.sustainable.title'),
+      description: t('trends.currentTrends.sustainable.description'),
       image: 'https://images.unsplash.com/photo-1606041008023-472dfb5e530f',
       percentage: 78,
       tags: ['Eco-friendly', 'Sustainable', 'Green']
     },
     {
-      title: 'Digital Fashion',
-      description: 'Virtual clothing and digital fashion experiences are reshaping the industry.',
+      title: t('trends.currentTrends.digital.title'),
+      description: t('trends.currentTrends.digital.description'),
       image: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb',
       percentage: 65,
       tags: ['Virtual', 'Digital', 'NFT']
     },
     {
-      title: 'Athleisure Evolution',
-      description: 'Performance wear continues to influence everyday fashion choices.',
+      title: t('trends.currentTrends.athleisure.title'),
+      description: t('trends.currentTrends.athleisure.description'),
       image: 'https://images.unsplash.com/photo-1483721310020-03333e577078',
       percentage: 82,
       tags: ['Sports', 'Comfort', 'Performance']
@@ -89,26 +91,26 @@ export default function TrendsPage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6 py-12">
               <h1 className="text-6xl font-bold leading-tight">
-                Fashion
+                {t('trends.hero.title')}
                 <span className="block bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
-                  Trends
+                  {t('trends.hero.subtitle')}
                 </span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl">
-                Discover the latest trends and insights powered by our AI analysis.
+                {t('trends.hero.description')}
               </p>
               <div className="flex gap-4 pt-4">
                 <button
                   onClick={handleLoginClick}
                   className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
                 >
-                  Login
+                  {t('common.login')}
                 </button>
                 <button
                   onClick={handleRegisterClick}
                   className="px-6 py-2 border border-primary text-primary rounded-lg hover:bg-primary/10 transition-colors"
                 >
-                  Register
+                  {t('common.register')}
                 </button>
               </div>
             </div>
@@ -126,7 +128,7 @@ export default function TrendsPage() {
 
         {/* Current Trends */}
         <section className="mb-32">
-          <h2 className="text-4xl font-bold mb-16 text-foreground">Current Trends</h2>
+          <h2 className="text-4xl font-bold mb-16 text-foreground">{t('trends.currentTrends.title')}</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {trends.map((trend) => (
               <div key={trend.title} className="group bg-card rounded-xl overflow-hidden shadow-lg border hover:shadow-2xl transition-all hover:-translate-y-1">
@@ -151,7 +153,7 @@ export default function TrendsPage() {
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Trend Strength</span>
+                      <span className="text-muted-foreground">{t('trends.currentTrends.trendStrength')}</span>
                       <span className="text-primary font-medium">{trend.percentage}%</span>
                     </div>
                     <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
@@ -172,7 +174,7 @@ export default function TrendsPage() {
 
         {/* Color Trends */}
         <section className="mb-32">
-          <h2 className="text-4xl font-bold mb-16 text-foreground">Color Trends</h2>
+          <h2 className="text-4xl font-bold mb-16 text-foreground">{t('trends.colorTrends.title')}</h2>
           <div className="grid md:grid-cols-4 gap-8">
             {colorTrends.map((color) => (
               <div key={color.name} className="group bg-card rounded-xl overflow-hidden shadow-lg border hover:shadow-2xl transition-all hover:-translate-y-1">
@@ -198,7 +200,7 @@ export default function TrendsPage() {
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Popularity</span>
+                      <span className="text-muted-foreground">{t('trends.colorTrends.popularity')}</span>
                       <span className="text-primary font-medium">{color.percentage}%</span>
                     </div>
                     <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
@@ -223,17 +225,17 @@ export default function TrendsPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-primary to-blue-400 opacity-10 rounded-3xl -z-10" />
           <div className="relative bg-card/50 backdrop-blur-sm rounded-3xl p-12 text-center border">
             <h2 className="text-4xl font-bold mb-6 text-card-foreground">
-              Want More Detailed Analysis?
+              {t('trends.cta.title')}
             </h2>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Get access to our full range of AI-powered analytics and trend predictions with a dashboard account.
+              {t('trends.cta.description')}
             </p>
             <div className="flex gap-4 justify-center">
               <button
                 onClick={handleLoginClick}
                 className="inline-flex items-center gap-2 bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg"
               >
-                Login to Dashboard
+                {t('trends.cta.loginButton')}
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -242,7 +244,7 @@ export default function TrendsPage() {
                 onClick={handleRegisterClick}
                 className="inline-flex items-center gap-2 border-2 border-primary text-primary px-8 py-3 rounded-lg font-semibold hover:bg-primary/10 hover:scale-105 transition-all duration-300"
               >
-                Create Account
+                {t('trends.cta.registerButton')}
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>

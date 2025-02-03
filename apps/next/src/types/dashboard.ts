@@ -1,19 +1,14 @@
-
 export interface Trend {
   id: number
   title: string
   image: string
   views: number
   likes: number
-  data: Array<{
-
-    month: string;
-
-    actual: number;
-
-    forecast: number;
-
-  }>;
+  data: {
+    month: string
+    actual: number | null
+    forecast: number
+  }[]
 }
 
 export interface ColorTrend {

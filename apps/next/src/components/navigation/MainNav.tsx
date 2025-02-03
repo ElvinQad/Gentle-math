@@ -2,15 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { AuthModals } from '@/components/auth/AuthModals'
+import { useTranslation } from '@/lib/i18n'
 
-const navItems = [
-  { href: '/dashboard', label: 'Dashboard', requiresAuth: true },
-  { href: '/trends', label: 'Trends', requiresAuth: false },
-  { href: '/about', label: 'About', requiresAuth: false },
+const getNavItems = (t: (key: string) => string) => [
+  { href: '/dashboard', label: t('common.dashboard'), requiresAuth: true },
+  { href: '/trends', label: t('common.trends'), requiresAuth: false },
+  { href: '/about', label: t('common.about'), requiresAuth: false },
 ]
 
 export function MainNav() {
@@ -19,6 +19,8 @@ export function MainNav() {
   const { data: session } = useSession()
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const [isRegisterOpen, setIsRegisterOpen] = useState(false)
+  const { t } = useTranslation()
+  const navItems = getNavItems(t)
 
   const handleAuthClick = (e: React.MouseEvent<HTMLAnchorElement>, requiresAuth: boolean) => {
     if (requiresAuth && !session) {
@@ -48,68 +50,57 @@ export function MainNav() {
                 Gentle-math
               </Link>
             </div>
-
+            
             <div className="flex items-center space-x-4">
               {navItems.map(({ href, label, requiresAuth }) => (
                 <Link
                   key={href}
                   href={href}
                   onClick={(e) => handleAuthClick(e, requiresAuth)}
-                  className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    isHome
-                      ? 'text-white hover:text-white hover:bg-white/20 backdrop-blur-sm shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                  } ${
-                    pathname === href && !isHome
-                      ? 'bg-accent text-foreground shadow-sm'
-                      : ''
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    pathname === href
+                      ? 'bg-primary/10 text-primary'
+                      : isHome
+                      ? 'text-white hover:bg-white/10'
+                      : 'text-foreground hover:bg-accent'
                   }`}
                 >
                   {label}
                 </Link>
               ))}
-
-              <div className={`ml-4 p-1 rounded-lg ${isHome ? 'bg-white/10 backdrop-blur-sm' : ''}`}>
-                <ThemeToggle />
-              </div>
-
+              
               {session ? (
-                <Link
-                  href="/dashboard/profile"
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 group ${
-                    isHome
-                      ? 'text-white hover:bg-white/20'
-                      : 'text-foreground hover:bg-accent'
-                  }`}
-                >
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    {session.user?.name?.[0] || session.user?.email?.[0] || '?'}
-                  </div>
-                  <span className="text-sm font-medium">
-                    {session.user?.name?.split(' ')[0] || 'User'}
-                  </span>
-                </Link>
-              ) : (
                 <button
-                  onClick={() => setIsLoginOpen(true)}
-                  className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    isHome
-                      ? 'text-white hover:text-white hover:bg-white/20 backdrop-blur-sm shadow-sm'
-                      : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                  }`}
+                  onClick={() => signOut()}
+                  className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-accent transition-colors"
                 >
-                  Sign in
+                  {t('common.logout')}
                 </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setIsLoginOpen(true)}
+                    className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-accent transition-colors"
+                  >
+                    {t('common.login')}
+                  </button>
+                  <button
+                    onClick={() => setIsRegisterOpen(true)}
+                    className="px-3 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                  >
+                    {t('common.register')}
+                  </button>
+                </>
               )}
             </div>
           </div>
         </div>
       </nav>
-
+      
       <AuthModals
         isLoginOpen={isLoginOpen}
-        isRegisterOpen={isRegisterOpen}
         onLoginClose={() => setIsLoginOpen(false)}
+        isRegisterOpen={isRegisterOpen}
         onRegisterClose={() => setIsRegisterOpen(false)}
         onSwitchToRegister={() => {
           setIsLoginOpen(false)

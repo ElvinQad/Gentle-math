@@ -2,12 +2,13 @@ import { withAuth } from 'next-auth/middleware'
 
 export default withAuth({
   callbacks: {
-    authorized: ({ token }) => {
-      return !!token
-    },
+    authorized: ({ token }) => !!token,
   },
-})
+});
 
 export const config = {
-  matcher: ['/dashboard/:path*']
-} 
+  matcher: [
+    // Add auth protection to dashboard
+    '/dashboard/:path*',
+  ],
+}; 

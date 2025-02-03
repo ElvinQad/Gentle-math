@@ -1,5 +1,7 @@
 import { DashboardNav } from '@/components/dashboard/DashboardNav'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
+import { PageTransition } from '@/components/animations/PageTransition'
+import { AnimatePresence } from 'framer-motion'
 
 export default function DashboardLayout({
   children,
@@ -12,7 +14,11 @@ export default function DashboardLayout({
         <DashboardNav />
         <main className="flex-1 pl-20 transition-all duration-300 ease-in-out relative z-0">
           <div className="p-8">
-            {children}
+            <AnimatePresence mode="wait">
+              <PageTransition>
+                {children}
+              </PageTransition>
+            </AnimatePresence>
           </div>
         </main>
       </div>

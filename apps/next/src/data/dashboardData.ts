@@ -6,12 +6,12 @@ export const trendingFashion = [
     views: 125000,
     likes: 45600,
     data: [
-      { month: "Jan", actual: 4000, forecast: 4400 },
-      { month: "Feb", actual: 3000, forecast: 3200 },
-      { month: "Mar", actual: 2000, forecast: 2400 },
-      { month: "Apr", actual: 2780, forecast: 2900 },
-      { month: "May", actual: 1890, forecast: 2100 },
-      { month: "Jun", actual: 2390, forecast: 2500 },
+      { month: "Jan", actual: 4000, forecast: 4000 },
+      { month: "Feb", actual: 3000, forecast: 3000 },
+      { month: "Mar", actual: 2000, forecast: 2000 },
+      { month: "Apr", actual: 2780, forecast: 2780 },
+      { month: "May", actual: null, forecast: 2100 },
+      { month: "Jun", actual: null, forecast: 2500 },
     ]
   },
   {
@@ -21,12 +21,12 @@ export const trendingFashion = [
     views: 89000,
     likes: 32400,
     data: [
-      { month: "Jan", actual: 3000, forecast: 3300 },
-      { month: "Feb", actual: 4000, forecast: 4200 },
-      { month: "Mar", actual: 3500, forecast: 3700 },
-      { month: "Apr", actual: 4200, forecast: 4500 },
-      { month: "May", actual: 3800, forecast: 4000 },
-      { month: "Jun", actual: 4100, forecast: 4300 },
+      { month: "Jan", actual: 3000, forecast: 3000 },
+      { month: "Feb", actual: 4000, forecast: 4000 },
+      { month: "Mar", actual: 3500, forecast: 3500 },
+      { month: "Apr", actual: 4200, forecast: 4200 },
+      { month: "May", actual: null, forecast: 4000 },
+      { month: "Jun", actual: null, forecast: 4300 },
     ]
   },
   {
@@ -36,12 +36,12 @@ export const trendingFashion = [
     views: 67000,
     likes: 28900,
     data: [
-      { month: "Jan", actual: 2000, forecast: 2200 },
-      { month: "Feb", actual: 2500, forecast: 2700 },
-      { month: "Mar", actual: 3000, forecast: 3200 },
-      { month: "Apr", actual: 3500, forecast: 3700 },
-      { month: "May", actual: 4000, forecast: 4200 },
-      { month: "Jun", actual: 4500, forecast: 4700 },
+      { month: "Jan", actual: 2000, forecast: 2000 },
+      { month: "Feb", actual: 2500, forecast: 2500 },
+      { month: "Mar", actual: 3000, forecast: 3000 },
+      { month: "Apr", actual: 3500, forecast: 3500 },
+      { month: "May", actual: null, forecast: 4200 },
+      { month: "Jun", actual: null, forecast: 4700 },
     ]
   }
 ];

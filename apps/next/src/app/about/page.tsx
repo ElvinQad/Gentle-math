@@ -1,6 +1,11 @@
+'use client'
+
 import Image from 'next/image'
+import { useTranslation } from '@/lib/i18n'
 
 export default function AboutPage() {
+  const { t } = useTranslation()
+
   return (
     <div className="min-h-screen pt-24 bg-background">
       <div className="max-w-7xl mx-auto px-6">
@@ -10,13 +15,13 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6 py-12">
               <h1 className="text-6xl font-bold leading-tight">
-                About
+                {t('about.hero.title')}
                 <span className="block bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
-                  Gentle-math
+                  {t('about.hero.subtitle')}
                 </span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl">
-                We're revolutionizing fashion trend analysis through advanced AI and machine learning technologies.
+                {t('about.hero.description')}
               </p>
             </div>
             <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-2xl transform md:translate-x-12">
@@ -42,26 +47,23 @@ export default function AboutPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
           </div>
           <div className="space-y-8 order-1 md:order-2">
-            <h2 className="text-4xl font-bold text-foreground leading-tight">Our Mission</h2>
+            <h2 className="text-4xl font-bold text-foreground leading-tight">{t('about.mission.title')}</h2>
             <div className="space-y-6">
               <p className="text-lg text-muted-foreground">
-                At Gentle-math, we believe in the power of data-driven decision making in the fashion industry. 
-                Our platform combines cutting-edge AI technology with comprehensive market analysis to provide 
-                actionable insights for fashion professionals.
+                {t('about.mission.description1')}
               </p>
               <p className="text-lg text-muted-foreground">
-                We're committed to helping brands, designers, and retailers stay ahead of trends and make 
-                informed decisions about their collections and inventory.
+                {t('about.mission.description2')}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-6 pt-6">
               <div className="bg-card p-6 rounded-xl border shadow-lg">
                 <div className="text-3xl font-bold text-primary mb-2">98%</div>
-                <div className="text-sm text-muted-foreground">Prediction Accuracy</div>
+                <div className="text-sm text-muted-foreground">{t('about.stats.accuracy')}</div>
               </div>
               <div className="bg-card p-6 rounded-xl border shadow-lg">
                 <div className="text-3xl font-bold text-primary mb-2">500+</div>
-                <div className="text-sm text-muted-foreground">Active Brands</div>
+                <div className="text-sm text-muted-foreground">{t('about.stats.brands')}</div>
               </div>
             </div>
           </div>
@@ -69,26 +71,26 @@ export default function AboutPage() {
 
         {/* Features Grid */}
         <section className="mb-32">
-          <h2 className="text-4xl font-bold text-center mb-16 text-foreground">What Sets Us Apart</h2>
+          <h2 className="text-4xl font-bold text-center mb-16 text-foreground">{t('about.features.title')}</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                title: 'Advanced AI Models',
-                description: 'Our proprietary AI models analyze millions of data points to predict upcoming trends with high accuracy.',
+                title: t('about.features.ai.title'),
+                description: t('about.features.ai.description'),
                 icon: (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 )
               },
               {
-                title: 'Real-time Updates',
-                description: 'Stay current with real-time trend analysis and market insights updated continuously.',
+                title: t('about.features.realtime.title'),
+                description: t('about.features.realtime.description'),
                 icon: (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 )
               },
               {
-                title: 'Customizable Analytics',
-                description: 'Tailor your analytics dashboard to focus on the metrics that matter most to your business.',
+                title: t('about.features.analytics.title'),
+                description: t('about.features.analytics.description'),
                 icon: (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                 )
@@ -111,7 +113,7 @@ export default function AboutPage() {
 
         {/* Team Section */}
         <section className="mb-32">
-          <h2 className="text-4xl font-bold text-center mb-16 text-foreground">Our Team</h2>
+          <h2 className="text-4xl font-bold text-center mb-16 text-foreground">{t('about.team.title')}</h2>
           <div className="grid md:grid-cols-4 gap-8">
             {[
               { 

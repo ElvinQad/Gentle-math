@@ -435,14 +435,7 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                       </motion.div>
                     </AnimatePresence>
                     
-                    {!isMobile && (
-                      <>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <h2 className="absolute bottom-4 left-4 text-2xl font-bold text-white">
-                      {selectedTrend.title}
-                    </h2>
-                      </>
-                    )}
+          
 
                     {/* Image Navigation Dots */}
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
@@ -466,9 +459,18 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                 </div>
 
                 <div className={`${isMobile ? 'h-[60%]' : 'lg:w-3/5'} bg-background flex flex-col`}>
+                {!isMobile && (
+                      <>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <h2 className="absolute top-2 right-44 text-2xl font-bold text-white">
+                      {selectedTrend.title}
+                    </h2>
+                      </>
+                    )}
                   <div className="h-full overflow-y-auto overscroll-y-contain touch-pan-y">
                     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                   <div className="h-[300px] sm:h-[400px] w-full">
+                    
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={getProcessedData(selectedTrend.data)} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                         <defs>

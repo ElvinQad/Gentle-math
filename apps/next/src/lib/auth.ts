@@ -18,6 +18,21 @@ declare module 'next-auth' {
   }
 }
 
+async function trackSessionEvent(userId: string, type: string, metadata = {}) {
+  try {
+    await prisma.userActivity.create({
+      data: {
+        userId,
+        type,
+        metadata,
+        timestamp: new Date(),
+      },
+    })
+  } catch (error) {
+    console.error('Failed to track session event:', error)
+  }
+}
+
 export const authConfig: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET || 'my-default-secret',
   debug: process.env.NODE_ENV === 'development',
@@ -88,6 +103,30 @@ export const authConfig: NextAuthOptions = {
   ],
   pages: {
     signIn: '/',
+  },
+  events: {
+    async signIn({ user, account, isNewUser }) {
+      if (user.id) {
+        await trackSessionEvent(user.id, 'session.login', {
+          provider: account?.provider,
+          isNewUser,
+        })
+      }
+    },
+    async signOut({ token }) {
+      if (token?.sub) {
+        await trackSessionEvent(token.sub, 'session.logout', {
+          sessionId: token.jti,
+        })
+      }
+    },
+    async session({ token, session }) {
+      if (token?.sub) {
+        await trackSessionEvent(token.sub, 'session.refresh', {
+          sessionId: token.jti,
+        })
+      }
+    },
   },
   callbacks: {
     async jwt({ token, user }) {

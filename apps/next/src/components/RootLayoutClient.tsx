@@ -3,6 +3,8 @@
 import { Inter } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { MainNav } from '@/components/navigation/MainNav'
+import { BottomNav } from '@/components/navigation/BottomNav'
+import { SwipeNavigation } from '@/components/navigation/SwipeNavigation'
 import { usePathname } from 'next/navigation'
 import { AuthProvider } from '@/providers/AuthProvider'
 import { Provider } from 'react-redux'
@@ -28,12 +30,17 @@ export function RootLayoutClient({
     }
   }, [locale])
 
+  // Define available routes for swipe navigation
+  const routes = ['/', '/trends', '/about']
+  const currentPath = pathname || '/'
+
   return (
     <Provider store={store}>
       {!isDashboard && <MainNav />}
-      <main className="min-h-screen bg-background">
-        {children}
+      <main className="min-h-screen bg-background pb-16 md:pb-0">
+          {children}
       </main>
+      {!isDashboard && <BottomNav />}
     </Provider>
   )
 } 

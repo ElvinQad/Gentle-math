@@ -13,14 +13,14 @@ export default function AboutPage() {
         <section className="mb-32 relative">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-400/10 rounded-3xl -z-10" />
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6 py-12">
-              <h1 className="text-6xl font-bold leading-tight">
+            <div className="space-y-6 py-8 md:py-12">
+              <h1 className="text-4xl md:text-6xl font-bold leading-tight">
                 {t('about.hero.title')}
                 <span className="block bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
                   {t('about.hero.subtitle')}
                 </span>
               </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl">
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
                 {t('about.hero.description')}
               </p>
             </div>
@@ -36,8 +36,8 @@ export default function AboutPage() {
         </section>
 
         {/* Mission Section */}
-        <section className="grid md:grid-cols-2 gap-16 items-center mb-32">
-          <div className="relative h-[600px] rounded-2xl overflow-hidden shadow-2xl order-2 md:order-1">
+        <section className="grid md:grid-cols-2 gap-8 md:gap-16 items-center mb-16 md:mb-32">
+          <div className="relative h-[300px] md:h-[600px] rounded-2xl overflow-hidden shadow-2xl order-2 md:order-1">
             <Image
               src="https://images.unsplash.com/photo-1451187580459-43490279c0fa"
               alt="Data Visualization"
@@ -46,8 +46,8 @@ export default function AboutPage() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
           </div>
-          <div className="space-y-8 order-1 md:order-2">
-            <h2 className="text-4xl font-bold text-foreground leading-tight">{t('about.mission.title')}</h2>
+          <div className="space-y-6 md:space-y-8 order-1 md:order-2">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">{t('about.mission.title')}</h2>
             <div className="space-y-6">
               <p className="text-lg text-muted-foreground">
                 {t('about.mission.description1')}
@@ -70,9 +70,9 @@ export default function AboutPage() {
         </section>
 
         {/* Features Grid */}
-        <section className="mb-32">
-          <h2 className="text-4xl font-bold text-center mb-16 text-foreground">{t('about.features.title')}</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+        <section className="mb-16 md:mb-32">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 md:mb-16 text-foreground">{t('about.features.title')}</h2>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
             {[
               {
                 title: t('about.features.ai.title'),
@@ -112,9 +112,9 @@ export default function AboutPage() {
         </section>
 
         {/* Team Section */}
-        <section className="mb-32">
-          <h2 className="text-4xl font-bold text-center mb-16 text-foreground">{t('about.team.title')}</h2>
-          <div className="grid md:grid-cols-4 gap-8">
+        <section className="mb-16 md:mb-32">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 md:mb-16 text-foreground">{t('about.team.title')}</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             {[
               { 
                 name: 'Dr. Sarah Chen', 

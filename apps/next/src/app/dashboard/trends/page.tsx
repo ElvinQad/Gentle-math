@@ -1,5 +1,4 @@
 import { TrendsGallery } from '@/components/dashboard/TrendsGallery'
-import { ColorsGallery } from '@/components/dashboard/ColorsGallery'
 import { trendingFashion, colorTrends } from '@/data/dashboardData'
 
 export default function TrendsPage() {
@@ -12,15 +11,9 @@ export default function TrendsPage() {
         </p>
       </div>
       
-      <section className="bg-card rounded-lg p-6 shadow-sm border border-border">
-        <h2 className="text-2xl font-bold mb-6">Current Trends</h2>
+     
         <TrendsGallery trends={trendingFashion} />
-      </section>
 
-      <section className="bg-card rounded-lg p-6 shadow-sm border border-border">
-        <h2 className="text-2xl font-bold mb-6">Color Analysis</h2>
-        <ColorsGallery colors={colorTrends} />
-      </section>
     </div>
   )
 }

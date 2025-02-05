@@ -1,14 +1,19 @@
-import { ChartShowcase } from '@/components/dashboard/ChartShowcase'
+import { TrendsGallery } from '@/components/dashboard/TrendsGallery'
+import { trendingFashion, colorTrends } from '@/data/dashboardData'
 
 export default function DashboardPage() {
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Recharts Components</h1>
-        <p className="text-foreground-secondary mt-2">Available chart types from Recharts library</p>
-      </header>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Trends Analysis</h1>
+        <p className="text-gray-600 dark:text-gray-300">
+          Detailed analysis of current and emerging trends
+        </p>
+      </div>
+      
+     
+        <TrendsGallery trends={trendingFashion} />
 
-      <ChartShowcase />
     </div>
   )
 }

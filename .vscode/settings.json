@@ -3,5 +3,15 @@
     {
       "mode": "auto"
     }
+  ],
+  "folder-customization.folders": [
+    {
+      "path": "Gentle-math/apps/next/src/app/"
+    },
+    {
+      "path": "Gentle-math/apps/next/src/app/api/",
+      "badge": "⚙️",
+      "color": "__blocked__"
+    }
   ]
 }

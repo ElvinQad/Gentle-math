@@ -3,10 +3,12 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { AuthModals } from '@/components/auth/AuthModals'
 import { useTranslation } from '@/lib/i18n'
 
 export default function TrendsPage() {
+  const { data: session } = useSession()
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const [isRegisterOpen, setIsRegisterOpen] = useState(false)
   const { t } = useTranslation()
@@ -88,33 +90,44 @@ export default function TrendsPage() {
         {/* Hero Section */}
         <section className="mb-32 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-400/10 rounded-3xl -z-10" />
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6 py-12">
-              <h1 className="text-6xl font-bold leading-tight">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="space-y-6 py-8 md:py-12">
+              <h1 className="text-4xl md:text-6xl font-bold leading-tight">
                 {t('trends.hero.title')}
                 <span className="block bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
                   {t('trends.hero.subtitle')}
                 </span>
               </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl">
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
                 {t('trends.hero.description')}
               </p>
-              <div className="flex gap-4 pt-4">
-                <button
-                  onClick={handleLoginClick}
-                  className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  {t('common.login')}
-                </button>
-                <button
-                  onClick={handleRegisterClick}
-                  className="px-6 py-2 border border-primary text-primary rounded-lg hover:bg-primary/10 transition-colors"
-                >
-                  {t('common.register')}
-                </button>
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                {session ? (
+                  <Link
+                    href="/dashboard"
+                    className="w-full sm:w-auto text-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                  >
+                    {t('common.dashboard')}
+                  </Link>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleLoginClick}
+                      className="w-full sm:w-auto text-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                      {t('common.login')}
+                    </button>
+                    <button
+                      onClick={handleRegisterClick}
+                      className="w-full sm:w-auto text-center px-6 py-2 border border-primary text-primary rounded-lg hover:bg-primary/10 transition-colors"
+                    >
+                      {t('common.register')}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
-            <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-2xl transform md:translate-x-12">
+            <div className="relative h-[300px] md:h-[500px] rounded-2xl overflow-hidden shadow-2xl transform md:translate-x-12">
               <Image
                 src="https://images.unsplash.com/photo-1445205170230-053b83016050"
                 alt="Fashion Trends"
@@ -127,9 +140,9 @@ export default function TrendsPage() {
         </section>
 
         {/* Current Trends */}
-        <section className="mb-32">
-          <h2 className="text-4xl font-bold mb-16 text-foreground">{t('trends.currentTrends.title')}</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+        <section className="mb-16 md:mb-32">
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 md:mb-16 text-foreground">{t('trends.currentTrends.title')}</h2>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
             {trends.map((trend) => (
               <div key={trend.title} className="group bg-card rounded-xl overflow-hidden shadow-lg border hover:shadow-2xl transition-all hover:-translate-y-1">
                 <div className="relative h-64">
@@ -173,9 +186,9 @@ export default function TrendsPage() {
         </section>
 
         {/* Color Trends */}
-        <section className="mb-32">
-          <h2 className="text-4xl font-bold mb-16 text-foreground">{t('trends.colorTrends.title')}</h2>
-          <div className="grid md:grid-cols-4 gap-8">
+        <section className="mb-16 md:mb-32">
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 md:mb-16 text-foreground">{t('trends.colorTrends.title')}</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             {colorTrends.map((color) => (
               <div key={color.name} className="group bg-card rounded-xl overflow-hidden shadow-lg border hover:shadow-2xl transition-all hover:-translate-y-1">
                 <div className="relative h-48">
@@ -221,34 +234,48 @@ export default function TrendsPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="mb-32 relative overflow-hidden">
+        <section className="mb-16 md:mb-32 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-primary to-blue-400 opacity-10 rounded-3xl -z-10" />
-          <div className="relative bg-card/50 backdrop-blur-sm rounded-3xl p-12 text-center border">
-            <h2 className="text-4xl font-bold mb-6 text-card-foreground">
+          <div className="relative bg-card/50 backdrop-blur-sm rounded-3xl p-6 md:p-12 text-center border">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 md:mb-6 text-card-foreground">
               {t('trends.cta.title')}
             </h2>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-base md:text-lg text-muted-foreground mb-6 md:mb-8 max-w-2xl mx-auto">
               {t('trends.cta.description')}
             </p>
-            <div className="flex gap-4 justify-center">
-              <button
-                onClick={handleLoginClick}
-                className="inline-flex items-center gap-2 bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg"
-              >
-                {t('trends.cta.loginButton')}
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </button>
-              <button
-                onClick={handleRegisterClick}
-                className="inline-flex items-center gap-2 border-2 border-primary text-primary px-8 py-3 rounded-lg font-semibold hover:bg-primary/10 hover:scale-105 transition-all duration-300"
-              >
-                {t('trends.cta.registerButton')}
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              {session ? (
+                <Link
+                  href="/dashboard"
+                  className="w-full sm:w-auto text-center inline-flex items-center justify-center gap-2 bg-primary text-white px-6 md:px-8 py-3 rounded-lg font-semibold hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg"
+                >
+                  {t('common.dashboard')}
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </Link>
+              ) : (
+                <>
+                  <button
+                    onClick={handleLoginClick}
+                    className="w-full sm:w-auto text-center inline-flex items-center justify-center gap-2 bg-primary text-white px-6 md:px-8 py-3 rounded-lg font-semibold hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg"
+                  >
+                    {t('trends.cta.loginButton')}
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={handleRegisterClick}
+                    className="w-full sm:w-auto text-center inline-flex items-center justify-center gap-2 border-2 border-primary text-primary px-6 md:px-8 py-3 rounded-lg font-semibold hover:bg-primary/10 hover:scale-105 transition-all duration-300"
+                  >
+                    {t('trends.cta.registerButton')}
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </section>

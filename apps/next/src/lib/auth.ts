@@ -12,6 +12,8 @@ declare module 'next-auth' {
       name?: string | null
       email?: string | null
       image?: string | null
+      isAdmin?: boolean
+      subscribedUntil?: string | null
     }
   }
 }
@@ -24,6 +26,13 @@ export const authConfig: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
     }),
     CredentialsProvider({
       name: 'credentials',
@@ -44,7 +53,14 @@ export const authConfig: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email: normalizedEmail },
-          select: { id: true, email: true, name: true, password: true }
+          select: { 
+            id: true, 
+            email: true, 
+            name: true, 
+            password: true,
+            isAdmin: true,
+            subscribedUntil: true
+          }
         });
 
         if (!user || !user.password) {
@@ -64,6 +80,8 @@ export const authConfig: NextAuthOptions = {
           id: user.id.toString(),
           email: user.email,
           name: user.name,
+          isAdmin: user.isAdmin,
+          subscribedUntil: user.subscribedUntil?.toISOString() || null,
         };
       }
     })
@@ -77,6 +95,15 @@ export const authConfig: NextAuthOptions = {
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email || undefined },
+          select: {
+            isAdmin: true,
+            subscribedUntil: true
+          }
+        });
+        token.isAdmin = dbUser?.isAdmin || false;
+        token.subscribedUntil = dbUser?.subscribedUntil?.toISOString() || null;
       }
       return token;
     },
@@ -85,8 +112,32 @@ export const authConfig: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
+        session.user.isAdmin = token.isAdmin as boolean;
+        session.user.subscribedUntil = token.subscribedUntil as string | null;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Get the hostname from the URL
+      try {
+        const returnUrl = new URL(url);
+        const baseUrlObj = new URL(baseUrl);
+        
+        // Check if we're dealing with a .ru domain
+        const isRuDomain = returnUrl.hostname.endsWith('.ru') || baseUrlObj.hostname.endsWith('.ru');
+        
+        if (isRuDomain) {
+          // Construct the proper .ru URL while maintaining the path and query parameters
+          const ruBaseUrl = baseUrl.replace(/\.[^.]+(\:[0-9]+)?$/, '.ru$1');
+          return url.replace(baseUrl, ruBaseUrl);
+        }
+        
+        // Default case - return the original URL
+        return url;
+      } catch (e) {
+        // If URL parsing fails, return the original URL
+        return url;
+      }
     }
   },
   session: {

@@ -3,13 +3,14 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authConfig } from '@/lib/auth'
 import { Prisma } from '@prisma/client'
+import type { JsonValue } from '@prisma/client/runtime/library'
 
 interface Activity {
   id: string
   userId: string
   type: string
   timestamp: Date
-  metadata: Prisma.JsonValue
+  metadata: JsonValue
 }
 
 interface ActivityMetadata {

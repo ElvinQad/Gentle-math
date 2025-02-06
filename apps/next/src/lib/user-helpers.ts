@@ -11,12 +11,15 @@ type SessionUser = {
   email?: string | null;
   image?: string | null;
   isAdmin?: boolean;
+  subscribedUntil?: string | Date | null;
 }
+
+type UserType = ExtendedUser | SessionUser;
 
 /**
  * Checks if a user has admin privileges
  */
-export function isUserAdmin(user: ExtendedUser | SessionUser | null | undefined): boolean {
+export function isUserAdmin(user: UserType | null | undefined): boolean {
   if (!user) return false;
   return user.isAdmin ?? false;
 }
@@ -24,7 +27,7 @@ export function isUserAdmin(user: ExtendedUser | SessionUser | null | undefined)
 /**
  * Checks if a user has an active subscription
  */
-export function hasActiveSubscription(user: ExtendedUser | null | undefined): boolean {
+export function hasActiveSubscription(user: UserType | null | undefined): boolean {
   if (!user || !user.subscribedUntil) return false;
   return new Date(user.subscribedUntil) > new Date();
 }
@@ -33,7 +36,7 @@ export function hasActiveSubscription(user: ExtendedUser | null | undefined): bo
  * Gets the number of days remaining in the subscription
  * Returns -1 if no active subscription
  */
-export function getSubscriptionDaysRemaining(user: ExtendedUser | null | undefined): number {
+export function getSubscriptionDaysRemaining(user: UserType | null | undefined): number {
   if (!user || !user.subscribedUntil) return -1;
   const now = new Date();
   const subscriptionEnd = new Date(user.subscribedUntil);
@@ -46,7 +49,7 @@ export function getSubscriptionDaysRemaining(user: ExtendedUser | null | undefin
 /**
  * Formats the subscription end date into a human-readable string
  */
-export function formatSubscriptionEndDate(user: ExtendedUser | null | undefined): string {
+export function formatSubscriptionEndDate(user: UserType | null | undefined): string {
   if (!user || !user.subscribedUntil) return 'No active subscription';
   return new Date(user.subscribedUntil).toLocaleDateString();
 } 

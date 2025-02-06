@@ -67,7 +67,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { userId: string } }
+  context: { params: { userId: string } }
 ) {
   try {
     const session = await getServerSession(authConfig)
@@ -86,14 +86,14 @@ export async function DELETE(
     }
 
     // Prevent self-deletion
-    if (params.userId === session.user.id) {
+    if (context.params.userId === session.user.id) {
       console.log('Admin attempted to delete their own account:', session.user.email)
       return new NextResponse('Cannot delete your own account', { status: 400 })
     }
 
     // Check if target user is also an admin
     const targetUser = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: context.params.userId },
       select: { isAdmin: true, email: true }
     })
 
@@ -104,7 +104,7 @@ export async function DELETE(
 
     // Delete user
     await prisma.user.delete({
-      where: { id: params.userId }
+      where: { id: context.params.userId }
     })
 
     return new NextResponse(null, { status: 204 })

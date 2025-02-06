@@ -4,6 +4,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useState } from 'react'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
+import { hasActiveSubscription, getSubscriptionDaysRemaining, formatSubscriptionEndDate } from '@/lib/user-helpers'
 
 export default function ProfilePage() {
   const { data: session, update: updateSession } = useSession()
@@ -36,6 +37,7 @@ export default function ProfilePage() {
       toast.success('Profile updated successfully')
     } catch (error) {
       toast.error('Failed to update profile')
+      console.error('Error updating profile:', error)
     } finally {
       setIsLoading(false)
     }
@@ -70,6 +72,7 @@ export default function ProfilePage() {
       toast.success('Password updated successfully')
     } catch (error) {
       toast.error('Failed to update password')
+      console.error('Error updating password:', error)
     } finally {
       setIsLoading(false)
     }
@@ -90,13 +93,12 @@ export default function ProfilePage() {
         throw new Error('Failed to delete account')
       }
 
-      // Sign out and redirect to home page
-      await signOut({ 
-        callbackUrl: '/',
-        redirect: true 
-      })
+      await signOut({ callbackUrl: '/' })
+      toast.success('Account deleted successfully')
     } catch (error) {
       toast.error('Failed to delete account')
+      console.error('Error deleting account:', error)
+    } finally {
       setIsLoading(false)
     }
   }
@@ -158,6 +160,38 @@ export default function ProfilePage() {
               >
                 {isLoading ? 'Saving...' : isEditing ? 'Save Changes' : 'Edit Profile'}
               </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Subscription Information */}
+        <section className="bg-card rounded-lg p-6 shadow-sm border border-border">
+          <h2 className="text-2xl font-bold mb-6">Subscription</h2>
+          <div className="space-y-6">
+            <div>
+              <div className="flex items-center space-x-2 mb-4">
+                <div className={`w-3 h-3 rounded-full ${hasActiveSubscription(session?.user) ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span className="font-medium">
+                  {hasActiveSubscription(session?.user) ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+              
+              {hasActiveSubscription(session?.user) ? (
+                <>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      Days Remaining: <span className="font-medium text-foreground">{getSubscriptionDaysRemaining(session?.user)}</span>
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Expires: <span className="font-medium text-foreground">{formatSubscriptionEndDate(session?.user)}</span>
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Your subscription has expired. Please renew to access premium features.
+                </p>
+              )}
             </div>
           </div>
         </section>

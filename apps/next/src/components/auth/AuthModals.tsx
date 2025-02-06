@@ -43,8 +43,8 @@ export function AuthModals({
       } else {
         onLoginClose()
       }
-    } catch (err) {
-      setError('An error occurred. Please try again.')
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An error occurred. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -87,8 +87,8 @@ export function AuthModals({
       } else {
         onRegisterClose()
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed. Please try again.')
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Registration failed. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -100,8 +100,8 @@ export function AuthModals({
       // Use the current URL as callback URL if available
       const callbackUrl = window.location.href || '/dashboard'
       await signIn('google', { callbackUrl })
-    } catch (err) {
-      setError('Google sign in failed. Please try again.')
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Google sign in failed. Please try again.')
       setIsLoading(false)
     }
   }
@@ -185,7 +185,7 @@ export function AuthModals({
               {isLoading ? 'Loading...' : 'Login'}
             </button>
             <div className="text-center text-sm text-muted-foreground">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <button
                 type="button"
                 onClick={onSwitchToRegister}

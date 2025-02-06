@@ -4,6 +4,19 @@ import { prisma } from '@/lib/db'
 import { authConfig } from '@/lib/auth'
 import { Prisma } from '@prisma/client'
 
+interface Activity {
+  id: string
+  userId: string
+  type: string
+  timestamp: Date
+  metadata: Prisma.JsonValue
+}
+
+interface ActivityMetadata {
+  path?: string
+  userAgent?: string
+}
+
 async function isAdminUser(email: string | null | undefined): Promise<boolean> {
   if (!email) return false
   
@@ -16,8 +29,8 @@ async function isAdminUser(email: string | null | undefined): Promise<boolean> {
 }
 
 // Helper function to group activities by date
-function groupActivitiesByDate(activities: any[]) {
-  const grouped = new Map<string, any[]>()
+function groupActivitiesByDate(activities: Activity[]) {
+  const grouped = new Map<string, Activity[]>()
   
   activities.forEach(activity => {
     const date = new Date(activity.timestamp).toLocaleDateString()
@@ -31,7 +44,7 @@ function groupActivitiesByDate(activities: any[]) {
 }
 
 // Helper function to calculate activity statistics
-function calculateActivityStats(activities: any[]) {
+function calculateActivityStats(activities: Activity[]) {
   const now = new Date()
   const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000)
   const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -44,7 +57,8 @@ function calculateActivityStats(activities: any[]) {
     total: activities.length,
     mostVisitedPaths: Object.entries(
       activities.reduce((acc: Record<string, number>, activity) => {
-        const path = activity.metadata?.path || 'unknown'
+        const metadata = activity.metadata as ActivityMetadata
+        const path = metadata?.path || 'unknown'
         acc[path] = (acc[path] || 0) + 1
         return acc
       }, {})
@@ -53,7 +67,8 @@ function calculateActivityStats(activities: any[]) {
       .slice(0, 5),
     browsers: Object.entries(
       activities.reduce((acc: Record<string, number>, activity) => {
-        const browser = activity.metadata?.userAgent || 'unknown'
+        const metadata = activity.metadata as ActivityMetadata
+        const browser = metadata?.userAgent || 'unknown'
         acc[browser] = (acc[browser] || 0) + 1
         return acc
       }, {})
@@ -66,7 +81,7 @@ function calculateActivityStats(activities: any[]) {
 }
 
 // Calculate user status
-function calculateUserStatus(activities: any[], now: Date) {
+function calculateUserStatus(activities: Activity[], now: Date) {
   const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000)
   const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
   const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -139,7 +154,7 @@ export async function GET(
         status: status
       },
       activities: {
-        recent: userDetails.activities.slice(0, 50).map(activity => ({
+        recent: userDetails.activities.slice(0, 10).map(activity => ({
           id: activity.id,
           type: activity.type,
           timestamp: activity.timestamp,

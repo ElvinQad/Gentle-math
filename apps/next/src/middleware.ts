@@ -1,11 +1,12 @@
 import { withAuth } from 'next-auth/middleware'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+import type { JWT } from 'next-auth/jwt'
 
 declare module 'next-auth/jwt' {
   interface JWT {
     isAdmin?: boolean
+    jti?: string
   }
 }
 
@@ -32,18 +33,6 @@ function shouldTrackPath(path: string): boolean {
   return !IGNORED_PATHS.some(ignoredPath => path.startsWith(ignoredPath))
 }
 
-function shouldThrottle(userId: string): boolean {
-  const lastActivity = activityCache.get(userId)
-  const now = Date.now()
-  
-  if (!lastActivity || (now - lastActivity) > THROTTLE_DURATION) {
-    activityCache.set(userId, now)
-    return false
-  }
-  
-  return true
-}
-
 // Clean up old entries periodically
 setInterval(() => {
   const now = Date.now()
@@ -54,37 +43,39 @@ setInterval(() => {
   }
 }, THROTTLE_DURATION)
 
-async function trackActivity(req: NextRequest, token: any, type: string, additionalMetadata = {}) {
+async function trackActivity(
+  req: NextRequest, 
+  token: JWT, 
+  type: string, 
+  additionalMetadata: Record<string, unknown> = {}
+) {
   try {
     const path = req.nextUrl.pathname
-    // Skip tracking for paths we want to ignore
-    if (!shouldTrackPath(path)) {
-      return
+    if (!shouldTrackPath(path)) return
+
+    const userId = token.sub
+    if (!userId) return
+
+    const metadata = {
+      path,
+      userAgent: req.headers.get('user-agent'),
+      ...additionalMetadata
     }
 
-    const response = await fetch(`${req.nextUrl.origin}/api/user/activity`, {
+    await fetch(`${req.nextUrl.origin}/api/user/activity`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-internal-request': '1',
-        cookie: req.headers.get('cookie') || '',
+        'X-Request-ID': token.jti || crypto.randomUUID()
       },
       body: JSON.stringify({
+        userId,
         type,
-        metadata: {
-          path: path === '/' ? 'home' : path.replace(/^\/+|\/+$/g, ''),
-          userAgent: req.headers.get('user-agent')?.split(' ')[0] || 'unknown',
-          sessionId: token.jti,
-          ...additionalMetadata
-        },
-      }),
+        metadata
+      })
     })
-
-    if (!response.ok) {
-      console.error('Failed to track activity:', await response.text())
-    }
   } catch (error) {
-    console.error('Error tracking activity:', error)
+    console.error('Failed to track activity:', error)
   }
 }
 

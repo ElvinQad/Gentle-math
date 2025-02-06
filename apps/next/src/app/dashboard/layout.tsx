@@ -1,6 +1,6 @@
 'use client'
 
-import { DashboardNav, ModalContext } from '@/components/dashboard/DashboardNav'
+import { DashboardNav, ModalContext } from '@/components/navigation/DashboardNav'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { PageTransition } from '@/components/animations/PageTransition'
 import { AnimatePresence } from 'framer-motion'

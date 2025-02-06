@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, ReferenceLine, Label, Area, AreaChart } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, ReferenceLine, Label } from 'recharts'
 import { type Trend } from '@/types/dashboard'
 import Image from 'next/image'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useTheme } from 'next-themes'
-import { useModal } from './DashboardNav'
+import { useModal } from '../navigation/DashboardNav'
 
 interface TrendsGalleryProps {
   trends?: Trend[]
@@ -72,21 +72,6 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
     setDirection(0)
   }, [])
 
-  const handleDragEnd = useCallback((e: any, { offset, velocity }: any) => {
-    const swipe = offset.x;
-    
-    if (Math.abs(velocity.x) > 500 || Math.abs(swipe) > 50) {
-      if (swipe > 0 && currentIndex > 0) {
-        // Swipe right - show previous
-        setDirection(-1)
-        setSelectedTrend(trends[currentIndex - 1])
-      } else if (swipe < 0 && currentIndex < trends.length - 1) {
-        // Swipe left - show next
-        setDirection(1)
-        setSelectedTrend(trends[currentIndex + 1])
-      }
-    }
-  }, [currentIndex, trends])
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (selectedTrend) {
@@ -133,14 +118,11 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
     )
   }
 
-  // Get current date and add 4 months for forecast
-  const currentDate = new Date()
-  
   // Combine actual and forecast into one line
-  const getProcessedData = (data: any[]): ChartDataPoint[] => {
+  const getProcessedData = (data: Array<{ month: string; actual: number | null; forecast: number }>): ChartDataPoint[] => {
     return data.map((item) => ({
       month: item.month,
-      value: item.actual,
+      value: item.actual ?? 0,
       prediction: item.forecast,
       upperBound: item.actual === null ? item.forecast * 1.15 : undefined,
       lowerBound: item.actual === null ? item.forecast * 0.85 : undefined,

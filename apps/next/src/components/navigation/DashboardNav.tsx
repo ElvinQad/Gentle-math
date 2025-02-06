@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { isUserAdmin } from '@/lib/user-helpers'
 
 // Create a context to manage modal state
@@ -23,6 +23,7 @@ const navItems = [
     title: 'Trends',
     href: '/dashboard/trends',
     icon: TrendingUpIcon,
+    adminOnly: false,
   },
   {
     title: 'Admin',
@@ -55,20 +56,21 @@ export function DashboardNav() {
     return (
       <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30">
         <div className="flex justify-around items-center h-16">
-          {/* {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex flex-col items-center justify-center px-3 py-2 rounded-lg transition-colors
-                ${pathname === item.href
-                  ? 'text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
-                }`}
-            >
-              <item.icon className="w-5 h-5" />
-              <span className="text-xs mt-1">{item.title}</span>
-            </Link>
-          ))} */}
+          {/* Profile Link */}
+          <Link
+            href="/dashboard/profile"
+            className={`flex flex-col items-center justify-center px-3 py-2 rounded-lg transition-colors
+              ${pathname === '/dashboard/profile'
+                ? 'text-primary'
+                : 'text-muted-foreground hover:text-foreground'
+              }`}
+          >
+            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
+              {session?.user?.name?.[0] || session?.user?.email?.[0] || '?'}
+            </div>
+            <span className="text-xs mt-1">Profile</span>
+          </Link>
+          
           <button
             onClick={() => signOut()}
             className="flex flex-col items-center justify-center px-3 py-2 text-muted-foreground hover:text-destructive transition-colors"
@@ -116,7 +118,7 @@ export function DashboardNav() {
                     : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                   }`}
               >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
+                {item.icon && <item.icon className="w-5 h-5 flex-shrink-0" />}
                 <span className={`ml-3 transition-all duration-300 ${
                   isExpanded 
                     ? 'opacity-100 relative' 
@@ -192,26 +194,10 @@ export function DashboardNav() {
   )
 }
 
-function HomeIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" {...props}>
-      <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-    </svg>
-  )
-}
-
 function TrendingUpIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" {...props}>
       <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-    </svg>
-  )
-}
-
-function ChartIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" {...props}>
-      <path d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
     </svg>
   )
 }

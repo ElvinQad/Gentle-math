@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authConfig } from '@/lib/auth'
 
-export async function DELETE(req: Request) {
+export async function DELETE() {
   try {
     const session = await getServerSession(authConfig)
     const userEmail = session?.user?.email

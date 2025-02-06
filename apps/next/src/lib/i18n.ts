@@ -13,6 +13,8 @@ const translations: Record<string, TranslationType> = {
 
 export type Language = keyof typeof translations;
 
+type NestedValue = string | { [key: string]: NestedValue };
+
 // Function to get initial locale from cookies or default to 'en'
 const getInitialLocale = (): Language => {
   if (typeof window === 'undefined') return 'en';
@@ -41,11 +43,11 @@ export function useTranslation() {
       // Save to localStorage for persistence
       window.localStorage.setItem('locale', newLocale);
     }
-  }, []);
+  }, [locale]);
 
   const t = (key: string): string => {
     const keys = key.split('.');
-    let value: any = translations[locale];
+    let value: NestedValue = translations[locale];
     
     for (const k of keys) {
       if (value && typeof value === 'object' && k in value) {
@@ -55,7 +57,7 @@ export function useTranslation() {
       }
     }
     
-    return value as string;
+    return typeof value === 'string' ? value : key;
   };
 
   return {

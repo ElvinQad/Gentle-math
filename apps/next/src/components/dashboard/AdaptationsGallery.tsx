@@ -1,38 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 import { type Adaptation } from '@/types/dashboard'
-
-const dummyData = [
-  { month: 'Jan', streetwear: 65, luxury: 45, casual: 80 },
-  { month: 'Feb', streetwear: 70, luxury: 50, casual: 75 },
-  { month: 'Mar', streetwear: 75, luxury: 55, casual: 70 },
-  { month: 'Apr', streetwear: 80, luxury: 60, casual: 65 },
-  { month: 'May', streetwear: 85, luxury: 65, casual: 60 },
-  { month: 'Jun', streetwear: 90, luxury: 70, casual: 55 },
-]
-
-const adaptationCategories = [
-  {
-    id: 'streetwear',
-    name: 'Streetwear',
-    description: 'Urban fashion trends adapted for mainstream appeal',
-    color: 'hsl(var(--primary))'
-  },
-  {
-    id: 'luxury',
-    name: 'Luxury',
-    description: 'High-end fashion elements adapted for ready-to-wear',
-    color: 'hsl(var(--accent-foreground))'
-  },
-  {
-    id: 'casual',
-    name: 'Casual',
-    description: 'Everyday wear with contemporary fashion influences',
-    color: 'hsl(var(--muted-foreground))'
-  }
-]
 
 interface AdaptationsGalleryProps {
   adaptations?: Adaptation[]

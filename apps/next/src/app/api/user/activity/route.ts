@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { getServerSession } from 'next-auth'
 import { authConfig } from '@/lib/auth'
 import { z } from 'zod'
+import { Prisma } from '@prisma/client'
 
 // Define the activity schema
 const activitySchema = z.object({
@@ -16,7 +17,7 @@ const BATCH_INTERVAL = 5000 // 5 seconds
 let activityQueue: Array<{
   userId: string
   type: string
-  metadata: any
+  metadata: Prisma.InputJsonValue
   timestamp: Date
 }> = []
 let batchTimeout: NodeJS.Timeout | null = null

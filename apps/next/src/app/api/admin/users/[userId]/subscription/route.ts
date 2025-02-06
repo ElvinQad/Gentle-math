@@ -35,9 +35,10 @@ function addMonths(date: Date, months: number): Date {
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { userId: string } }
+  context: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const params = await context.params
     const session = await getServerSession(authConfig)
     
     // Check authentication
@@ -100,9 +101,10 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { userId: string } }
+  context: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const params = await context.params
     const session = await getServerSession(authConfig)
     
     // Check authentication

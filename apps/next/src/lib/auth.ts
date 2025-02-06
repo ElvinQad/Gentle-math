@@ -16,6 +16,15 @@ declare module 'next-auth' {
       subscribedUntil?: string | null
     }
   }
+
+  interface User {
+    id: string
+    name?: string | null
+    email?: string | null
+    image?: string | null
+    isAdmin?: boolean
+    subscribedUntil?: string | null
+  }
 }
 
 async function trackSessionEvent(userId: string, type: string, metadata = {}) {
@@ -106,7 +115,7 @@ export const authConfig: NextAuthOptions = {
   },
   events: {
     async signIn({ user, account, isNewUser }) {
-      if (user.id) {
+      if (user?.id) {
         await trackSessionEvent(user.id, 'session.login', {
           provider: account?.provider,
           isNewUser,
@@ -119,31 +128,44 @@ export const authConfig: NextAuthOptions = {
           sessionId: token.jti,
         })
       }
-    },
-    async session({ token, session }) {
-      if (token?.sub) {
-        await trackSessionEvent(token.sub, 'session.refresh', {
-          sessionId: token.jti,
-        })
-      }
-    },
+    }
   },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.email = user.email;
-        token.name = user.name;
-        const dbUser = await prisma.user.findUnique({
-          where: { email: user.email || undefined },
-          select: {
-            isAdmin: true,
-            subscribedUntil: true
+    async jwt({ token, user, trigger }) {
+      try {
+        // Only fetch fresh data on sign in or when explicitly requested
+        if (user || trigger === 'update') {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email || undefined },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              isAdmin: true,
+              subscribedUntil: true
+            }
+          });
+
+          if (dbUser) {
+            // Update token with latest user data
+            token.id = dbUser.id;
+            token.email = dbUser.email;
+            token.name = dbUser.name;
+            token.isAdmin = dbUser.isAdmin || false;
+            token.subscribedUntil = dbUser.subscribedUntil?.toISOString() || null;
+          } else if (user) {
+            // Fallback to user data if database query fails
+            token.id = user.id;
+            token.email = user.email;
+            token.name = user.name;
+            token.isAdmin = user.isAdmin || false;
+            token.subscribedUntil = user.subscribedUntil || null;
           }
-        });
-        token.isAdmin = dbUser?.isAdmin || false;
-        token.subscribedUntil = dbUser?.subscribedUntil?.toISOString() || null;
+        }
+      } catch (error) {
+        console.error('Error updating JWT:', error);
       }
+      
       return token;
     },
     async session({ session, token }) {
@@ -173,7 +195,7 @@ export const authConfig: NextAuthOptions = {
         
         // Default case - return the original URL
         return url;
-      } catch (e) {
+      } catch {
         // If URL parsing fails, return the original URL
         return url;
       }

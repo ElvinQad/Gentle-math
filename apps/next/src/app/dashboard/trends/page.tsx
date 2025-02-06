@@ -1,5 +1,5 @@
 import { TrendsGallery } from '@/components/dashboard/TrendsGallery'
-import { trendingFashion, colorTrends } from '@/data/dashboardData'
+import { trendingFashion } from '@/data/dashboardData'
 
 export default function TrendsPage() {
   return (

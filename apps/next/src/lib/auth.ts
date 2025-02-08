@@ -3,7 +3,13 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import { prisma } from '@/lib/db'
 import { compare, hash } from 'bcryptjs'
-import { PrismaAdapter } from '@next-auth/prisma-adapter'
+
+// Add this type definition at the top of the file, after the imports
+type SessionEventMetadata = {
+  provider?: string;
+  timestamp?: string;
+  [key: string]: string | undefined;
+};
 
 declare module 'next-auth' {
   interface Session {
@@ -27,25 +33,36 @@ declare module 'next-auth' {
   }
 }
 
-async function trackSessionEvent(userId: string, type: string, metadata = {}) {
+async function trackSessionEvent(
+  userId: string, 
+  type: string, 
+  metadata: SessionEventMetadata = {}
+) {
   try {
+    // Ensure metadata is serializable
+    const safeMetadata = JSON.parse(JSON.stringify(metadata || {}))
+    
     await prisma.userActivity.create({
       data: {
         userId,
         type,
-        metadata,
+        metadata: safeMetadata,
         timestamp: new Date(),
       },
     })
   } catch (error) {
-    console.error('Failed to track session event:', error)
+    // Log the error but don't throw
+    console.error('Failed to track session event:', {
+      userId,
+      type,
+      error: error instanceof Error ? error.message : String(error)
+    })
   }
 }
 
 export const authConfig: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET || 'my-default-secret',
   debug: process.env.NODE_ENV === 'development',
-  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || '',
@@ -65,16 +82,12 @@ export const authConfig: NextAuthOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-        console.log('CredentialsProvider authorize called with:', credentials);
         if (!credentials?.email || !credentials?.password) {
-          console.log('Missing email or password in credentials');
           return null;
         }
 
-        // Normalize email
         const normalizedEmail = credentials.email.trim().toLowerCase();
-        console.log('Normalized email:', normalizedEmail);
-
+        
         const user = await prisma.user.findUnique({
           where: { email: normalizedEmail },
           select: { 
@@ -83,25 +96,25 @@ export const authConfig: NextAuthOptions = {
             name: true, 
             password: true,
             isAdmin: true,
-            subscribedUntil: true
+            subscribedUntil: true,
+            emailVerified: true
           }
         });
 
-        if (!user || !user.password) {
-          console.log('User not found or missing password:', user);
-          return null;
+        if (!user) {
+          throw new Error('No user found with this email');
         }
 
-        const isValid = await compare(credentials.password, user.password);
-
-        if (!isValid) {
-          console.log('Invalid password');
-          return null;
+        if (!user.password && user.emailVerified) {
+          throw new Error('This email is registered with Google. Please sign in with Google instead.');
         }
 
-        console.log('User authenticated successfully:', user);
+        if (!user.password || !await compare(credentials.password, user.password)) {
+          throw new Error('Invalid password');
+        }
+
         return {
-          id: user.id.toString(),
+          id: user.id,
           email: user.email,
           name: user.name,
           isAdmin: user.isAdmin,
@@ -112,25 +125,64 @@ export const authConfig: NextAuthOptions = {
   ],
   pages: {
     signIn: '/',
+    error: '/auth/error',
   },
   events: {
-    async signIn({ user, account, isNewUser }) {
-      if (user?.id) {
-        await trackSessionEvent(user.id, 'session.login', {
-          provider: account?.provider,
-          isNewUser,
-        })
+    async signIn({ user, account }) {
+      try {
+        // Get the user from our database first
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email || undefined }
+        });
+
+        if (dbUser?.id) {
+          await trackSessionEvent(dbUser.id, 'session.login', {
+            provider: account?.provider,
+            timestamp: new Date().toISOString()
+          })
+        }
+      } catch (error) {
+        console.error('Sign in event error:', error)
       }
     },
     async signOut({ token }) {
-      if (token?.sub) {
-        await trackSessionEvent(token.sub, 'session.logout', {
-          sessionId: token.jti,
-        })
+      try {
+        if (token?.id) { // Use token.id instead of token.sub
+          await trackSessionEvent(token.id as string, 'session.logout', {
+            timestamp: new Date().toISOString()
+          })
+        }
+      } catch (error) {
+        console.error('Sign out event error:', error)
       }
     }
   },
   callbacks: {
+    async signIn({ user }) {
+      try {
+        // Check if user exists
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email || undefined }
+        });
+
+        // If user doesn't exist, create one
+        if (!existingUser && user.email) {
+          await prisma.user.create({
+            data: {
+              email: user.email,
+              name: user.name,
+              image: user.image,
+              emailVerified: new Date(),
+            }
+          });
+        }
+
+        return true;
+      } catch (error) {
+        console.error('Sign in error:', error);
+        return false;
+      }
+    },
     async jwt({ token, user, trigger }) {
       try {
         // Only fetch fresh data on sign in or when explicitly requested
@@ -169,40 +221,54 @@ export const authConfig: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
+      console.log('Auth Config: Session callback', { 
+        hasSession: !!session,
+        hasToken: !!token,
+        tokenData: {
+          id: token.id,
+          email: token.email
+        }
+      })
+      
       if (session.user) {
-        session.user.id = token.id as string;
-        session.user.email = token.email as string;
-        session.user.name = token.name as string;
-        session.user.isAdmin = token.isAdmin as boolean;
-        session.user.subscribedUntil = token.subscribedUntil as string | null;
+        session.user.id = token.id as string
+        session.user.email = token.email as string
+        session.user.name = token.name as string
+        session.user.isAdmin = token.isAdmin as boolean
+        session.user.subscribedUntil = token.subscribedUntil as string | null
       }
-      return session;
+      return session
     },
     async redirect({ url, baseUrl }) {
-      // Get the hostname from the URL
-      try {
-        const returnUrl = new URL(url);
-        const baseUrlObj = new URL(baseUrl);
-        
-        // Check if we're dealing with a .ru domain
-        const isRuDomain = returnUrl.hostname.endsWith('.ru') || baseUrlObj.hostname.endsWith('.ru');
-        
-        if (isRuDomain) {
-          // Construct the proper .ru URL while maintaining the path and query parameters
-          const ruBaseUrl = baseUrl.replace(/\.[^.]+(\:[0-9]+)?$/, '.ru$1');
-          return url.replace(baseUrl, ruBaseUrl);
-        }
-        
-        // Default case - return the original URL
-        return url;
-      } catch {
-        // If URL parsing fails, return the original URL
-        return url;
+      // Strip nested callback URLs
+      const cleanUrl = url.split('?')[0]
+      
+      // If the URL is relative or matches the base URL, return it
+      if (url.startsWith('/') || url.startsWith(baseUrl)) {
+        return cleanUrl
       }
+      
+      // Default to base URL
+      return baseUrl
     }
   },
   session: {
     strategy: 'jwt',
+    maxAge: 60 * 60 * 24, // 24 hours
+  },
+  cookies: {
+    csrfToken: {
+      name: 'next-auth.csrf-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production'
+      }
+    }
+  },
+  jwt: {
+    maxAge: 60 * 60 * 24 // 24 hours
   },
 }
 

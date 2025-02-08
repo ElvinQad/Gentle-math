@@ -55,12 +55,32 @@ function scheduleBatchProcessing() {
 }
 
 export async function POST(req: Request) {
+  console.log('Activity API: Request received')
+  
   try {
-    // Check authentication
+    // Log before getServerSession
+    console.log('Activity API: Attempting to get session')
+    
     const session = await getServerSession(authConfig)
     
+    // Log after getServerSession
+    console.log('Activity API: Session check complete', {
+      hasSession: !!session,
+      headers: req.headers.get('cookie'),
+      sessionData: session ? {
+        userId: session.user?.id,
+        email: session.user?.email
+      } : 'No session'
+    })
+
     if (!session?.user?.id) {
-      return new NextResponse('Unauthorized', { status: 401 })
+      console.log('Activity API: No valid session found')
+      return new NextResponse('Unauthorized', { 
+        status: 401,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
     }
 
     // Parse and validate request body

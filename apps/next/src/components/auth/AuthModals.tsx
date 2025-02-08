@@ -20,7 +20,7 @@ export function AuthModals({
   onSwitchToLogin,
 }: AuthModalsProps) {
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState<string | React.ReactElement>('')
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -39,7 +39,9 @@ export function AuthModals({
       })
 
       if (result?.error) {
-        setError('Invalid email or password')
+        setError(result.error)
+        
+      
       } else {
         onLoginClose()
       }

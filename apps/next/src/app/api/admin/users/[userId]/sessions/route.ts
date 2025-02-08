@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authConfig } from '@/lib/auth'
-import { Prisma } from '@prisma/client'
 import type { JsonValue } from '@prisma/client/runtime/library'
 
 interface Activity {
@@ -130,8 +129,6 @@ export async function GET(
           },
           take: 1000 // Get last 1000 activities
         },
-        accounts: true,
-        sessions: true // Include active sessions
       }
     })
 
@@ -164,21 +161,6 @@ export async function GET(
         byDate: groupActivitiesByDate(userDetails.activities),
         stats: calculateActivityStats(userDetails.activities)
       },
-      sessions: {
-        active: userDetails.sessions.filter(session => new Date(session.expires) > now).length,
-        expired: userDetails.sessions.filter(session => new Date(session.expires) <= now).length,
-        details: userDetails.sessions.map(session => ({
-          id: session.id,
-          expires: session.expires,
-          isActive: new Date(session.expires) > now
-        }))
-      },
-      accounts: userDetails.accounts.map(account => ({
-        provider: account.provider,
-        type: account.type,
-        providerAccountId: account.providerAccountId,
-        createdAt: account.id, // Using id as a proxy for creation time
-      })),
     }
 
     return NextResponse.json(formattedData)

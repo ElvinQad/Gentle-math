@@ -29,5 +29,10 @@ export default withAuth({
 
 // Configure middleware paths
 export const config = {
-  matcher: ['/dashboard/:path*', '/admin/:path*', '/api/:path*', '/((?!api/user/activity).*)'],
+  matcher: [
+    '/dashboard/:path*',
+    '/admin/:path*',
+    '/api/:path*',
+    '/((?!api/auth|auth|api/user/activity).*)',
+  ],
 };

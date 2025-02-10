@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authConfig } from '@/lib/auth'
+import type { User } from '@prisma/client'
 
 async function isAdminUser(email: string | null | undefined): Promise<boolean> {
   if (!email) return false
@@ -39,7 +40,7 @@ export async function GET() {
     })
 
     // Filter sensitive data before sending response
-    const sanitizedUsers = users.map(user => ({
+    const sanitizedUsers = users.map((user: User) => ({
       id: user.id,
       name: user.name,
       email: user.email,

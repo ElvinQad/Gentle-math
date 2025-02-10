@@ -152,7 +152,7 @@ export async function GET(
         status: status
       },
       activities: {
-        recent: userDetails.activities.slice(0, 10).map(activity => ({
+        recent: userDetails.activities.slice(0, 10).map((activity: Activity) => ({
           id: activity.id,
           type: activity.type,
           timestamp: activity.timestamp,

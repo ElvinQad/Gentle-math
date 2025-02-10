@@ -14,12 +14,7 @@ const activitySchema = z.object({
 // Batch processing setup
 const BATCH_SIZE = 10
 const BATCH_INTERVAL = 5000 // 5 seconds
-let activityQueue: Array<{
-  userId: string
-  type: string
-  metadata: Prisma.InputJsonValue
-  timestamp: Date
-}> = []
+let activityQueue: Array<Prisma.UserActivityCreateManyInput> = []
 let batchTimeout: NodeJS.Timeout | null = null
 
 // Function to process the batch
@@ -31,7 +26,7 @@ async function processBatch() {
 
   try {
     // Use transaction and createMany for better performance
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.userActivity.createMany({
         data: activities,
         skipDuplicates: true, // Skip if exact duplicate exists

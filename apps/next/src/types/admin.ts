@@ -62,10 +62,14 @@ export interface Trend {
   description: string
   type: string
   imageUrls: string[]
+  mainImageIndex: number
   createdAt: string
   updatedAt: string
-  analytics: {
-    dates: string[]
+  analytics?: {
+    id: string
+    dates: Date[]
     values: number[]
   }[]
+  data?: Array<{ month: string; actual: number | null; forecast: number }>
+  spreadsheetUrl?: string
 } 

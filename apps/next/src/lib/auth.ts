@@ -21,6 +21,7 @@ declare module 'next-auth' {
       isAdmin?: boolean
       subscribedUntil?: string | null
     }
+    accessToken?: string
   }
 
   interface User {
@@ -30,6 +31,17 @@ declare module 'next-auth' {
     image?: string | null
     isAdmin?: boolean
     subscribedUntil?: string | null
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    id: string
+    email?: string | null
+    name?: string | null
+    isAdmin?: boolean
+    subscribedUntil?: string | null
+    accessToken?: string
   }
 }
 
@@ -65,13 +77,13 @@ export const authConfig: NextAuthOptions = {
   debug: process.env.NODE_ENV === 'development',
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
+          scope: 'openid email profile https://www.googleapis.com/auth/spreadsheets.readonly',
           prompt: "consent",
           access_type: "offline",
-          response_type: "code"
         }
       }
     }),
@@ -183,60 +195,40 @@ export const authConfig: NextAuthOptions = {
         return false;
       }
     },
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, account, user }) {
       try {
-        // Only fetch fresh data on sign in or when explicitly requested
-        if (user || trigger === 'update') {
-          const dbUser = await prisma.user.findUnique({
-            where: { email: token.email || undefined },
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              isAdmin: true,
-              subscribedUntil: true
-            }
-          });
-
-          if (dbUser) {
-            // Update token with latest user data
-            token.id = dbUser.id;
-            token.email = dbUser.email;
-            token.name = dbUser.name;
-            token.isAdmin = dbUser.isAdmin || false;
-            token.subscribedUntil = dbUser.subscribedUntil?.toISOString() || null;
-          } else if (user) {
-            // Fallback to user data if database query fails
-            token.id = user.id;
-            token.email = user.email;
-            token.name = user.name;
-            token.isAdmin = user.isAdmin || false;
-            token.subscribedUntil = user.subscribedUntil || null;
+        // Handle initial sign in
+        if (account && user) {
+          return {
+            ...token,
+            accessToken: account.access_token,
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            isAdmin: user.isAdmin || false,
+            subscribedUntil: user.subscribedUntil || null,
           }
         }
+
+        // On subsequent calls, return the token
+        return token
       } catch (error) {
-        console.error('Error updating JWT:', error);
+        console.error('Error updating JWT:', error)
+        return token
       }
-      
-      return token;
     },
     async session({ session, token }) {
-      console.log('Auth Config: Session callback', { 
-        hasSession: !!session,
-        hasToken: !!token,
-        tokenData: {
-          id: token.id,
-          email: token.email
-        }
-      })
-      
       if (session.user) {
-        session.user.id = token.id as string
+        session.user.id = token.id
         session.user.email = token.email as string
         session.user.name = token.name as string
         session.user.isAdmin = token.isAdmin as boolean
         session.user.subscribedUntil = token.subscribedUntil as string | null
       }
+      
+      // Add access token to session
+      session.accessToken = token.accessToken
+
       return session
     },
     async redirect({ url, baseUrl }) {

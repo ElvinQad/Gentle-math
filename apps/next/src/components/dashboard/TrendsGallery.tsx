@@ -13,23 +13,6 @@ interface TrendsGalleryProps {
   isLoading?: boolean
 }
 
-interface ChartDataPoint {
-  month: string
-  value: number
-  prediction?: number
-  upperBound?: number
-  lowerBound?: number
-  isActual: boolean
-}
-
-// Add fake images for the carousel
-const additionalImages = [
-  'https://picsum.photos/seed/trend1/800/600',
-  'https://picsum.photos/seed/trend2/800/600',
-  'https://picsum.photos/seed/trend3/800/600',
-  'https://picsum.photos/seed/trend4/800/600',
-]
-
 export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryProps) {
   const [selectedTrend, setSelectedTrend] = useState<Trend | null>(null)
   const [selectedImagePosition, setSelectedImagePosition] = useState<DOMRect | null>(null)
@@ -69,6 +52,7 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
     setSelectedImagePosition(rect)
     setSelectedTrend(trend)
+    setCurrentImageIndex(0)
     setDirection(0)
   }, [])
 
@@ -95,6 +79,13 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
     setShowSwipeHint(false)
   }
 
+  const getTrendImages = (trend: Trend | null) => {
+    if (!trend?.imageUrls || !Array.isArray(trend.imageUrls)) {
+      return []
+    }
+    return trend.imageUrls
+  }
+
   if (isLoading) {
     return <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
       {Array.from({ length: 3 }).map((_, i) => (
@@ -118,18 +109,6 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
     )
   }
 
-  // Combine actual and forecast into one line
-  const getProcessedData = (data: Array<{ month: string; actual: number | null; forecast: number }>): ChartDataPoint[] => {
-    return data.map((item) => ({
-      month: item.month,
-      value: item.actual ?? 0,
-      prediction: item.forecast,
-      upperBound: item.actual === null ? item.forecast * 1.15 : undefined,
-      lowerBound: item.actual === null ? item.forecast * 0.85 : undefined,
-      isActual: item.actual !== null
-    }))
-  }
-
   return (
     <>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 auto-rows-[200px] md:auto-rows-[250px]">
@@ -143,7 +122,7 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
           >
             <div className="relative h-full w-full">
               <Image
-                src={trend.image}
+                src={trend.imageUrls[0]}
                 alt={trend.title}
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -155,21 +134,12 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                 <h3 className="font-semibold text-base md:text-lg text-white line-clamp-2">
                   {trend.title}
                 </h3>
-                <div className="flex items-center space-x-3 text-xs text-white/80">
-                  <span className="flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    {trend.views.toLocaleString()}
-                  </span>
-                  <span className="flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                    {trend.likes.toLocaleString()}
-                  </span>
-                </div>
+                <p className="text-sm text-white/80 line-clamp-2">
+                  {trend.description}
+                </p>
+                <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
+                  {trend.type}
+                </span>
               </div>
             </div>
           </div>
@@ -408,7 +378,7 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                         onClick={() => setIsFullScreen(true)}
                       >
                         <Image
-                          src={currentImageIndex === 0 ? selectedTrend.image : additionalImages[currentImageIndex - 1]}
+                          src={currentImageIndex === 0 ? selectedTrend.imageUrls[0] : selectedTrend.imageUrls[currentImageIndex - 1]}
                           alt={selectedTrend.title}
                           fill
                           className="object-cover"
@@ -421,7 +391,7 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
 
                     {/* Image Navigation Dots */}
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
-                      {[selectedTrend.image, ...additionalImages].map((_, index) => (
+                      {selectedTrend?.imageUrls.map((_, index) => (
                         <button
                           key={index}
                           onClick={(e) => {
@@ -454,14 +424,14 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                   <div className="h-[300px] sm:h-[400px] w-full">
                     
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={getProcessedData(selectedTrend.data)} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                      <AreaChart data={selectedTrend?.data ?? []} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                         <defs>
-                          <linearGradient id={`colorValue-${selectedTrend.id}`} x1="0" y1="0" x2="0" y2="1">
+                          <linearGradient id={`colorActual-${selectedTrend?.id}`} x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor={theme === 'dark' ? '#8884d8' : '#6366f1'} stopOpacity={0.8}/>
                             <stop offset="95%" stopColor={theme === 'dark' ? '#8884d8' : '#6366f1'} stopOpacity={0}/>
                           </linearGradient>
-                          <linearGradient id={`colorPrediction-${selectedTrend.id}`} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={theme === 'dark' ? '#82ca9d' : '#10b981'} stopOpacity={0.8}/>
+                          <linearGradient id={`colorForecast-${selectedTrend?.id}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={theme === 'dark' ? '#82ca9d' : '#10b981'} stopOpacity={0.4}/>
                             <stop offset="95%" stopColor={theme === 'dark' ? '#82ca9d' : '#10b981'} stopOpacity={0}/>
                           </linearGradient>
                         </defs>
@@ -486,89 +456,86 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                             borderRadius: '0.5rem',
                             padding: '1rem',
                           }}
+                          formatter={(value: number, name: string) => [
+                            value.toFixed(2),
+                            name === 'actual' ? 'Historical' : 'Forecast'
+                          ]}
                         />
-                        <Legend verticalAlign="top" height={36} />
+                        <Legend 
+                          verticalAlign="top" 
+                          height={36}
+                          formatter={(value: string) => value === 'actual' ? 'Historical' : 'Forecast'}
+                        />
 
+                        {/* Historical Data */}
                         <Area
                           type="monotone"
-                          dataKey="value"
+                          dataKey="actual"
                           stroke={theme === 'dark' ? '#8884d8' : '#6366f1'}
                           strokeWidth={2}
                           fillOpacity={1}
-                          fill={`url(#colorValue-${selectedTrend.id})`}
-                          name="Historical"
+                          fill={`url(#colorActual-${selectedTrend?.id})`}
+                          name="actual"
                           dot={{ r: 4, strokeWidth: 2 }}
                           activeDot={{ r: 6 }}
+                          connectNulls={false}
                         />
                         
+                        {/* Forecast Data */}
                         <Area
                           type="monotone"
-                          dataKey="prediction"
+                          dataKey="forecast"
                           stroke={theme === 'dark' ? '#82ca9d' : '#10b981'}
                           strokeWidth={2}
-                          fillOpacity={1}
-                          fill={`url(#colorPrediction-${selectedTrend.id})`}
-                          name="Prediction"
+                          fillOpacity={0.5}
+                          fill={`url(#colorForecast-${selectedTrend?.id})`}
+                          name="forecast"
                           dot={{ r: 4, strokeWidth: 2 }}
                           strokeDasharray="5 5"
+                          connectNulls={true}
                         />
 
-                        <ReferenceLine 
-                          y={getProcessedData(selectedTrend.data)
-                              .filter(d => d.isActual)
-                              .reduce((acc, curr) => acc + (curr.value || 0), 0) / 
-                              getProcessedData(selectedTrend.data).filter(d => d.isActual).length
-                          } 
-                          stroke="hsl(var(--muted-foreground))" 
-                          strokeDasharray="3 3"
-                        >
-                          <Label 
-                            value="Average" 
-                            position="insideLeft"
-                            fill="currentColor"
-                          />
-                        </ReferenceLine>
+                        {selectedTrend?.data && (
+                          <ReferenceLine 
+                            y={selectedTrend.data
+                              .filter(d => d.actual !== null)
+                              .reduce((sum, d) => sum + (d.actual || 0), 0) / 
+                              selectedTrend.data.filter(d => d.actual !== null).length
+                            } 
+                            stroke="hsl(var(--muted-foreground))" 
+                            strokeDasharray="3 3"
+                          >
+                            <Label 
+                              value="Average" 
+                              position="insideLeft"
+                              fill="currentColor"
+                            />
+                          </ReferenceLine>
+                        )}
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
 
                   {/* Thumbnail Gallery */}
                   <div className="grid grid-cols-5 gap-2 pt-4">
-                    <div
-                      onClick={() => {
-                        setDirection(currentImageIndex > 0 ? -1 : 1);
-                        setCurrentImageIndex(0);
-                      }}
-                      className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden group ${
-                        currentImageIndex === 0 ? 'ring-2 ring-primary' : ''
-                      }`}
-                    >
-                      <Image
-                        src={selectedTrend.image}
-                        alt={selectedTrend.title}
-                        fill
-                        className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
-                    </div>
-                    {additionalImages.map((img, index) => (
+                    {getTrendImages(selectedTrend).map((url, index) => (
                       <div
                         key={index}
                         onClick={() => {
-                          setDirection(index + 1 > currentImageIndex ? 1 : -1);
-                          setCurrentImageIndex(index + 1);
+                          setDirection(index > currentImageIndex ? 1 : -1);
+                          setCurrentImageIndex(index);
                         }}
-                        className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden group ${
-                          currentImageIndex === index + 1 ? 'ring-2 ring-primary' : ''
+                        className={`relative group aspect-video cursor-pointer rounded-lg overflow-hidden ${
+                          currentImageIndex === index ? 'ring-2 ring-primary' : ''
                         }`}
                       >
                         <Image
-                          src={img}
-                          alt={`${selectedTrend.title} - Image ${index + 2}`}
+                          src={url}
+                          alt={`${selectedTrend?.title || 'Trend'} - Image ${index + 1}`}
                           fill
-                          className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                          className="object-cover"
                         />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                     ))}
                   </div>
@@ -599,13 +566,15 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
               className="relative w-[90vw] h-[90vh]"
               onClick={(e) => e.stopPropagation()}
             >
-              <Image
-                src={currentImageIndex === 0 ? selectedTrend.image : additionalImages[currentImageIndex - 1]}
-                alt={selectedTrend.title}
-                fill
-                className="object-contain"
-                priority
-              />
+              {selectedTrend.imageUrls?.[currentImageIndex] && (
+                <Image
+                  src={selectedTrend.imageUrls[currentImageIndex]}
+                  alt={selectedTrend.title || 'Trend image'}
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              )}
               
               {/* Full Screen Navigation Buttons */}
               <button
@@ -628,15 +597,16 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (currentImageIndex < additionalImages.length) {
+                  const maxIndex = getTrendImages(selectedTrend).length - 1;
+                  if (currentImageIndex < maxIndex) {
                     setDirection(1);
                     setCurrentImageIndex(currentImageIndex + 1);
                   }
                 }}
                 className={`absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/75 transition-colors ${
-                  currentImageIndex === additionalImages.length ? 'opacity-50 cursor-not-allowed' : 'opacity-100 cursor-pointer'
+                  currentImageIndex === getTrendImages(selectedTrend).length - 1 ? 'opacity-50 cursor-not-allowed' : 'opacity-100 cursor-pointer'
                 }`}
-                disabled={currentImageIndex === additionalImages.length}
+                disabled={currentImageIndex === getTrendImages(selectedTrend).length - 1}
               >
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

@@ -20,8 +20,8 @@ export function useModal() {
 
 const navItems = [
   {
-    title: 'Trends',
-    href: '/dashboard/trends',
+    title: 'Tends',
+    href: '/dashboard',
     icon: TrendingUpIcon,
     adminOnly: false,
   },
@@ -49,6 +49,14 @@ export function DashboardNav() {
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  // Add this helper function to check if a path is active
+  const isPathActive = (path: string) => {
+    if (path === '/dashboard') {
+      return pathname === '/dashboard' || pathname === '/dashboard/trends'
+    }
+    return pathname === path
+  }
 
   if (isMobile) {
     if (isModalOpen) return null; // Hide navigation when modal is open
@@ -113,7 +121,7 @@ export function DashboardNav() {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center px-3 py-2 rounded-lg mb-1 transition-colors group relative
-                  ${pathname === item.href
+                  ${isPathActive(item.href)
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                   }`}

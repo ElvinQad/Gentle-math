@@ -1,19 +1,5 @@
-import { TrendsGallery } from '@/components/dashboard/TrendsGallery'
-import { trendingFashion } from '@/data/dashboardData'
+import { redirect } from 'next/navigation'
 
 export default function DashboardPage() {
-  return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Trends Analysis</h1>
-        <p className="text-gray-600 dark:text-gray-300">
-          Detailed analysis of current and emerging trends
-        </p>
-      </div>
-      
-     
-        <TrendsGallery trends={trendingFashion} />
-
-    </div>
-  )
+  redirect('/dashboard/trends')
 }

@@ -1,19 +1,33 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import { TrendsGallery } from '@/components/dashboard/TrendsGallery'
-import { trendingFashion } from '@/data/dashboardData'
+import { type Trend } from '@/types/dashboard'
 
 export default function TrendsPage() {
-  return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Trends Analysis</h1>
-        <p className="text-gray-600 dark:text-gray-300">
-          Detailed analysis of current and emerging trends
-        </p>
-      </div>
-      
-     
-        <TrendsGallery trends={trendingFashion} />
+  const [trends, setTrends] = useState<Trend[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
+  useEffect(() => {
+    async function fetchTrends() {
+      try {
+        const response = await fetch('/api/admin/trends')
+        if (!response.ok) throw new Error('Failed to fetch trends')
+        const data = await response.json()
+        setTrends(data)
+      } catch (error) {
+        console.error('Error fetching trends:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchTrends()
+  }, [])
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <TrendsGallery trends={trends} isLoading={isLoading} />
     </div>
   )
 }

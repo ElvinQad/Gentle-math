@@ -7,14 +7,21 @@ declare module 'next-auth/jwt' {
   }
 }
 
-
 export default withAuth({
   callbacks: {
     authorized: ({ req, token }) => {
       console.log('Middleware: Auth check', {
         path: req.nextUrl.pathname,
-        hasToken: !!token
+        hasToken: !!token,
+        isAdmin: token?.isAdmin
       })
+
+      // Protect admin routes
+      if (req.nextUrl.pathname.startsWith('/admin')) {
+        return token?.isAdmin === true
+      }
+
+      // Regular auth check for other routes
       return !!token
     },
   },
@@ -24,6 +31,7 @@ export default withAuth({
 export const config = {
   matcher: [
     '/dashboard/:path*',
+    '/admin/:path*',
     '/api/:path*',
     '/((?!api/user/activity).*)',
   ],

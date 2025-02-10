@@ -63,20 +63,25 @@ export function BottomNav() {
     },
   ]
 
+  const isPathActive = (path: string) => {
+    if (path === '/dashboard') {
+      return pathname === '/dashboard' || pathname === '/dashboard/trends'
+    }
+    return pathname === path
+  }
+
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-t">
       <div className="flex justify-around items-center h-16">
         {navItems.map(({ href, label, icon, requiresAuth }) => {
           if (requiresAuth && !session) return null;
           
-          const isActive = pathname === href
-          
           return (
             <Link
               key={href}
               href={href}
               className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
-                isActive
+                isPathActive(href)
                   ? 'text-primary'
                   : 'text-muted-foreground hover:text-foreground'
               }`}

@@ -4,6 +4,27 @@ import { Card } from "@/components/ui/card"
 import { Trend } from '@/types/admin'
 import { Modal } from '@/components/ui/Modal'
 import Image from 'next/image'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Spinner } from '@/components/ui/spinner'
+
+interface ImagePreview {
+  url: string
+  isMain: boolean
+}
+
+const isValidUrl = (url: string) => {
+  try {
+    new URL(url)
+    return true
+  } catch {
+    return false
+  }
+}
 
 export function TrendsTab() {
   const [trends, setTrends] = useState<Trend[]>([])
@@ -17,11 +38,15 @@ export function TrendsTab() {
     mainImageIndex: 0,
     spreadsheetUrl: ''
   })
-  const [uploadedImages, setUploadedImages] = useState<File[]>([])
-  const [uploadedImagePreviews, setUploadedImagePreviews] = useState<string[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentTab, setCurrentTab] = useState<'details' | 'images' | 'data'>('details')
+  const [imageUrls, setImageUrls] = useState<ImagePreview[]>([{ url: '', isMain: true }])
+  const [selectedTrend, setSelectedTrend] = useState<Trend | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [isProcessingSpreadsheet, setIsProcessingSpreadsheet] = useState(false)
 
   useEffect(() => {
     const fetchTrends = async () => {
@@ -39,24 +64,37 @@ export function TrendsTab() {
 
     fetchTrends()
   }, [])
-
   const handleImageUrlChange = (index: number, value: string) => {
-    const newImageUrls = [...formData.imageUrls]
-    newImageUrls[index] = value
-    setFormData({ ...formData, imageUrls: newImageUrls })
+    try {
+      new URL(value)
+      const newImageUrls = [...imageUrls]
+      newImageUrls[index] = { ...newImageUrls[index], url: value }
+      setImageUrls(newImageUrls)
+    } catch  {
+      if (value) {
+        toast.error('Please enter a valid URL')
+      }
+    }
   }
 
   const addImageUrl = () => {
-    setFormData({ ...formData, imageUrls: [...formData.imageUrls, ''] })
+    setImageUrls([...imageUrls, { url: '', isMain: false }])
   }
 
   const removeImageUrl = (index: number) => {
-    const newImageUrls = formData.imageUrls.filter((_, i) => i !== index)
-    setFormData({ 
-      ...formData, 
-      imageUrls: newImageUrls,
-      mainImageIndex: formData.mainImageIndex >= index ? Math.max(0, formData.mainImageIndex - 1) : formData.mainImageIndex
-    })
+    const newImageUrls = imageUrls.filter((_, i) => i !== index)
+    if (imageUrls[index].isMain && newImageUrls.length > 0) {
+      newImageUrls[0].isMain = true
+    }
+    setImageUrls(newImageUrls)
+  }
+
+  const setMainImage = (index: number) => {
+    const newImageUrls = imageUrls.map((img, i) => ({
+      ...img,
+      isMain: i === index
+    }))
+    setImageUrls(newImageUrls)
   }
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -69,23 +107,65 @@ export function TrendsTab() {
     setIsDragging(false)
   }, [])
 
-  const handleFileUpload = useCallback((files: File[]) => {
-    const newFiles = files.slice(0, 10 - uploadedImages.length) // Limit to 10 images total
-    if (newFiles.length < files.length) {
-      toast.error('Maximum 10 images allowed')
-    }
+  const handleFileUpload = useCallback(async (files: File[]) => {
+    try {
+      const uploadedUrls: string[] = []
 
-    setUploadedImages(prev => [...prev, ...newFiles])
+      for (const file of files) {
+        console.log('Uploading file:', {
+          name: file.name,
+          type: file.type,
+          size: file.size
+        })
 
-    // Create preview URLs
-    newFiles.forEach(file => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setUploadedImagePreviews(prev => [...prev, reader.result as string])
+        const response = await fetch('/api/admin/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: file.name,
+            contentType: file.type
+          })
+        })
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error('Failed to get upload URL:', errorText)
+          throw new Error('Failed to get upload URL')
+        }
+
+        const { presignedUrl, publicUrl } = await response.json()
+
+        const uploadResponse = await fetch(presignedUrl, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': file.type,
+          }
+        })
+
+        if (!uploadResponse.ok) {
+          throw new Error(`Upload failed: ${uploadResponse.statusText}`)
+        }
+
+        if (!isValidUrl(publicUrl)) {
+          throw new Error(`Invalid URL received from server: ${publicUrl}`)
+        }
+
+        uploadedUrls.push(publicUrl)
       }
-      reader.readAsDataURL(file)
-    })
-  }, [uploadedImages.length])
+
+      // Update imageUrls state with the new URLs
+      setImageUrls(prev => [
+        ...prev,
+        ...uploadedUrls.map(url => ({ url, isMain: prev.length === 0 }))
+      ].filter(img => isValidUrl(img.url)))
+
+      toast.success('Images uploaded successfully')
+    } catch (error) {
+      console.error('Upload error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to upload images')
+    }
+  }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -100,311 +180,573 @@ export function TrendsTab() {
     handleFileUpload(files)
   }, [handleFileUpload])
 
-  const removeUploadedImage = (index: number) => {
-    setUploadedImages(prev => prev.filter((_, i) => i !== index))
-    setUploadedImagePreviews(prev => prev.filter((_, i) => i !== index))
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
     try {
-      // Validate form data
-      if (!formData.title.trim()) throw new Error('Title is required')
-      if (!formData.description.trim()) throw new Error('Description is required')
-      if (!formData.type.trim()) throw new Error('Type is required')
-      if (formData.imageUrls[0].trim().length === 0 && uploadedImages.length === 0) {
-        throw new Error('At least one image is required')
-      }
-      if (!formData.spreadsheetUrl.trim()) throw new Error('Google Spreadsheet URL is required')
-
-      // First, upload any files
-      const uploadedUrls: string[] = []
-      if (uploadedImages.length > 0) {
-        const formData = new FormData()
-        uploadedImages.forEach(file => {
-          formData.append('files', file)
-        })
-
-        const uploadResponse = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        })
-
-        if (!uploadResponse.ok) throw new Error('Failed to upload images')
-        const uploadedData = await uploadResponse.json()
-        uploadedUrls.push(...uploadedData.urls)
+      const validImageUrls = imageUrls.filter(img => isValidUrl(img.url)).map(img => img.url)
+      if (validImageUrls.length === 0) {
+        throw new Error('At least one valid image URL is required')
       }
 
-      // Create the trend
-      const response = await fetch('/api/admin/trends', {
-        method: 'POST',
+      const mainImageIndex = imageUrls.findIndex(img => img.isMain)
+
+      const response = await fetch(`/api/admin/trends${isEditMode && selectedTrend ? `/${selectedTrend.id}` : ''}`, {
+        method: isEditMode ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
-          imageUrls: [
-            ...formData.imageUrls.filter(url => url.trim()),
-            ...uploadedUrls
-          ],
+          title: formData.title,
+          description: formData.description,
+          type: formData.type,
+          imageUrls: validImageUrls,
+          mainImageIndex: mainImageIndex >= 0 ? mainImageIndex : 0,
+          spreadsheetUrl: formData.spreadsheetUrl
         }),
       })
 
-      if (!response.ok) throw new Error('Failed to create trend')
+      if (!response.ok) throw new Error(`Failed to ${isEditMode ? 'update' : 'create'} trend`)
 
       const newTrend = await response.json()
-      setTrends([...trends, newTrend])
+      
+      if (isEditMode) {
+        setTrends(trends.map(t => t.id === newTrend.id ? newTrend : t))
+      } else {
+        setTrends([...trends, newTrend])
+      }
+
       setIsModalOpen(false)
-      setFormData({
-        title: '',
-        description: '',
-        type: '',
-        imageUrls: [''],
-        mainImageIndex: 0,
-        spreadsheetUrl: ''
-      })
-      setUploadedImages([])
-      setUploadedImagePreviews([])
-      toast.success('Trend created successfully')
+      resetForm()
+      toast.success(`Trend ${isEditMode ? 'updated' : 'created'} successfully`)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to create trend')
+      toast.error(error instanceof Error ? error.message : `Failed to ${isEditMode ? 'update' : 'create'} trend`)
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const renderTabContent = () => {
-    switch (currentTab) {
-      case 'details':
-        return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label htmlFor="title" className="text-sm font-medium text-foreground">
-                Title
-              </label>
-              <input
-                type="text"
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
-                placeholder="Enter trend title"
-                required
-              />
-            </div>
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      type: '',
+      imageUrls: [''],
+      mainImageIndex: 0,
+      spreadsheetUrl: ''
+    })
+    setImageUrls([{ url: '', isMain: true }])
+    setIsEditMode(false)
+    setSelectedTrend(null)
+  }
 
-            <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-medium text-foreground">
-                Description
-              </label>
-              <textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all min-h-[100px]"
-                placeholder="Enter trend description"
-                required
-              />
-            </div>
+  const handleEditClick = (trend: Trend) => {
+    setSelectedTrend(trend)
+    setIsEditMode(true)
+    setFormData({
+      title: trend.title,
+      description: trend.description,
+      type: trend.type,
+      imageUrls: trend.imageUrls,
+      mainImageIndex: trend.mainImageIndex,
+      spreadsheetUrl: trend.spreadsheetUrl || ''
+    })
+    setImageUrls(
+      trend.imageUrls.map((url, index) => ({
+        url,
+        isMain: index === trend.mainImageIndex
+      }))
+    )
+    setIsModalOpen(true)
+    setIsDetailModalOpen(false)
+  }
 
-            <div className="space-y-2">
-              <label htmlFor="type" className="text-sm font-medium text-foreground">
-                Type
-              </label>
-              <input
-                type="text"
-                id="type"
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
-                placeholder="Enter trend type (e.g., Fashion, Technology)"
-                required
-              />
-            </div>
+  const handleProcessSpreadsheet = async () => {
+    if (!formData.spreadsheetUrl) {
+      toast.error('No spreadsheet URL provided')
+      return
+    }
+
+    try {
+      setIsProcessingSpreadsheet(true)
+      const trendId = selectedTrend?.id
+      if (!trendId) {
+        throw new Error("No trend selected")
+      }
+      const response = await fetch(`/api/admin/trends/${trendId}/spreadsheet`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spreadsheetUrl: formData.spreadsheetUrl }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to process spreadsheet')
+      }
+
+      const updatedTrend = await response.json()
+      setTrends(trends.map(t => t.id === updatedTrend.id ? updatedTrend : t))
+      toast.success('Spreadsheet data processed successfully')
+    } catch (error) {
+      console.error('Failed to process spreadsheet:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to process spreadsheet data')
+    } finally {
+      setIsProcessingSpreadsheet(false)
+    }
+  }
+
+  const renderDetailsTab = () => (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="title">Title</Label>
+        <Input
+          id="title"
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          placeholder="Enter trend title"
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder="Enter trend description"
+          required
+          rows={4}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="type">Type</Label>
+        <select
+          id="type"
+          value={formData.type}
+          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+          className="w-full px-3 py-2 border rounded-lg bg-background text-foreground"
+          required
+        >
+          <option value="">Select type</option>
+          <option value="Fashion">Fashion</option>
+          <option value="Technology">Technology</option>
+          <option value="Lifestyle">Lifestyle</option>
+          <option value="Business">Business</option>
+        </select>
+      </div>
+    </div>
+  )
+
+  const renderImagesTab = () => (
+    <div className="space-y-8">
+      {/* Upload Area */}
+      <div 
+        className={`relative border-2 border-dashed rounded-lg p-8 transition-colors ${
+          isDragging ? 'border-primary bg-primary/5' : 'border-border'
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          onChange={(e) => handleFileUpload(Array.from(e.target.files || []))}
+        />
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+            <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
           </div>
-        )
+          <div>
+            <p className="text-lg font-medium">Drop images here or click to upload</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Support for PNG, JPG, JPEG, GIF up to 5MB
+            </p>
+          </div>
+        </div>
+      </div>
 
-      case 'images':
-        return (
-          <div className="space-y-6">
-            {/* Image Upload Zone */}
-            <div 
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                isDragging ? 'border-primary bg-primary/5' : 'border-border'
-              }`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
+      {/* Image URLs */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <Label>Image URLs</Label>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={addImageUrl}
+          >
+            Add URL
+          </Button>
+        </div>
+        
+        {imageUrls.map((img, index) => (
+          <div key={index} className="flex gap-2">
+            <Input
+              value={img.url}
+              onChange={(e) => handleImageUrlChange(index, e.target.value)}
+              placeholder="Enter image URL"
+            />
+            <Button
+              type="button"
+              variant={img.isMain ? "default" : "outline"}
+              size="icon"
+              onClick={() => setMainImage(index)}
+              className="shrink-0"
             >
-              <div className="space-y-4">
-                <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-lg font-medium">Drag and drop your images here</p>
-                  <p className="text-sm text-muted-foreground mt-1">or click to browse</p>
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => handleFileUpload(Array.from(e.target.files || []))}
-                />
-                <p className="text-sm text-muted-foreground mt-4">
-                  You can upload up to 10 images. Supported formats: PNG, JPG, JPEG, GIF
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Images will be resized and optimized automatically. Maximum file size: 5MB
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Don&apos;t forget to set your main image after uploading
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  You can also provide image URLs instead of uploading files
-                </p>
-              </div>
-            </div>
+              {img.isMain ? (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              onClick={() => removeImageUrl(index)}
+              className="shrink-0"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </Button>
+          </div>
+        ))}
+      </div>
 
-            {/* Image Previews */}
-            {(uploadedImagePreviews.length > 0 || formData.imageUrls.some(url => url.trim())) && (
-              <div className="space-y-4">
-                <h3 className="font-medium">Added Images</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {uploadedImagePreviews.map((preview, index) => (
-                    <div key={`upload-${index}`} className="relative group aspect-video">
-                      <Image
-                        src={preview}
-                        alt={`Upload preview ${index + 1}`}
-                        width={300}
-                        height={200}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                        <button
-                          type="button"
-                          onClick={() => removeUploadedImage(index)}
-                          className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  {formData.imageUrls.map((url, index) => url.trim() && (
-                    <div key={`url-${index}`} className="relative group aspect-video">
-                      <Image
-                        src={url}
-                        alt={`URL preview ${index + 1}`}
-                        width={300}
-                        height={200}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                        <button
-                          type="button"
-                          onClick={() => removeImageUrl(index)}
-                          className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+      {/* Image Previews */}
+      {imageUrls.some(img => isValidUrl(img.url)) && (
+        <div className="space-y-4">
+          <Label>Preview</Label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {imageUrls.map((img, index) => {
+              if (!img.url || !isValidUrl(img.url)) return null;
+              
+              return (
+                <div key={`url-${index}`} className="relative group aspect-video">
+                  <Image
+                    src={img.url || '/placeholder-image.jpg'}
+                    alt={`Preview ${index + 1}`}
+                    fill
+                    className="object-cover rounded-lg"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/placeholder-image.jpg';
+                      toast.error(`Failed to load image: ${img.url}`);
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
+                    <Button
+                      type="button"
+                      variant={img.isMain ? "default" : "secondary"}
+                      size="sm"
+                      onClick={() => setMainImage(index)}
+                    >
+                      {img.isMain ? 'Main' : 'Set Main'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => removeImageUrl(index)}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </Button>
+                  </div>
                 </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  const renderDataTab = () => (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="spreadsheet">Google Spreadsheet URL</Label>
+        <div className="flex gap-2">
+          <Input
+            id="spreadsheet"
+            type="url"
+            value={formData.spreadsheetUrl}
+            onChange={(e) => setFormData({ ...formData, spreadsheetUrl: e.target.value })}
+            placeholder="Enter Google Spreadsheet URL"
+          />
+          {isEditMode && (
+            <Button
+              type="button"
+              onClick={handleProcessSpreadsheet}
+              disabled={isProcessingSpreadsheet || !formData.spreadsheetUrl}
+            >
+              {isProcessingSpreadsheet ? (
+                <>
+                  <Spinner className="mr-2 h-4 w-4" />
+                  Processing...
+                </>
+              ) : (
+                'Process Data'
+              )}
+            </Button>
+          )}
+        </div>
+        <p className="text-sm text-muted-foreground">
+          The spreadsheet should have &apos;trend&apos; and &apos;date&apos; columns
+        </p>
+      </div>
+
+      {/* Add Data Preview Section */}
+      {selectedTrend?.data && selectedTrend.data.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="font-medium">Data Preview</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border">
+              <thead>
+                <tr>
+                  <th className="px-4 py-2 text-left">Month</th>
+                  <th className="px-4 py-2 text-left">Actual</th>
+                  <th className="px-4 py-2 text-left">Forecast</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {selectedTrend.data.map((item, index) => (
+                  <tr key={index}>
+                    <td className="px-4 py-2">{item.month}</td>
+                    <td className="px-4 py-2">{item.actual ?? '—'}</td>
+                    <td className="px-4 py-2">{item.forecast}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            <p>• Historical data points: {selectedTrend.data.filter(d => d.actual !== null).length}</p>
+            <p>• Forecast points: {selectedTrend.data.filter(d => d.actual === null).length}</p>
+            <p>• Maximum value: {Math.max(...selectedTrend.data.map(d => Math.max(d.actual ?? 0, d.forecast)))}</p>
+            <p>• Average value: {(selectedTrend.data.reduce((sum, d) => sum + (d.actual ?? d.forecast), 0) / selectedTrend.data.length).toFixed(2)}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  const handleDeleteTrend = async (trendId: string) => {
+    try {
+      setIsDeleting(true)
+      const response = await fetch(`/api/admin/trends/${trendId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete trend')
+      }
+
+      // Remove trend from local state
+      setTrends(trends.filter(t => t.id !== trendId))
+      setSelectedTrend(null)
+      setIsDetailModalOpen(false)
+      toast.success('Trend deleted successfully')
+    } catch {
+      toast.error('Failed to delete trend')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const renderDetailModal = () => {
+    if (!selectedTrend) return null
+
+    return (
+      <Modal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        title="Trend Details"
+      >
+        <div className="space-y-6">
+          {/* Trend Images */}
+          <div className="aspect-video relative rounded-lg overflow-hidden">
+            {selectedTrend.imageUrls?.[selectedTrend.mainImageIndex] ? (
+              <Image
+                src={selectedTrend.imageUrls[selectedTrend.mainImageIndex]}
+                alt={selectedTrend.title || 'Trend image'}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-muted flex items-center justify-center">
+                <span className="text-muted-foreground">No image</span>
               </div>
             )}
-
-            {/* Image URL Input */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-medium">Add Image URLs</h3>
-                <button
-                  type="button"
-                  onClick={addImageUrl}
-                  className="text-sm text-primary hover:text-primary/90 transition-colors"
-                >
-                  + Add URL
-                </button>
-              </div>
-              {formData.imageUrls.map((url, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={url}
-                    onChange={(e) => handleImageUrlChange(index, e.target.value)}
-                    className="flex-1 px-3 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
-                    placeholder="Enter image URL"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImageUrl(index)}
-                    className="p-2 text-destructive hover:text-destructive/90 transition-colors"
-                    disabled={formData.imageUrls.length === 1 && index === 0}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
           </div>
-        )
 
-      case 'data':
-        return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label htmlFor="spreadsheet" className="text-sm font-medium text-foreground">
-                Google Spreadsheet URL
-              </label>
-              <input
-                type="url"
-                id="spreadsheet"
-                value={formData.spreadsheetUrl}
-                onChange={(e) => setFormData({ ...formData, spreadsheetUrl: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
-                placeholder="Enter Google Spreadsheet URL"
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                The spreadsheet should have &apos;trend&apos; and &apos;date&apos; columns
+          {/* Trend Information */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground">Title</h3>
+              <p className="text-lg">{selectedTrend.title}</p>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground">Description</h3>
+              <p className="text-base">{selectedTrend.description}</p>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground">Type</h3>
+              <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
+                {selectedTrend.type}
+              </span>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground">Created At</h3>
+              <p className="text-base">
+                {new Date(selectedTrend.createdAt).toLocaleDateString()}
               </p>
             </div>
 
-            <div className="rounded-lg border p-4 bg-muted/50">
-              <h4 className="font-medium mb-2">Spreadsheet Requirements</h4>
-              <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-                <li>Must be a publicly accessible Google Spreadsheet</li>
-                <li>Required columns: &apos;trend&apos; (numeric values) and &apos;date&apos; (YYYY-MM-DD format)</li>
-                <li>Data should be sorted by date in ascending order</li>
-                <li>Minimum of 6 months of historical data recommended</li>
-              </ul>
+            {/* Image Gallery */}
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-2">All Images</h3>
+              <div className="grid grid-cols-4 gap-2">
+                {selectedTrend.imageUrls?.map((url, index) => {
+                  if (!url) return null;
+                  return (
+                    <div key={index} className="relative aspect-video rounded-lg overflow-hidden">
+                      <Image
+                        src={url}
+                        alt={`${selectedTrend.title || 'Trend'} - Image ${index + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                      {index === selectedTrend.mainImageIndex && (
+                        <div className="absolute top-1 right-1 bg-primary text-primary-foreground text-xs px-1 rounded">
+                          Main
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        )
-    }
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 pt-6 border-t">
+            <Button
+              variant="secondary"
+              onClick={() => handleEditClick(selectedTrend!)}
+            >
+              Edit
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">
+                  Delete Trend
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the trend
+                    and remove all associated data.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => handleDeleteTrend(selectedTrend.id)}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            
+            <Button
+              variant="outline"
+              onClick={() => setIsDetailModalOpen(false)}
+            >
+              Close
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    )
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Trends Management</h2>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-        >
+        <h2 className="text-2xl font-semibold">Trends</h2>
+        <Button onClick={() => setIsModalOpen(true)}>
           Add New Trend
-        </button>
+        </Button>
       </div>
 
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => {
+          setIsModalOpen(false)
+          resetForm()
+        }}
+        title={isEditMode ? "Edit Trend" : "Create New Trend"}
+      >
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value as 'details' | 'images' | 'data')} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="images">Images</TabsTrigger>
+              <TabsTrigger value="data">Data</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="details" className="pt-4">
+              {renderDetailsTab()}
+            </TabsContent>
+
+            <TabsContent value="images" className="pt-4">
+              {renderImagesTab()}
+            </TabsContent>
+
+            <TabsContent value="data" className="pt-4">
+              {renderDataTab()}
+            </TabsContent>
+          </Tabs>
+
+          <div className="flex justify-end gap-3 pt-6 border-t">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Trend' : 'Create Trend')}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Trends Grid */}
       {isLoading ? (
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
@@ -413,16 +755,26 @@ export function TrendsTab() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {trends.map(trend => (
-            <Card key={trend.id} className="p-4">
+            <Card 
+              key={trend.id} 
+              className="p-4 cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => {
+                setSelectedTrend(trend)
+                setIsDetailModalOpen(true)
+              }}
+            >
               <div className="aspect-video relative mb-4 rounded-lg overflow-hidden">
-                {trend.imageUrls[0] && (
+                {trend.imageUrls?.[trend.mainImageIndex] ? (
                   <Image 
-                    src={trend.imageUrls[0]} 
-                    alt={trend.title}
-                    width={300}
-                    height={200}
-                    className="w-full h-full object-cover rounded-lg"
+                    src={trend.imageUrls[trend.mainImageIndex]}
+                    alt={trend.title || 'Trend image'}
+                    fill
+                    className="object-cover"
                   />
+                ) : (
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <span className="text-muted-foreground">No image</span>
+                  </div>
                 )}
               </div>
               <h3 className="text-lg font-semibold mb-2">{trend.title}</h3>
@@ -440,67 +792,8 @@ export function TrendsTab() {
         </div>
       )}
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Create New Trend">
-        <div className="mb-6">
-          <div className="flex border-b">
-            {(['details', 'images', 'data'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setCurrentTab(tab)}
-                className={`px-4 py-2 -mb-px text-sm font-medium transition-colors ${
-                  currentTab === tab
-                    ? 'border-b-2 border-primary text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {renderTabContent()}
-
-          <div className="flex justify-between items-center pt-6 border-t">
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Cancel
-            </button>
-            <div className="flex gap-3">
-              {currentTab !== 'details' && (
-                <button
-                  type="button"
-                  onClick={() => setCurrentTab(currentTab === 'images' ? 'details' : 'images')}
-                  className="px-4 py-2 text-primary hover:text-primary/90 transition-colors"
-                >
-                  Previous
-                </button>
-              )}
-              {currentTab !== 'data' ? (
-                <button
-                  type="button"
-                  onClick={() => setCurrentTab(currentTab === 'details' ? 'images' : 'data')}
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  Next
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Creating...' : 'Create Trend'}
-                </button>
-              )}
-            </div>
-          </div>
-        </form>
-      </Modal>
+      {/* Render Detail Modal */}
+      {renderDetailModal()}
     </div>
   )
 } 

@@ -2,15 +2,17 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['images.unsplash.com', 'picsum.photos'],
-    // Optional: You can also use remotePatterns for more secure configuration
-    // remotePatterns: [
-    //   {
-    //     protocol: 'https',
-    //     hostname: 'images.unsplash.com',
-    //     pathname: '/**',
-    //   },
-    // ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.s3.*.amazonaws.com',
+        pathname: '/trends/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '**', // For other external URLs
+      }
+    ],
   },
   i18n: {
     locales: ['en', 'ru'],

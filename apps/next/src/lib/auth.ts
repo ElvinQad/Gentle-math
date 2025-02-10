@@ -138,8 +138,9 @@ export const authConfig: NextAuthOptions = {
     }),
   ],
   pages: {
-    signIn: '/',
+    signIn: '/auth/signin',
     error: '/auth/error',
+    signOut: '/auth/signout',
   },
   events: {
     async signIn({ user, account }) {

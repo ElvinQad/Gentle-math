@@ -27,12 +27,13 @@ export default withAuth({
   },
 });
 
-// Configure middleware paths
+// Configure middleware paths to only protect specific routes
 export const config = {
   matcher: [
     '/dashboard/:path*',
     '/admin/:path*',
-    '/api/:path*',
-    '/((?!api/auth|auth|api/user/activity).*)',
+    '/api/admin/:path*',
+    '/api/user/:path*',
+    '/api/trends/:path*',
   ],
 };

@@ -5,8 +5,6 @@ import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { isUserAdmin } from '@/lib/user-helpers';
-
-// Create a context to manage modal state
 import { createContext, useContext } from 'react';
 
 export const ModalContext = createContext<{
@@ -53,7 +51,6 @@ export function DashboardNav() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Add this helper function to check if a path is active
   const isPathActive = (path: string) => {
     if (path === '/dashboard') {
       return pathname === '/dashboard' || pathname === '/dashboard/trends';
@@ -62,22 +59,21 @@ export function DashboardNav() {
   };
 
   if (isMobile) {
-    if (isModalOpen) return null; // Hide navigation when modal is open
+    if (isModalOpen) return null;
 
     return (
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30">
+      <nav className="fixed bottom-0 left-0 right-0 bg-[hsl(var(--card))] border-t border-[hsl(var(--border))] z-30">
         <div className="flex justify-around items-center h-16">
-          {/* Profile Link */}
           <Link
             href="/dashboard/profile"
             className={`flex flex-col items-center justify-center px-3 py-2 rounded-lg transition-colors
               ${
                 pathname === '/dashboard/profile'
-                  ? 'text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-[hsl(var(--primary))]'
+                  : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
               }`}
           >
-            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
+            <div className="w-5 h-5 rounded-full bg-[hsl(var(--primary))]/10 flex items-center justify-center text-xs font-medium text-[hsl(var(--primary))]">
               {session?.user?.name?.[0] || session?.user?.email?.[0] || '?'}
             </div>
             <span className="text-xs mt-1">Profile</span>
@@ -85,7 +81,7 @@ export function DashboardNav() {
 
           <button
             onClick={() => signOut()}
-            className="flex flex-col items-center justify-center px-3 py-2 text-muted-foreground hover:text-destructive transition-colors"
+            className="flex flex-col items-center justify-center px-3 py-2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] transition-colors"
           >
             <LogOutIcon className="w-5 h-5" />
             <span className="text-xs mt-1">Sign out</span>
@@ -99,27 +95,24 @@ export function DashboardNav() {
     <nav
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
-      className={`fixed top-0 left-0 h-screen border-r border-border bg-card flex flex-col z-30
+      className={`fixed top-0 left-0 h-screen border-r border-[hsl(var(--border))] bg-[hsl(var(--card))] flex flex-col z-30
         transition-all duration-300 ease-in-out hidden md:flex
         ${isExpanded ? 'w-64 shadow-lg' : 'w-20'}`}
     >
-      {/* Header */}
       <div
-        className={`p-6 border-b border-border overflow-hidden whitespace-nowrap ${isExpanded ? '' : 'text-center'}`}
+        className={`p-6 border-b border-[hsl(var(--border))] overflow-hidden whitespace-nowrap ${isExpanded ? '' : 'text-center'}`}
       >
         <Link
           href="/"
-          className="text-2xl font-bold transition-all duration-300 hover:scale-105 text-foreground hover:text-primary"
+          className="text-2xl font-bold transition-all duration-300 hover:scale-105 text-[hsl(var(--foreground))] hover:text-[hsl(var(--primary))]"
         >
           {isExpanded ? 'Gentle-math' : 'G'}
         </Link>
       </div>
 
-      {/* Navigation Links */}
       <div className={`flex-1 py-6 ${isExpanded ? 'overflow-y-auto' : 'overflow-hidden'}`}>
         <div className="px-3 space-y-1">
           {navItems.map((item) => {
-            // Skip admin-only items for non-admin users
             if (item.adminOnly && !isAdmin) return null;
 
             return (
@@ -129,8 +122,8 @@ export function DashboardNav() {
                 className={`flex items-center px-3 py-2 rounded-lg mb-1 transition-colors group relative
                   ${
                     isPathActive(item.href)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                      ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]'
+                      : 'text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--foreground))]'
                   }`}
               >
                 {item.icon && <item.icon className="w-5 h-5 flex-shrink-0" />}
@@ -142,7 +135,7 @@ export function DashboardNav() {
                   {item.title}
                 </span>
                 {!isExpanded && (
-                  <div className="absolute left-20 px-2 py-1 bg-popover text-popover-foreground rounded-md opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50">
+                  <div className="absolute left-20 px-2 py-1 bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] rounded-md opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50">
                     {item.title}
                   </div>
                 )}
@@ -152,17 +145,15 @@ export function DashboardNav() {
         </div>
       </div>
 
-      {/* User Profile & Settings */}
-      <div className={`p-4 border-t border-border space-y-4 ${isExpanded ? '' : 'items-center'}`}>
-        {/* User Profile */}
+      <div className={`p-4 border-t border-[hsl(var(--border))] space-y-4 ${isExpanded ? '' : 'items-center'}`}>
         <div className="px-3 py-2 space-y-3">
           <Link
             href="/dashboard/profile"
-            className={`flex items-center w-full rounded-lg transition-colors hover:bg-accent group relative ${isExpanded ? 'space-x-3' : 'justify-center'} ${
-              pathname === '/dashboard/profile' ? 'bg-primary text-primary-foreground' : ''
+            className={`flex items-center w-full rounded-lg transition-colors hover:bg-[hsl(var(--accent))] group relative ${isExpanded ? 'space-x-3' : 'justify-center'} ${
+              pathname === '/dashboard/profile' ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : ''
             }`}
           >
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-lg font-medium text-primary flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-[hsl(var(--primary))]/10 flex items-center justify-center text-lg font-medium text-[hsl(var(--primary))] flex-shrink-0">
               {session?.user?.name?.[0] || session?.user?.email?.[0] || '?'}
             </div>
             <div
@@ -170,21 +161,21 @@ export function DashboardNav() {
                 isExpanded ? 'opacity-100 relative' : 'opacity-0 absolute pointer-events-none'
               }`}
             >
-              <p className="text-sm font-medium text-foreground truncate">
+              <p className="text-sm font-medium text-[hsl(var(--foreground))] truncate">
                 {session?.user?.name || 'User'}
               </p>
-              <p className="text-xs text-muted-foreground truncate">{session?.user?.email}</p>
+              <p className="text-xs text-[hsl(var(--muted-foreground))] truncate">{session?.user?.email}</p>
             </div>
             {!isExpanded && (
-              <div className="absolute left-20 px-2 py-1 bg-popover text-popover-foreground rounded-md opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50">
+              <div className="absolute left-20 px-2 py-1 bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] rounded-md opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50">
                 View Profile
               </div>
             )}
           </Link>
           <button
             onClick={() => signOut()}
-            className={`flex items-center px-3 py-2 rounded-lg text-sm text-muted-foreground 
-              hover:bg-destructive/10 hover:text-destructive transition-colors w-full
+            className={`flex items-center px-3 py-2 rounded-lg text-sm text-[hsl(var(--muted-foreground))] 
+              hover:bg-[hsl(var(--destructive))]/10 hover:text-[hsl(var(--destructive))] transition-colors w-full
               ${isExpanded ? '' : 'justify-center'} group relative`}
           >
             <LogOutIcon className="w-4 h-4 flex-shrink-0" />
@@ -196,7 +187,7 @@ export function DashboardNav() {
               Sign out
             </span>
             {!isExpanded && (
-              <div className="absolute left-20 px-2 py-1 bg-popover text-popover-foreground rounded-md opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50">
+              <div className="absolute left-20 px-2 py-1 bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] rounded-md opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50">
                 Sign out
               </div>
             )}

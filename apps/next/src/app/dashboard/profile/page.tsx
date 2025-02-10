@@ -118,7 +118,7 @@ export default function ProfilePage() {
 
       <div className="grid gap-8 md:grid-cols-2">
         {/* Profile Information */}
-        <section className="bg-card rounded-lg p-6 shadow-sm border border-border">
+        <section className="bg-card rounded-lg p-6 shadow-xs border border-border">
           <h2 className="text-2xl font-bold mb-6">Profile Information</h2>
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
@@ -139,7 +139,7 @@ export default function ProfilePage() {
                   disabled={!isEditing}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all disabled:opacity-50"
+                  className="w-full px-3 py-2 border rounded-lg bg-background text-foreground ring-primary/50 focus:ring-1 focus:border-primary outline-none transition-colors disabled:opacity-50"
                 />
               </div>
               <div>
@@ -148,7 +148,7 @@ export default function ProfilePage() {
                   type="email"
                   disabled
                   value={session?.user?.email || ''}
-                  className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all disabled:opacity-50"
+                  className="w-full px-3 py-2 border rounded-lg bg-background text-foreground ring-primary/50 focus:ring-1 focus:border-primary outline-none transition-colors disabled:opacity-50"
                 />
               </div>
               <button

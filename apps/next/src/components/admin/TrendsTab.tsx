@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { signOut } from 'next-auth/react';
 
 interface ImagePreview {
   url: string;
@@ -209,6 +210,11 @@ export function TrendsTab() {
 
       const mainImageIndex = imageUrls.findIndex((img) => img.isMain);
 
+      // Validate spreadsheet URL if provided
+      if (formData.spreadsheetUrl && !formData.spreadsheetUrl.includes('docs.google.com/spreadsheets')) {
+        throw new Error('Please provide a valid Google Spreadsheet URL');
+      }
+
       const response = await fetch(
         `/api/admin/trends${isEditMode && selectedTrend ? `/${selectedTrend.id}` : ''}`,
         {
@@ -220,12 +226,15 @@ export function TrendsTab() {
             type: formData.type,
             imageUrls: validImageUrls,
             mainImageIndex: mainImageIndex >= 0 ? mainImageIndex : 0,
-            spreadsheetUrl: formData.spreadsheetUrl,
+            spreadsheetUrl: formData.spreadsheetUrl.trim(),
           }),
         },
       );
 
-      if (!response.ok) throw new Error(`Failed to ${isEditMode ? 'update' : 'create'} trend`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `Failed to ${isEditMode ? 'update' : 'create'} trend`);
+      }
 
       const newTrend = await response.json();
 
@@ -238,6 +247,11 @@ export function TrendsTab() {
       setIsModalOpen(false);
       resetForm();
       toast.success(`Trend ${isEditMode ? 'updated' : 'created'} successfully`);
+
+      // Show a warning if spreadsheet URL was provided but no data was processed
+      if (formData.spreadsheetUrl && (!newTrend.analytics || newTrend.analytics.length === 0)) {
+        toast.warning('Trend was created but spreadsheet data could not be processed. Please check the spreadsheet URL and permissions.');
+      }
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -303,7 +317,25 @@ export function TrendsTab() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to process spreadsheet');
+        const errorData = await response.json().catch(() => null);
+        const errorMessage = errorData?.message || 'Failed to process spreadsheet';
+        
+        if (errorMessage.includes('Google authentication required')) {
+          toast.error(
+            'Google Sign-in Required',
+            {
+              description: 'Please sign out and sign in with Google to access spreadsheet data.',
+              action: {
+                label: 'Sign Out',
+                onClick: () => signOut({ callbackUrl: '/' })
+              },
+              duration: 10000
+            }
+          );
+          return;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const updatedTrend = await response.json();
@@ -556,9 +588,14 @@ export function TrendsTab() {
             </Button>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">
-          The spreadsheet should have &apos;trend&apos; and &apos;date&apos; columns
-        </p>
+        <div className="text-sm space-y-1">
+          <p className="text-muted-foreground">
+            The spreadsheet should have &apos;trend&apos; and &apos;date&apos; columns
+          </p>
+          <p className="text-yellow-600 dark:text-yellow-500">
+            Note: You must be signed in with Google to process spreadsheet data. If you&apos;re using regular login, you&apos;ll need to sign out and sign in with Google first.
+          </p>
+        </div>
       </div>
 
       {/* Add Data Preview Section */}
@@ -577,7 +614,7 @@ export function TrendsTab() {
               <tbody className="divide-y divide-border">
                 {selectedTrend.analytics[0].dates.map((date, index) => (
                   <tr key={index}>
-                    <td className="px-4 py-2">{date.toISOString().slice(0, 7)}</td>
+                    <td className="px-4 py-2">{new Date(date).toISOString().slice(0, 7)}</td>
                     <td className="px-4 py-2">{selectedTrend.analytics[0].values[index] ?? '—'}</td>
                     <td className="px-4 py-2">{selectedTrend.analytics[0].values[index]}</td>
                   </tr>
@@ -640,7 +677,7 @@ export function TrendsTab() {
     // Convert analytics to chart data format
     const chartData = selectedTrend?.analytics?.[0]
       ? selectedTrend.analytics[0].dates.map((date, i) => ({
-          month: date.toISOString().slice(0, 7),
+          month: new Date(date).toISOString().slice(0, 7),
           actual: selectedTrend.analytics[0].values[i],
           forecast: selectedTrend.analytics[0].values[i],
         }))

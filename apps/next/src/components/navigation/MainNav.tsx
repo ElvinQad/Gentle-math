@@ -32,13 +32,21 @@ export function MainNav() {
     <>
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
-          isHome ? 'bg-transparent' : 'bg-background border-b'
+          isHome ? 'bg-transparent' : 'bg-[hsl(var(--background))] border-b border-[hsl(var(--border))]'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex justify-between items-center py-4 md:py-6">
             <Link href="/" className="text-2xl font-bold">
-              <span className={isHome ? 'text-white' : 'text-foreground'}>Gentle-math</span>
+              <span 
+                className={
+                  isHome 
+                    ? 'text-white font-bold' 
+                    : 'text-[hsl(var(--foreground))] font-bold'
+                }
+              >
+                Gentle-math
+              </span>
             </Link>
 
             {/* Desktop navigation */}
@@ -50,10 +58,10 @@ export function MainNav() {
                   onClick={(e) => handleAuthClick(e, requiresAuth)}
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     pathname === href
-                      ? 'bg-primary/10 text-primary'
+                      ? 'bg-[hsl(var(--primary))/0.1] text-[hsl(var(--primary))]'
                       : isHome
                         ? 'text-white hover:bg-white/10'
-                        : 'text-foreground hover:bg-accent'
+                        : 'text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))]'
                   }`}
                 >
                   {label}
@@ -63,7 +71,7 @@ export function MainNav() {
               {session ? (
                 <button
                   onClick={() => signOut()}
-                  className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-accent transition-colors"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] transition-colors"
                 >
                   {t('common.logout')}
                 </button>
@@ -71,13 +79,13 @@ export function MainNav() {
                 <>
                   <button
                     onClick={() => setIsLoginOpen(true)}
-                    className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-accent transition-colors"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] transition-colors"
                   >
                     {t('common.login')}
                   </button>
                   <button
                     onClick={() => setIsRegisterOpen(true)}
-                    className="px-3 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                    className="px-3 py-2 rounded-md text-sm font-medium bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))/0.9] transition-colors"
                   >
                     {t('common.register')}
                   </button>
@@ -90,7 +98,7 @@ export function MainNav() {
               {session ? (
                 <button
                   onClick={() => signOut()}
-                  className="p-2 rounded-md text-sm font-medium text-foreground hover:bg-accent transition-colors"
+                  className="p-2 rounded-md text-sm font-medium text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent))] transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -104,7 +112,7 @@ export function MainNav() {
               ) : (
                 <button
                   onClick={() => setIsLoginOpen(true)}
-                  className="p-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                  className="p-2 rounded-md text-sm font-medium bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))/0.9] transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path

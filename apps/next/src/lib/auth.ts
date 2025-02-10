@@ -178,18 +178,40 @@ export const authConfig: NextAuthOptions = {
         // Check if user exists
         const existingUser = await prisma.user.findUnique({
           where: { email: user.email || undefined },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            image: true,
+            isAdmin: true,
+            emailVerified: true,
+          },
         });
 
         // If user doesn't exist, create one
         if (!existingUser && user.email) {
-          await prisma.user.create({
+          const newUser = await prisma.user.create({
             data: {
               email: user.email,
               name: user.name,
               image: user.image,
               emailVerified: new Date(),
+              // Set isAdmin based on your criteria, e.g., first user or specific email domains
+              isAdmin: false,
+            },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              image: true,
+              isAdmin: true,
             },
           });
+          // Update the user object with admin status
+          user.isAdmin = newUser.isAdmin;
+        } else if (existingUser) {
+          // Update the user object with existing admin status
+          user.isAdmin = existingUser.isAdmin;
         }
 
         return true;

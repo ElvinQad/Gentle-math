@@ -94,7 +94,7 @@ export default function TrendsPage() {
             <div className="space-y-6 py-8 md:py-12">
               <h1 className="text-4xl md:text-6xl font-bold leading-tight">
                 {t('trends.hero.title')}
-                <span className="block bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
+                <span className="block bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-blue-400">
                   {t('trends.hero.subtitle')}
                 </span>
               </h1>

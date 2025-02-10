@@ -7,20 +7,20 @@ export default function AboutPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="min-h-screen pt-24 bg-background">
+    <div className="min-h-screen pt-24 bg-[hsl(var(--background))]">
       <div className="max-w-7xl mx-auto px-6">
         {/* Hero Section */}
         <section className="mb-32 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-400/10 rounded-3xl -z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--primary)_/_0.1)] to-[hsl(206_100%_50%_/_0.1)] rounded-3xl -z-10" />
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6 py-8 md:py-12">
-              <h1 className="text-4xl md:text-6xl font-bold leading-tight">
+              <h1 className="text-4xl md:text-6xl font-bold leading-tight text-[hsl(var(--foreground))]">
                 {t('about.hero.title')}
-                <span className="block bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
+                <span className="block text-[hsl(var(--primary))]">
                   {t('about.hero.subtitle')}
                 </span>
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
+              <p className="text-lg md:text-xl text-[hsl(var(--muted-foreground))] max-w-2xl">
                 {t('about.hero.description')}
               </p>
             </div>

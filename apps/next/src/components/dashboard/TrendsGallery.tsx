@@ -471,11 +471,7 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                         onClick={() => setIsFullScreen(true)}
                       >
                         <Image
-                          src={
-                            currentImageIndex === 0
-                              ? selectedTrend.imageUrls[0]
-                              : selectedTrend.imageUrls[currentImageIndex - 1]
-                          }
+                          src={selectedTrend.imageUrls[currentImageIndex]}
                           alt={selectedTrend.title}
                           fill
                           className="object-cover"

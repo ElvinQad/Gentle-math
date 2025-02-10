@@ -56,19 +56,24 @@ export async function POST(req: Request) {
       },
     });
 
-    // If spreadsheet URL is provided, process it
-    if (data.spreadsheetUrl) {
-      const sheetData = await getSheetData(data.spreadsheetUrl);
-      const trendData = convertSheetDataToTrendData(sheetData);
+    // Only process spreadsheet if URL is provided and not empty
+    if (data.spreadsheetUrl && data.spreadsheetUrl.trim()) {
+      try {
+        const sheetData = await getSheetData(data.spreadsheetUrl);
+        const trendData = convertSheetDataToTrendData(sheetData);
 
-      // Update analytics with processed data
-      await prisma.analytics.update({
-        where: { trendId: trend.id },
-        data: {
-          dates: trendData.dates,
-          values: trendData.values,
-        },
-      });
+        // Update analytics with processed data
+        await prisma.analytics.update({
+          where: { trendId: trend.id },
+          data: {
+            dates: trendData.dates,
+            values: trendData.values,
+          },
+        });
+      } catch (error) {
+        console.error('Failed to process spreadsheet:', error);
+        // Don't fail the entire request if spreadsheet processing fails
+      }
     }
 
     return NextResponse.json(trend);

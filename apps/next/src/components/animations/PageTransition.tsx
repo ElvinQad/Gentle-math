@@ -13,12 +13,12 @@ const pagePositions: { [key: string]: number } = {
 };
 
 export function PageTransition({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '/';
   const prevPathRef = React.useRef(pathname);
 
   const getAnimationDirection = () => {
-    const currentPos = pagePositions[pathname] ?? 0;
-    const prevPos = pagePositions[prevPathRef.current] ?? 0;
+    const currentPos = pagePositions[pathname as keyof typeof pagePositions] ?? 0;
+    const prevPos = pagePositions[prevPathRef.current as keyof typeof pagePositions] ?? 0;
 
     prevPathRef.current = pathname;
 

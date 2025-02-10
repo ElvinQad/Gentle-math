@@ -96,7 +96,7 @@ export function BottomNav() {
   };
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-t">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[hsl(var(--background))]/80 backdrop-blur-lg border-t border-[hsl(var(--border))]">
       <div className="flex justify-around items-center h-16">
         {navItems.map(({ href, label, icon, requiresAuth }) => {
           if (requiresAuth && !session) return null;
@@ -106,7 +106,9 @@ export function BottomNav() {
               key={href}
               href={href}
               className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
-                isPathActive(href) ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                isPathActive(href) 
+                  ? 'text-[hsl(var(--primary))]' 
+                  : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
               }`}
             >
               {icon}

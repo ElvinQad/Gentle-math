@@ -6,7 +6,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { AuthModals } from '@/components/auth/AuthModals';
 import { useTranslation } from '@/lib/i18n';
@@ -15,7 +15,24 @@ export default function LandingPage() {
   const { data: session } = useSession();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [bgImage, setBgImage] = useState('/bg.avif');
   const { t } = useTranslation();
+
+  useEffect(() => {
+    const fetchBgImage = async () => {
+      try {
+        const response = await fetch('/api/admin/settings/background');
+        if (response.ok) {
+          const data = await response.json();
+          setBgImage(data.imageUrl);
+        }
+      } catch (error) {
+        console.error('Failed to fetch background image:', error);
+      }
+    };
+
+    fetchBgImage();
+  }, []);
 
   const handleGetStarted = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (!session) {
@@ -30,7 +47,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-purple-900/40 to-blue-900/40 z-10" />
         <div className="absolute inset-0">
           <Image
-            src="/bg.avif"
+            src={bgImage}
             alt="Fashion background"
             fill
             className="object-cover transform scale-105 animate-[slowZoom_20s_ease-in-out_infinite]"
@@ -42,7 +59,7 @@ export default function LandingPage() {
           <div className="space-y-6 animate-fade-in">
             <h1 className="text-4xl md:text-7xl font-bold text-white mb-6 leading-tight">
               {t('landing.hero.title')}
-              <span className="block bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
+              <span className="block bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
                 {t('landing.hero.subtitle')}
               </span>
             </h1>
@@ -52,7 +69,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-4 animate-slide-up">
               <Link
                 href={session ? '/dashboard' : '/trends'}
-                className="w-full sm:w-auto text-center inline-block bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg"
+                className="w-full sm:w-auto text-center inline-block bg-blue-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg"
                 onClick={!session ? handleGetStarted : undefined}
               >
                 {session ? t('common.dashboard') : t('common.getStarted')}

@@ -17,10 +17,21 @@ export async function PUT(req: Request) {
       where: { email: session.user.email },
     });
 
-    if (!user || !user.password) {
+    if (!user) {
       return new NextResponse('User not found', { status: 404 });
     }
 
+    // If user has no password (Google auth), allow setting a new one without current password
+    if (!user.password) {
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      await prisma.user.update({
+        where: { email: session.user.email },
+        data: { password: hashedPassword },
+      });
+      return new NextResponse('Password set successfully');
+    }
+
+    // For users with existing password, verify current password
     const isValid = await bcrypt.compare(currentPassword, user.password);
     if (!isValid) {
       return new NextResponse('Invalid current password', { status: 400 });

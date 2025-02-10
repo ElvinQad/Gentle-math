@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { User, UserDetails } from '@/types/admin';
 import { UsersTab } from '@/components/admin/UsersTab';
 import { TrendsTab } from '@/components/admin/TrendsTab';
+import { AppearanceTab } from '@/components/admin/AppearanceTab';
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -66,7 +67,7 @@ export default function AdminPage() {
     setIsUpdating((prev) => ({ ...prev, [userId]: true }));
     try {
       const response = await fetch(`/api/admin/users/${userId}/subscription`, {
-        method: 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ months }),
       });
@@ -167,6 +168,7 @@ export default function AdminPage() {
         <TabsList>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="trends">Trends</TabsTrigger>
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="space-y-6">
@@ -189,6 +191,10 @@ export default function AdminPage() {
 
         <TabsContent value="trends">
           <TrendsTab />
+        </TabsContent>
+
+        <TabsContent value="appearance">
+          <AppearanceTab />
         </TabsContent>
       </Tabs>
     </div>

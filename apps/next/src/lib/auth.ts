@@ -73,8 +73,26 @@ async function trackSessionEvent(
 }
 
 export const authConfig: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET || 'my-default-secret',
+  secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 days - match session maxAge
+  },
+  cookies: {
+    sessionToken: {
+      name: 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -269,24 +287,6 @@ export const authConfig: NextAuthOptions = {
       // Default to base URL
       return baseUrl;
     },
-  },
-  session: {
-    strategy: 'jwt',
-    maxAge: 60 * 60 * 24, // 24 hours
-  },
-  cookies: {
-    csrfToken: {
-      name: 'next-auth.csrf-token',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-      },
-    },
-  },
-  jwt: {
-    maxAge: 60 * 60 * 24, // 24 hours
   },
 };
 

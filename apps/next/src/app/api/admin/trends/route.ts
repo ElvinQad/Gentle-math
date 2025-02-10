@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
     const data = await req.json()
     
-    // Create the trend with the data
+    // Create the trend with analytics
     const trend = await prisma.trend.create({
       data: {
         title: data.title,
@@ -44,6 +44,15 @@ export async function POST(req: Request) {
         type: data.type,
         imageUrls: data.imageUrls,
         mainImageIndex: data.mainImageIndex,
+        analytics: {
+          create: {
+            dates: [],
+            values: []
+          }
+        }
+      },
+      include: {
+        analytics: true
       }
     })
 
@@ -52,10 +61,13 @@ export async function POST(req: Request) {
       const sheetData = await getSheetData(data.spreadsheetUrl)
       const trendData = convertSheetDataToTrendData(sheetData)
       
-      // Update trend with processed data
-      await prisma.trend.update({
-        where: { id: trend.id },
-        data: { data: trendData }
+      // Update analytics with processed data
+      await prisma.analytics.update({
+        where: { trendId: trend.id },
+        data: {
+          dates: trendData.dates,
+          values: trendData.values
+        }
       })
     }
 

@@ -46,7 +46,7 @@ model Trend {
 model Analytics {
   id        String     @id @default(cuid())
   createdAt DateTime   @default(now())
-  trendId   String
+  trendId   String     @unique
   dates     DateTime[]
   values    Int[]
   trend     Trend      @relation(fields: [trendId], references: [id])

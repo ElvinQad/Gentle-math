@@ -56,6 +56,12 @@ export interface User {
   subscribedUntil: string | null
 }
 
+export interface TrendData {
+  month: string
+  actual: number | null
+  forecast: number
+}
+
 export interface Trend {
   id: string
   title: string
@@ -65,11 +71,11 @@ export interface Trend {
   mainImageIndex: number
   createdAt: string
   updatedAt: string
-  analytics?: {
+  analytics: {
     id: string
     dates: Date[]
     values: number[]
   }[]
-  data?: Array<{ month: string; actual: number | null; forecast: number }>
+  data?: TrendData[]
   spreadsheetUrl?: string
 } 

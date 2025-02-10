@@ -21,14 +21,38 @@ export async function POST(
     const sheetData = await getSheetData(spreadsheetUrl)
     const trendData = convertSheetDataToTrendData(sheetData)
 
-    // Update the trend with new data
-    const { id } = await params;
-    const trend = await prisma.trend.update({
+    // Get the trend ID
+    const { id } = await params
+
+    // Get the trend with analytics
+    const trend = await prisma.trend.findUnique({
       where: { id },
-      data: { data: trendData }
+      include: { analytics: true }
     })
 
-    return NextResponse.json(trend)
+    // Create or update analytics
+    await prisma.analytics.upsert({
+      where: { 
+        id: trend?.analytics[0]?.id ?? 'new'
+      },
+      create: {
+        trendId: id,
+        dates: trendData.dates,
+        values: trendData.values
+      },
+      update: {
+        dates: trendData.dates,
+        values: trendData.values
+      }
+    })
+
+    // Get updated trend with analytics
+    const updatedTrend = await prisma.trend.findUnique({
+      where: { id },
+      include: { analytics: true }
+    })
+
+    return NextResponse.json(updatedTrend)
   } catch (error) {
     console.error('Failed to process spreadsheet:', error)
     return new NextResponse('Internal Server Error', { status: 500 })

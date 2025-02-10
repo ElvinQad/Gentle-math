@@ -59,36 +59,15 @@ export async function getSheetData(spreadsheetUrl: string): Promise<SheetData> {
 
 // Helper function to convert sheet data to trend data format
 export function convertSheetDataToTrendData(data: SheetData) {
-  const months = data.dates
+  const dates = data.dates.map(date => new Date(date))
   const values = data.values
   
   // Normalize values to 0-100 scale
   const maxValue = Math.max(...values)
-  const normalizedValues = values.map(value => (value / maxValue) * 100)
+  const normalizedValues = values.map(value => Math.round((value / maxValue) * 100))
   
-  // Adjust these values to change the forecast behavior
-  const forecastPeriods = 3 // Number of future months to forecast
-  const windowSize = 3 // Moving average window size
-  
-  // Get current month for comparison
-  const currentDate = new Date()
-  const currentMonth = currentDate.toISOString().slice(0, 7) // Format: YYYY-MM
-  
-  // Calculate moving average of past normalized values
-  const movingAverage = normalizedValues.slice(-windowSize).reduce((a, b) => a + b) / windowSize
-  
-  // Generate forecast values
-  const forecast = Array(forecastPeriods).fill(movingAverage)
-  
-  // Combine historical and forecast data
-  return [...months].map((month, index) => {
-    const isHistorical = month < currentMonth
-    return {
-      month,
-      actual: isHistorical ? normalizedValues[index] : null,
-      forecast: isHistorical ? normalizedValues[index] : (
-        index < normalizedValues.length ? normalizedValues[index] : forecast[index - normalizedValues.length]
-      ),
-    }
-  })
+  return {
+    dates,
+    values: normalizedValues
+  }
 } 

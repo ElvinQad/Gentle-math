@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Spinner } from '@/components/ui/spinner'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 
 interface ImagePreview {
   url: string
@@ -508,7 +509,7 @@ export function TrendsTab() {
       </div>
 
       {/* Add Data Preview Section */}
-      {selectedTrend?.data && selectedTrend.data.length > 0 && (
+      {selectedTrend?.analytics && selectedTrend.analytics.length > 0 && (
         <div className="space-y-4">
           <h3 className="font-medium">Data Preview</h3>
           <div className="overflow-x-auto">
@@ -521,21 +522,21 @@ export function TrendsTab() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {selectedTrend.data.map((item, index) => (
+                {selectedTrend.analytics[0].dates.map((date, index) => (
                   <tr key={index}>
-                    <td className="px-4 py-2">{item.month}</td>
-                    <td className="px-4 py-2">{item.actual ?? '—'}</td>
-                    <td className="px-4 py-2">{item.forecast}</td>
+                    <td className="px-4 py-2">{date.toISOString().slice(0, 7)}</td>
+                    <td className="px-4 py-2">{selectedTrend.analytics[0].values[index] ?? '—'}</td>
+                    <td className="px-4 py-2">{selectedTrend.analytics[0].values[index]}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           <div className="text-sm text-muted-foreground">
-            <p>• Historical data points: {selectedTrend.data.filter(d => d.actual !== null).length}</p>
-            <p>• Forecast points: {selectedTrend.data.filter(d => d.actual === null).length}</p>
-            <p>• Maximum value: {Math.max(...selectedTrend.data.map(d => Math.max(d.actual ?? 0, d.forecast)))}</p>
-            <p>• Average value: {(selectedTrend.data.reduce((sum, d) => sum + (d.actual ?? d.forecast), 0) / selectedTrend.data.length).toFixed(2)}</p>
+            <p>• Historical data points: {selectedTrend.analytics[0].dates.length - selectedTrend.analytics[0].values.filter(v => v === null).length}</p>
+            <p>• Forecast points: {selectedTrend.analytics[0].values.filter(v => v === null).length}</p>
+            <p>• Maximum value: {Math.max(...selectedTrend.analytics[0].values.map(v => v ?? 0))}</p>
+            <p>• Average value: {(selectedTrend.analytics[0].values.reduce((sum, v) => sum + (v ?? 0), 0) / selectedTrend.analytics[0].values.length).toFixed(2)}</p>
           </div>
         </div>
       )}
@@ -567,6 +568,14 @@ export function TrendsTab() {
 
   const renderDetailModal = () => {
     if (!selectedTrend) return null
+
+    // Convert analytics to chart data format
+    const chartData = selectedTrend?.analytics?.[0] ? 
+      selectedTrend.analytics[0].dates.map((date, i) => ({
+        month: date.toISOString().slice(0, 7),
+        actual: selectedTrend.analytics[0].values[i],
+        forecast: selectedTrend.analytics[0].values[i]
+      })) : [];
 
     return (
       <Modal
@@ -684,6 +693,31 @@ export function TrendsTab() {
             >
               Close
             </Button>
+          </div>
+
+          {/* Area Chart */}
+          <div className="mt-6">
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">Trend Data</h3>
+            <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="month"
+                tickFormatter={(str) => {
+                  const date = new Date(str);
+                  return date.toLocaleDateString('en-US', { month: 'short' });
+                }}
+              />
+              <YAxis />
+              <Tooltip
+                labelFormatter={(value) => {
+                  const date = new Date(value);
+                  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                }}
+              />
+              <Legend />
+              <Area type="monotone" dataKey="actual" stroke="#8884d8" activeDot={{ r: 8 }} />
+              <Area type="monotone" dataKey="forecast" stroke="#82ca9d" />
+            </AreaChart>
           </div>
         </div>
       </Modal>

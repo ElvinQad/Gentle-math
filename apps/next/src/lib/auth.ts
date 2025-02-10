@@ -1,8 +1,8 @@
-import { NextAuthOptions } from 'next-auth'
-import CredentialsProvider from 'next-auth/providers/credentials'
-import GoogleProvider from 'next-auth/providers/google'
-import { prisma } from '@/lib/db'
-import { compare, hash } from 'bcryptjs'
+import { NextAuthOptions } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
+import { prisma } from '@/lib/db';
+import { compare, hash } from 'bcryptjs';
 
 // Add this type definition at the top of the file, after the imports
 type SessionEventMetadata = {
@@ -14,46 +14,46 @@ type SessionEventMetadata = {
 declare module 'next-auth' {
   interface Session {
     user: {
-      id: string
-      name?: string | null
-      email?: string | null
-      image?: string | null
-      isAdmin?: boolean
-      subscribedUntil?: string | null
-    }
-    accessToken?: string
+      id: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      isAdmin?: boolean;
+      subscribedUntil?: string | null;
+    };
+    accessToken?: string;
   }
 
   interface User {
-    id: string
-    name?: string | null
-    email?: string | null
-    image?: string | null
-    isAdmin?: boolean
-    subscribedUntil?: string | null
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+    isAdmin?: boolean;
+    subscribedUntil?: string | null;
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
-    id: string
-    email?: string | null
-    name?: string | null
-    isAdmin?: boolean
-    subscribedUntil?: string | null
-    accessToken?: string
+    id: string;
+    email?: string | null;
+    name?: string | null;
+    isAdmin?: boolean;
+    subscribedUntil?: string | null;
+    accessToken?: string;
   }
 }
 
 async function trackSessionEvent(
-  userId: string, 
-  type: string, 
-  metadata: SessionEventMetadata = {}
+  userId: string,
+  type: string,
+  metadata: SessionEventMetadata = {},
 ) {
   try {
     // Ensure metadata is serializable
-    const safeMetadata = JSON.parse(JSON.stringify(metadata || {}))
-    
+    const safeMetadata = JSON.parse(JSON.stringify(metadata || {}));
+
     await prisma.userActivity.create({
       data: {
         userId,
@@ -61,14 +61,14 @@ async function trackSessionEvent(
         metadata: safeMetadata,
         timestamp: new Date(),
       },
-    })
+    });
   } catch (error) {
     // Log the error but don't throw
     console.error('Failed to track session event:', {
       userId,
       type,
-      error: error instanceof Error ? error.message : String(error)
-    })
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
@@ -82,16 +82,16 @@ export const authConfig: NextAuthOptions = {
       authorization: {
         params: {
           scope: 'openid email profile https://www.googleapis.com/auth/spreadsheets.readonly',
-          prompt: "consent",
-          access_type: "offline",
-        }
-      }
+          prompt: 'consent',
+          access_type: 'offline',
+        },
+      },
     }),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' }
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -99,18 +99,18 @@ export const authConfig: NextAuthOptions = {
         }
 
         const normalizedEmail = credentials.email.trim().toLowerCase();
-        
+
         const user = await prisma.user.findUnique({
           where: { email: normalizedEmail },
-          select: { 
-            id: true, 
-            email: true, 
-            name: true, 
+          select: {
+            id: true,
+            email: true,
+            name: true,
             password: true,
             isAdmin: true,
             subscribedUntil: true,
-            emailVerified: true
-          }
+            emailVerified: true,
+          },
         });
 
         if (!user) {
@@ -118,10 +118,12 @@ export const authConfig: NextAuthOptions = {
         }
 
         if (!user.password && user.emailVerified) {
-          throw new Error('This email is registered with Google. Please sign in with Google instead.');
+          throw new Error(
+            'This email is registered with Google. Please sign in with Google instead.',
+          );
         }
 
-        if (!user.password || !await compare(credentials.password, user.password)) {
+        if (!user.password || !(await compare(credentials.password, user.password))) {
           throw new Error('Invalid password');
         }
 
@@ -132,8 +134,8 @@ export const authConfig: NextAuthOptions = {
           isAdmin: user.isAdmin,
           subscribedUntil: user.subscribedUntil?.toISOString() || null,
         };
-      }
-    })
+      },
+    }),
   ],
   pages: {
     signIn: '/',
@@ -144,37 +146,38 @@ export const authConfig: NextAuthOptions = {
       try {
         // Get the user from our database first
         const dbUser = await prisma.user.findUnique({
-          where: { email: user.email || undefined }
+          where: { email: user.email || undefined },
         });
 
         if (dbUser?.id) {
           await trackSessionEvent(dbUser.id, 'session.login', {
             provider: account?.provider,
-            timestamp: new Date().toISOString()
-          })
+            timestamp: new Date().toISOString(),
+          });
         }
       } catch (error) {
-        console.error('Sign in event error:', error)
+        console.error('Sign in event error:', error);
       }
     },
     async signOut({ token }) {
       try {
-        if (token?.id) { // Use token.id instead of token.sub
+        if (token?.id) {
+          // Use token.id instead of token.sub
           await trackSessionEvent(token.id as string, 'session.logout', {
-            timestamp: new Date().toISOString()
-          })
+            timestamp: new Date().toISOString(),
+          });
         }
       } catch (error) {
-        console.error('Sign out event error:', error)
+        console.error('Sign out event error:', error);
       }
-    }
+    },
   },
   callbacks: {
     async signIn({ user }) {
       try {
         // Check if user exists
         const existingUser = await prisma.user.findUnique({
-          where: { email: user.email || undefined }
+          where: { email: user.email || undefined },
         });
 
         // If user doesn't exist, create one
@@ -185,7 +188,7 @@ export const authConfig: NextAuthOptions = {
               name: user.name,
               image: user.image,
               emailVerified: new Date(),
-            }
+            },
           });
         }
 
@@ -207,42 +210,42 @@ export const authConfig: NextAuthOptions = {
             name: user.name,
             isAdmin: user.isAdmin || false,
             subscribedUntil: user.subscribedUntil || null,
-          }
+          };
         }
 
         // On subsequent calls, return the token
-        return token
+        return token;
       } catch (error) {
-        console.error('Error updating JWT:', error)
-        return token
+        console.error('Error updating JWT:', error);
+        return token;
       }
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id
-        session.user.email = token.email as string
-        session.user.name = token.name as string
-        session.user.isAdmin = token.isAdmin as boolean
-        session.user.subscribedUntil = token.subscribedUntil as string | null
+        session.user.id = token.id;
+        session.user.email = token.email as string;
+        session.user.name = token.name as string;
+        session.user.isAdmin = token.isAdmin as boolean;
+        session.user.subscribedUntil = token.subscribedUntil as string | null;
       }
-      
-      // Add access token to session
-      session.accessToken = token.accessToken
 
-      return session
+      // Add access token to session
+      session.accessToken = token.accessToken;
+
+      return session;
     },
     async redirect({ url, baseUrl }) {
       // Strip nested callback URLs
-      const cleanUrl = url.split('?')[0]
-      
+      const cleanUrl = url.split('?')[0];
+
       // If the URL is relative or matches the base URL, return it
       if (url.startsWith('/') || url.startsWith(baseUrl)) {
-        return cleanUrl
+        return cleanUrl;
       }
-      
+
       // Default to base URL
-      return baseUrl
-    }
+      return baseUrl;
+    },
   },
   session: {
     strategy: 'jwt',
@@ -255,19 +258,19 @@ export const authConfig: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production'
-      }
-    }
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
   },
   jwt: {
-    maxAge: 60 * 60 * 24 // 24 hours
+    maxAge: 60 * 60 * 24, // 24 hours
   },
-}
+};
 
 export async function hashPassword(password: string) {
-  return hash(password, 12)
+  return hash(password, 12);
 }
 
 export async function comparePasswords(password: string, hashedPassword: string) {
-  return compare(password, hashedPassword)
-} 
+  return compare(password, hashedPassword);
+}

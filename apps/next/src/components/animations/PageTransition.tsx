@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
-import { motion } from 'framer-motion'
-import { usePathname } from 'next/navigation'
-import React from 'react'
+import { motion } from 'framer-motion';
+import { usePathname } from 'next/navigation';
+import React from 'react';
 
 // Map pages to their vertical positions
 const pagePositions: { [key: string]: number } = {
@@ -10,25 +10,25 @@ const pagePositions: { [key: string]: number } = {
   '/dashboard/trends': 1,
   '/dashboard/predictions': 2,
   '/dashboard/profile': 3,
-}
+};
 
 export function PageTransition({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
-  const prevPathRef = React.useRef(pathname)
+  const pathname = usePathname();
+  const prevPathRef = React.useRef(pathname);
 
   const getAnimationDirection = () => {
-    const currentPos = pagePositions[pathname] ?? 0
-    const prevPos = pagePositions[prevPathRef.current] ?? 0
+    const currentPos = pagePositions[pathname] ?? 0;
+    const prevPos = pagePositions[prevPathRef.current] ?? 0;
 
-    prevPathRef.current = pathname
+    prevPathRef.current = pathname;
 
     // When moving down (currentPos > prevPos), new page comes from top (-1)
     // When moving up (currentPos < prevPos), new page comes from bottom (1)
-    return currentPos > prevPos ? -1 : 1
-  }
+    return currentPos > prevPos ? -1 : 1;
+  };
 
-  const direction = getAnimationDirection()
-  const slideDistance = 500
+  const direction = getAnimationDirection();
+  const slideDistance = 500;
 
   return (
     <motion.div
@@ -36,7 +36,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
       initial={{ y: slideDistance * direction, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: slideDistance * direction, opacity: 0 }}
-      transition={{ 
+      transition={{
         duration: 0.5,
         ease: [0.32, 0.72, 0, 1],
       }}
@@ -44,5 +44,5 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
     >
       {children}
     </motion.div>
-  )
-} 
+  );
+}

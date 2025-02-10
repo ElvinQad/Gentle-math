@@ -25,8 +25,8 @@ export async function POST(req: Request) {
       data: {
         email: normalizedEmail,
         name,
-        password: hashedPassword
-      }
+        password: hashedPassword,
+      },
     });
 
     return NextResponse.json({ success: true, user });
@@ -34,4 +34,4 @@ export async function POST(req: Request) {
     console.error('Registration error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
-} 
+}

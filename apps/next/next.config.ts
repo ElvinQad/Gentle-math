@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   images: {
@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: '**', // For other external URLs
-      }
+      },
     ],
   },
   i18n: {
@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
       {
         domain: 'example.ru',
         defaultLocale: 'ru',
-      }
+      },
     ],
   },
 };

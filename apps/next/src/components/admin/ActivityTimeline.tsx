@@ -1,20 +1,18 @@
-import { UserActivity } from '@/types/admin'
+import { UserActivity } from '@/types/admin';
 
 interface ActivityTimelineProps {
-  activities: UserActivity[]
+  activities: UserActivity[];
 }
 
 export function ActivityTimeline({ activities }: ActivityTimelineProps) {
   return (
     <div className="space-y-4">
-      {activities.map(activity => (
+      {activities.map((activity) => (
         <div key={activity.id} className="bg-card p-4 rounded-lg border">
           <div className="flex justify-between items-start">
             <div>
               <div className="font-medium">{activity.type}</div>
-              <div className="text-sm text-muted-foreground">
-                {activity.metadata?.path}
-              </div>
+              <div className="text-sm text-muted-foreground">{activity.metadata?.path}</div>
             </div>
             <div className="text-sm text-muted-foreground">
               {new Date(activity.timestamp).toLocaleString()}
@@ -28,5 +26,5 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
         </div>
       ))}
     </div>
-  )
-} 
+  );
+}

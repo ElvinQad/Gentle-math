@@ -1,10 +1,10 @@
 interface ActivityStatsProps {
   stats: {
-    last24Hours: number
-    lastWeek: number
-    lastMonth: number
-    total: number
-  }
+    last24Hours: number;
+    lastWeek: number;
+    lastMonth: number;
+    total: number;
+  };
 }
 
 export function ActivityStats({ stats }: ActivityStatsProps) {
@@ -27,5 +27,5 @@ export function ActivityStats({ stats }: ActivityStatsProps) {
         <div className="text-2xl font-bold">{stats.total}</div>
       </div>
     </div>
-  )
-} 
+  );
+}

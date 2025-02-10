@@ -1,41 +1,41 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { prisma } from '@/lib/db'
-import { authConfig } from '@/lib/auth'
-import { getSheetData, convertSheetDataToTrendData } from '@/lib/sheets'
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { prisma } from '@/lib/db';
+import { authConfig } from '@/lib/auth';
+import { getSheetData, convertSheetDataToTrendData } from '@/lib/sheets';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authConfig)
-    
+    const session = await getServerSession(authConfig);
+
     if (!session?.user) {
-      return new NextResponse('Unauthorized', { status: 401 })
+      return new NextResponse('Unauthorized', { status: 401 });
     }
 
     const trends = await prisma.trend.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
-        analytics: true
-      }
-    })
+        analytics: true,
+      },
+    });
 
-    return NextResponse.json(trends)
+    return NextResponse.json(trends);
   } catch (error) {
-    console.error('Failed to fetch trends:', error)
-    return new NextResponse('Internal Server Error', { status: 500 })
+    console.error('Failed to fetch trends:', error);
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authConfig)
-    
+    const session = await getServerSession(authConfig);
+
     if (!session?.user?.isAdmin) {
-      return new NextResponse('Unauthorized', { status: 401 })
+      return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const data = await req.json()
-    
+    const data = await req.json();
+
     // Create the trend with analytics
     const trend = await prisma.trend.create({
       data: {
@@ -47,33 +47,33 @@ export async function POST(req: Request) {
         analytics: {
           create: {
             dates: [],
-            values: []
-          }
-        }
+            values: [],
+          },
+        },
       },
       include: {
-        analytics: true
-      }
-    })
+        analytics: true,
+      },
+    });
 
     // If spreadsheet URL is provided, process it
     if (data.spreadsheetUrl) {
-      const sheetData = await getSheetData(data.spreadsheetUrl)
-      const trendData = convertSheetDataToTrendData(sheetData)
-      
+      const sheetData = await getSheetData(data.spreadsheetUrl);
+      const trendData = convertSheetDataToTrendData(sheetData);
+
       // Update analytics with processed data
       await prisma.analytics.update({
         where: { trendId: trend.id },
         data: {
           dates: trendData.dates,
-          values: trendData.values
-        }
-      })
+          values: trendData.values,
+        },
+      });
     }
 
-    return NextResponse.json(trend)
+    return NextResponse.json(trend);
   } catch (error) {
-    console.error('Failed to create trend:', error)
-    return new NextResponse('Internal Server Error', { status: 500 })
+    console.error('Failed to create trend:', error);
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
-} 
+}

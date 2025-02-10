@@ -1,25 +1,25 @@
-import { Fragment } from 'react'
-import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react'
-import { toast } from 'sonner'
-import { User, UserDetails } from '@/types/admin'
-import { ActivityStats } from './ActivityStats'
-import { MostVisitedPaths } from './MostVisitedPaths'
-import { ActivityTimeline } from './ActivityTimeline'
+import { Fragment } from 'react';
+import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { User, UserDetails } from '@/types/admin';
+import { ActivityStats } from './ActivityStats';
+import { MostVisitedPaths } from './MostVisitedPaths';
+import { ActivityTimeline } from './ActivityTimeline';
 
 interface UsersTabProps {
-  users: User[]
-  isLoading: boolean
-  handleSubscription: (userId: string, months: number) => Promise<void>
-  handleCustomSubscription: (userId: string, e: React.FormEvent) => void
-  handleDeleteUser: (userId: string) => Promise<void>
-  handleRemoveSubscription: (userId: string) => Promise<void>
-  toggleUserExpanded: (userId: string) => Promise<void>
-  expandedUsers: { [key: string]: boolean }
-  userDetails: { [key: string]: UserDetails }
-  loadingDetails: { [key: string]: boolean }
-  customMonths: { [key: string]: string }
-  isUpdating: { [key: string]: boolean }
-  setCustomMonths: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>
+  users: User[];
+  isLoading: boolean;
+  handleSubscription: (userId: string, months: number) => Promise<void>;
+  handleCustomSubscription: (userId: string, e: React.FormEvent) => void;
+  handleDeleteUser: (userId: string) => Promise<void>;
+  handleRemoveSubscription: (userId: string) => Promise<void>;
+  toggleUserExpanded: (userId: string) => Promise<void>;
+  expandedUsers: { [key: string]: boolean };
+  userDetails: { [key: string]: UserDetails };
+  loadingDetails: { [key: string]: boolean };
+  customMonths: { [key: string]: string };
+  isUpdating: { [key: string]: boolean };
+  setCustomMonths: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
 }
 
 export function UsersTab({
@@ -38,26 +38,30 @@ export function UsersTab({
   setCustomMonths,
 }: UsersTabProps) {
   const handleClearActivities = async (userId: string) => {
-    if (!window.confirm('Are you sure you want to clear all activities for this user? This action cannot be undone.')) {
-      return
+    if (
+      !window.confirm(
+        'Are you sure you want to clear all activities for this user? This action cannot be undone.',
+      )
+    ) {
+      return;
     }
 
     try {
       const response = await fetch(`/api/admin/users/${userId}/activities`, {
         method: 'DELETE',
-      })
-      
-      if (!response.ok) throw new Error('Failed to clear activities')
-      
+      });
+
+      if (!response.ok) throw new Error('Failed to clear activities');
+
       // Refresh user details
-      await toggleUserExpanded(userId)
-      await toggleUserExpanded(userId)
-      
-      toast.success('Activities cleared successfully')
+      await toggleUserExpanded(userId);
+      await toggleUserExpanded(userId);
+
+      toast.success('Activities cleared successfully');
     } catch {
-      toast.error('Failed to clear activities')
+      toast.error('Failed to clear activities');
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -107,17 +111,18 @@ export function UsersTab({
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center space-x-2">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              user.subscribedUntil && new Date(user.subscribedUntil) > new Date()
-                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                            }`}>
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                user.subscribedUntil && new Date(user.subscribedUntil) > new Date()
+                                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                  : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                              }`}
+                            >
                               {user.subscribedUntil
                                 ? new Date(user.subscribedUntil) > new Date()
                                   ? `Until ${new Date(user.subscribedUntil).toLocaleDateString()}`
                                   : 'Expired'
-                                : 'No subscription'
-                              }
+                                : 'No subscription'}
                             </span>
                             <div className="flex items-center space-x-1">
                               <button
@@ -152,18 +157,19 @@ export function UsersTab({
                               >
                                 +1y
                               </button>
-                              {user.subscribedUntil && new Date(user.subscribedUntil) > new Date() && (
-                                <button
-                                  onClick={() => handleRemoveSubscription(user.id)}
-                                  disabled={isUpdating[user.id]}
-                                  className="px-2 py-1 text-xs bg-destructive/10 text-destructive rounded hover:bg-destructive/20 transition-colors disabled:opacity-50"
-                                  title="Remove subscription"
-                                >
-                                  Remove
-                                </button>
-                              )}
+                              {user.subscribedUntil &&
+                                new Date(user.subscribedUntil) > new Date() && (
+                                  <button
+                                    onClick={() => handleRemoveSubscription(user.id)}
+                                    disabled={isUpdating[user.id]}
+                                    className="px-2 py-1 text-xs bg-destructive/10 text-destructive rounded hover:bg-destructive/20 transition-colors disabled:opacity-50"
+                                    title="Remove subscription"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
                             </div>
-                            <form 
+                            <form
                               onSubmit={(e) => handleCustomSubscription(user.id, e)}
                               className="flex items-center space-x-1"
                             >
@@ -172,7 +178,9 @@ export function UsersTab({
                                 min="1"
                                 placeholder="# months"
                                 value={customMonths[user.id] || ''}
-                                onChange={(e) => setCustomMonths({ ...customMonths, [user.id]: e.target.value })}
+                                onChange={(e) =>
+                                  setCustomMonths({ ...customMonths, [user.id]: e.target.value })
+                                }
                                 className="w-20 px-2 py-1 text-xs rounded border border-border bg-background"
                               />
                               <button
@@ -218,38 +226,48 @@ export function UsersTab({
                                   <div className="bg-card p-4 rounded-lg border">
                                     <div className="text-sm text-muted-foreground">Last Active</div>
                                     <div className="text-lg font-medium">
-                                      {userDetails[user.id].user.lastActive 
-                                        ? new Date(userDetails[user.id].user.lastActive as string).toLocaleString()
+                                      {userDetails[user.id].user.lastActive
+                                        ? new Date(
+                                            userDetails[user.id].user.lastActive as string,
+                                          ).toLocaleString()
                                         : 'Never'}
                                     </div>
                                   </div>
                                   <div className="bg-card p-4 rounded-lg border">
-                                    <div className="text-sm text-muted-foreground">Account Created</div>
+                                    <div className="text-sm text-muted-foreground">
+                                      Account Created
+                                    </div>
                                     <div className="text-lg font-medium">
-                                      {new Date(userDetails[user.id].user.createdAt).toLocaleDateString()}
+                                      {new Date(
+                                        userDetails[user.id].user.createdAt,
+                                      ).toLocaleDateString()}
                                     </div>
                                   </div>
                                   <div className="bg-card p-4 rounded-lg border">
                                     <div className="text-sm text-muted-foreground">Status</div>
-                                    <div className={`text-lg font-medium ${
-                                      {
-                                        'online': 'text-green-500',
-                                        'away': 'text-yellow-500',
-                                        'inactive': 'text-orange-500',
-                                        'offline': 'text-gray-500'
-                                      }[userDetails[user.id].user.status]
-                                    }`}>
-                                      {userDetails[user.id].user.status.charAt(0).toUpperCase() + 
-                                       userDetails[user.id].user.status.slice(1)}
+                                    <div
+                                      className={`text-lg font-medium ${
+                                        {
+                                          online: 'text-green-500',
+                                          away: 'text-yellow-500',
+                                          inactive: 'text-orange-500',
+                                          offline: 'text-gray-500',
+                                        }[userDetails[user.id].user.status]
+                                      }`}
+                                    >
+                                      {userDetails[user.id].user.status.charAt(0).toUpperCase() +
+                                        userDetails[user.id].user.status.slice(1)}
                                     </div>
                                   </div>
                                 </div>
 
                                 <ActivityStats stats={userDetails[user.id].activities.stats} />
-                                
+
                                 <div className="grid md:grid-cols-2 gap-6">
                                   <div>
-                                    <MostVisitedPaths paths={userDetails[user.id].activities.stats.mostVisitedPaths} />
+                                    <MostVisitedPaths
+                                      paths={userDetails[user.id].activities.stats.mostVisitedPaths}
+                                    />
                                   </div>
                                   <div>
                                     <div className="flex justify-between items-center mb-4">
@@ -263,7 +281,9 @@ export function UsersTab({
                                         <span>Clear All</span>
                                       </button>
                                     </div>
-                                    <ActivityTimeline activities={userDetails[user.id].activities.recent} />
+                                    <ActivityTimeline
+                                      activities={userDetails[user.id].activities.recent}
+                                    />
                                   </div>
                                 </div>
                               </div>
@@ -284,5 +304,5 @@ export function UsersTab({
         </div>
       )}
     </div>
-  )
-} 
+  );
+}

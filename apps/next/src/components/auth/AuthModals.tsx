@@ -1,14 +1,14 @@
-import { useState } from 'react'
-import { Modal } from '@/components/ui/Modal'
-import { signIn } from 'next-auth/react'
+import { useState } from 'react';
+import { Modal } from '@/components/ui/Modal';
+import { signIn } from 'next-auth/react';
 
 interface AuthModalsProps {
-  isLoginOpen: boolean
-  isRegisterOpen: boolean
-  onLoginClose: () => void
-  onRegisterClose: () => void
-  onSwitchToRegister: () => void
-  onSwitchToLogin: () => void
+  isLoginOpen: boolean;
+  isRegisterOpen: boolean;
+  onLoginClose: () => void;
+  onRegisterClose: () => void;
+  onSwitchToRegister: () => void;
+  onSwitchToLogin: () => void;
 }
 
 export function AuthModals({
@@ -19,15 +19,15 @@ export function AuthModals({
   onSwitchToRegister,
   onSwitchToLogin,
 }: AuthModalsProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | React.ReactElement>('')
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | React.ReactElement>('');
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setError('')
-    setIsLoading(true)
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
 
-    const formData = new FormData(e.currentTarget)
+    const formData = new FormData(e.currentTarget);
     const email = (formData.get('email') as string)?.trim().toLowerCase();
     const password = (formData.get('password') as string)?.trim();
 
@@ -36,31 +36,29 @@ export function AuthModals({
         email,
         password,
         redirect: false,
-      })
+      });
 
       if (result?.error) {
-        setError(result.error)
-        
-      
+        setError(result.error);
       } else {
-        onLoginClose()
+        onLoginClose();
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred. Please try again.')
+      setError(error instanceof Error ? error.message : 'An error occurred. Please try again.');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setError('')
-    setIsLoading(true)
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
 
-    const formData = new FormData(e.currentTarget)
-    const email = (formData.get('email') as string)?.trim().toLowerCase()
-    const password = (formData.get('password') as string)?.trim()
-    const name = (formData.get('name') as string)?.trim()
+    const formData = new FormData(e.currentTarget);
+    const email = (formData.get('email') as string)?.trim().toLowerCase();
+    const password = (formData.get('password') as string)?.trim();
+    const name = (formData.get('name') as string)?.trim();
 
     try {
       // Call registration API
@@ -70,11 +68,11 @@ export function AuthModals({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password, name }),
-      })
+      });
 
       if (!registerResponse.ok) {
-        const data = await registerResponse.json()
-        throw new Error(data.error || 'Registration failed')
+        const data = await registerResponse.json();
+        throw new Error(data.error || 'Registration failed');
       }
 
       // After successful registration, sign in the user
@@ -82,31 +80,31 @@ export function AuthModals({
         email,
         password,
         redirect: false,
-      })
+      });
 
       if (result?.error) {
-        setError('Registration successful but sign in failed. Please try logging in.')
+        setError('Registration successful but sign in failed. Please try logging in.');
       } else {
-        onRegisterClose()
+        onRegisterClose();
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Registration failed. Please try again.')
+      setError(error instanceof Error ? error.message : 'Registration failed. Please try again.');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       // Use the current URL as callback URL if available
-      const callbackUrl = window.location.href || '/dashboard'
-      await signIn('google', { callbackUrl })
+      const callbackUrl = window.location.href || '/dashboard';
+      await signIn('google', { callbackUrl });
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Google sign in failed. Please try again.')
-      setIsLoading(false)
+      setError(error instanceof Error ? error.message : 'Google sign in failed. Please try again.');
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <>
@@ -148,11 +146,7 @@ export function AuthModals({
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
-            {error && (
-              <div className="p-3 text-sm text-red-500 bg-red-50 rounded-lg">
-                {error}
-              </div>
-            )}
+            {error && <div className="p-3 text-sm text-red-500 bg-red-50 rounded-lg">{error}</div>}
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-foreground">
                 Email
@@ -238,11 +232,7 @@ export function AuthModals({
           </div>
 
           <form onSubmit={handleRegister} className="space-y-4">
-            {error && (
-              <div className="p-3 text-sm text-red-500 bg-red-50 rounded-lg">
-                {error}
-              </div>
-            )}
+            {error && <div className="p-3 text-sm text-red-500 bg-red-50 rounded-lg">{error}</div>}
             <div className="space-y-2">
               <label htmlFor="name" className="text-sm font-medium text-foreground">
                 Full Name
@@ -303,5 +293,5 @@ export function AuthModals({
         </div>
       </Modal>
     </>
-  )
-} 
+  );
+}

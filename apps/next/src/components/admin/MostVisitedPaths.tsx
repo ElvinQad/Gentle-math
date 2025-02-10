@@ -1,14 +1,15 @@
 interface MostVisitedPathsProps {
-  paths: [string, number][]
+  paths: [string, number][];
 }
 
 export function MostVisitedPaths({ paths }: MostVisitedPathsProps) {
   function formatPath(path: string): string {
-    if (!path || path === 'unknown') return 'Unknown Path'
-    if (path === 'home') return 'Home Page'
-    return path.split('/').map(segment => 
-      segment.charAt(0).toUpperCase() + segment.slice(1)
-    ).join(' / ')
+    if (!path || path === 'unknown') return 'Unknown Path';
+    if (path === 'home') return 'Home Page';
+    return path
+      .split('/')
+      .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+      .join(' / ');
   }
 
   return (
@@ -23,5 +24,5 @@ export function MostVisitedPaths({ paths }: MostVisitedPathsProps) {
         ))}
       </div>
     </div>
-  )
-} 
+  );
+}

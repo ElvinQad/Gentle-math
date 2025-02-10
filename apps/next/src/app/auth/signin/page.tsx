@@ -34,7 +34,7 @@ export default function SignIn() {
         const currentDomain = window.location.hostname;
         const isRuDomain = currentDomain.endsWith('.ru');
         const redirectUrl = result?.url || callbackUrl;
-        
+
         // Ensure redirect URL matches the current domain
         if (isRuDomain && !redirectUrl.includes('.ru')) {
           window.location.href = redirectUrl.replace(/\.[^.]+(\:[0-9]+)?\//, '.ru$1/');
@@ -54,9 +54,9 @@ export default function SignIn() {
     try {
       const currentDomain = window.location.hostname;
       const isRuDomain = currentDomain.endsWith('.ru');
-      
+
       // Ensure the callback URL uses the correct domain
-      const adjustedCallbackUrl = isRuDomain 
+      const adjustedCallbackUrl = isRuDomain
         ? callbackUrl.replace(/\.[^.]+(\:[0-9]+)?\//, '.ru$1/')
         : callbackUrl;
 
@@ -71,9 +71,7 @@ export default function SignIn() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Welcome Back
-          </h2>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Welcome Back</h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Sign in to your account to continue
           </p>
@@ -116,11 +114,7 @@ export default function SignIn() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 text-sm text-red-500 bg-red-50 rounded-lg">
-                {error}
-              </div>
-            )}
+            {error && <div className="p-3 text-sm text-red-500 bg-red-50 rounded-lg">{error}</div>}
 
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-foreground">
@@ -160,10 +154,7 @@ export default function SignIn() {
 
             <div className="text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{' '}
-              <a
-                href="/auth/register"
-                className="text-primary hover:underline font-medium"
-              >
+              <a href="/auth/register" className="text-primary hover:underline font-medium">
                 Register
               </a>
             </div>
@@ -172,4 +163,4 @@ export default function SignIn() {
       </div>
     </div>
   );
-} 
+}

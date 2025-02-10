@@ -28,15 +28,10 @@ function ErrorContent() {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Authentication Error
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            {getErrorMessage(error)}
-          </p>
+          <p className="mt-2 text-center text-sm text-gray-600">{getErrorMessage(error)}</p>
         </div>
         <div className="text-center">
-          <Link
-            href="/auth/signin"
-            className="font-medium text-indigo-600 hover:text-indigo-500"
-          >
+          <Link href="/auth/signin" className="font-medium text-indigo-600 hover:text-indigo-500">
             Return to sign in
           </Link>
         </div>
@@ -51,4 +46,4 @@ export default function AuthErrorPage() {
       <ErrorContent />
     </Suspense>
   );
-} 
+}

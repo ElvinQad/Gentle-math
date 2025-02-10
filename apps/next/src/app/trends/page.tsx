@@ -1,37 +1,37 @@
-'use client'
+'use client';
 
-import Image from 'next/image'
-import Link from 'next/link'
-import { useState } from 'react'
-import { useSession } from 'next-auth/react'
-import { AuthModals } from '@/components/auth/AuthModals'
-import { useTranslation } from '@/lib/i18n'
+import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { AuthModals } from '@/components/auth/AuthModals';
+import { useTranslation } from '@/lib/i18n';
 
 export default function TrendsPage() {
-  const { data: session } = useSession()
-  const [isLoginOpen, setIsLoginOpen] = useState(false)
-  const [isRegisterOpen, setIsRegisterOpen] = useState(false)
-  const { t } = useTranslation()
+  const { data: session } = useSession();
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const { t } = useTranslation();
 
   const handleLoginClick = () => {
-    setIsLoginOpen(true)
-    setIsRegisterOpen(false)
-  }
+    setIsLoginOpen(true);
+    setIsRegisterOpen(false);
+  };
 
   const handleRegisterClick = () => {
-    setIsRegisterOpen(true)
-    setIsLoginOpen(false)
-  }
+    setIsRegisterOpen(true);
+    setIsLoginOpen(false);
+  };
 
   const handleSwitchToRegister = () => {
-    setIsLoginOpen(false)
-    setIsRegisterOpen(true)
-  }
+    setIsLoginOpen(false);
+    setIsRegisterOpen(true);
+  };
 
   const handleSwitchToLogin = () => {
-    setIsRegisterOpen(false)
-    setIsLoginOpen(true)
-  }
+    setIsRegisterOpen(false);
+    setIsLoginOpen(true);
+  };
 
   const trends = [
     {
@@ -39,50 +39,50 @@ export default function TrendsPage() {
       description: t('trends.currentTrends.sustainable.description'),
       image: 'https://images.unsplash.com/photo-1606041008023-472dfb5e530f',
       percentage: 78,
-      tags: ['Eco-friendly', 'Sustainable', 'Green']
+      tags: ['Eco-friendly', 'Sustainable', 'Green'],
     },
     {
       title: t('trends.currentTrends.digital.title'),
       description: t('trends.currentTrends.digital.description'),
       image: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb',
       percentage: 65,
-      tags: ['Virtual', 'Digital', 'NFT']
+      tags: ['Virtual', 'Digital', 'NFT'],
     },
     {
       title: t('trends.currentTrends.athleisure.title'),
       description: t('trends.currentTrends.athleisure.description'),
       image: 'https://images.unsplash.com/photo-1483721310020-03333e577078',
       percentage: 82,
-      tags: ['Sports', 'Comfort', 'Performance']
+      tags: ['Sports', 'Comfort', 'Performance'],
     },
-  ]
+  ];
 
   const colorTrends = [
-    { 
+    {
       name: 'Digital Lavender',
       hex: '#E6E6FA',
       percentage: 85,
-      image: 'https://images.unsplash.com/photo-1620207418302-439b387441b0'
+      image: 'https://images.unsplash.com/photo-1620207418302-439b387441b0',
     },
-    { 
+    {
       name: 'Viva Magenta',
       hex: '#BB2649',
       percentage: 75,
-      image: 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17'
+      image: 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17',
     },
-    { 
+    {
       name: 'Neo Mint',
       hex: '#98FF98',
       percentage: 70,
-      image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27'
+      image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27',
     },
-    { 
+    {
       name: 'Butter Yellow',
       hex: '#FFFAA0',
       percentage: 65,
-      image: 'https://images.unsplash.com/photo-1490623970972-ae8bb3da443e'
+      image: 'https://images.unsplash.com/photo-1490623970972-ae8bb3da443e',
     },
-  ]
+  ];
 
   return (
     <div className="min-h-screen pt-24 bg-background">
@@ -141,10 +141,15 @@ export default function TrendsPage() {
 
         {/* Current Trends */}
         <section className="mb-16 md:mb-32">
-          <h2 className="text-3xl md:text-4xl font-bold mb-12 md:mb-16 text-foreground">{t('trends.currentTrends.title')}</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 md:mb-16 text-foreground">
+            {t('trends.currentTrends.title')}
+          </h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
             {trends.map((trend) => (
-              <div key={trend.title} className="group bg-card rounded-xl overflow-hidden shadow-lg border hover:shadow-2xl transition-all hover:-translate-y-1">
+              <div
+                key={trend.title}
+                className="group bg-card rounded-xl overflow-hidden shadow-lg border hover:shadow-2xl transition-all hover:-translate-y-1"
+              >
                 <div className="relative h-64">
                   <Image
                     src={trend.image}
@@ -155,26 +160,33 @@ export default function TrendsPage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 <div className="p-8">
-                  <h3 className="text-2xl font-semibold mb-3 text-card-foreground">{trend.title}</h3>
+                  <h3 className="text-2xl font-semibold mb-3 text-card-foreground">
+                    {trend.title}
+                  </h3>
                   <p className="text-muted-foreground mb-6">{trend.description}</p>
                   <div className="flex flex-wrap gap-2 mb-6">
                     {trend.tags.map((tag) => (
-                      <span key={tag} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+                      <span
+                        key={tag}
+                        className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                      >
                         {tag}
                       </span>
                     ))}
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{t('trends.currentTrends.trendStrength')}</span>
+                      <span className="text-muted-foreground">
+                        {t('trends.currentTrends.trendStrength')}
+                      </span>
                       <span className="text-primary font-medium">{trend.percentage}%</span>
                     </div>
                     <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
                       <div
                         className="bg-primary h-2 transition-all duration-500 rounded-full"
-                        style={{ 
+                        style={{
                           width: `${trend.percentage}%`,
-                          boxShadow: '0 0 10px rgba(var(--primary), 0.5)'
+                          boxShadow: '0 0 10px rgba(var(--primary), 0.5)',
                         }}
                       />
                     </div>
@@ -187,17 +199,17 @@ export default function TrendsPage() {
 
         {/* Color Trends */}
         <section className="mb-16 md:mb-32">
-          <h2 className="text-3xl md:text-4xl font-bold mb-12 md:mb-16 text-foreground">{t('trends.colorTrends.title')}</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 md:mb-16 text-foreground">
+            {t('trends.colorTrends.title')}
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             {colorTrends.map((color) => (
-              <div key={color.name} className="group bg-card rounded-xl overflow-hidden shadow-lg border hover:shadow-2xl transition-all hover:-translate-y-1">
+              <div
+                key={color.name}
+                className="group bg-card rounded-xl overflow-hidden shadow-lg border hover:shadow-2xl transition-all hover:-translate-y-1"
+              >
                 <div className="relative h-48">
-                  <Image
-                    src={color.image}
-                    alt={color.name}
-                    fill
-                    className="object-cover"
-                  />
+                  <Image src={color.image} alt={color.name} fill className="object-cover" />
                   <div
                     className="absolute inset-0 opacity-75"
                     style={{ backgroundColor: color.hex }}
@@ -213,16 +225,18 @@ export default function TrendsPage() {
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{t('trends.colorTrends.popularity')}</span>
+                      <span className="text-muted-foreground">
+                        {t('trends.colorTrends.popularity')}
+                      </span>
                       <span className="text-primary font-medium">{color.percentage}%</span>
                     </div>
                     <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
                       <div
                         className="h-2 transition-all duration-500 rounded-full"
-                        style={{ 
+                        style={{
                           width: `${color.percentage}%`,
                           backgroundColor: color.hex,
-                          boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)'
+                          boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
                         }}
                       />
                     </div>
@@ -251,7 +265,12 @@ export default function TrendsPage() {
                 >
                   {t('common.dashboard')}
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
                   </svg>
                 </Link>
               ) : (
@@ -262,7 +281,12 @@ export default function TrendsPage() {
                   >
                     {t('trends.cta.loginButton')}
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
                     </svg>
                   </button>
                   <button
@@ -271,7 +295,12 @@ export default function TrendsPage() {
                   >
                     {t('trends.cta.registerButton')}
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
                     </svg>
                   </button>
                 </>
@@ -290,5 +319,5 @@ export default function TrendsPage() {
         onSwitchToLogin={handleSwitchToLogin}
       />
     </div>
-  )
-} 
+  );
+}

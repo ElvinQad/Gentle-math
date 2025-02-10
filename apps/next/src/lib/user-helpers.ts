@@ -3,7 +3,7 @@ import type { User } from '@prisma/client';
 type ExtendedUser = User & {
   isAdmin?: boolean;
   subscribedUntil?: Date | null;
-}
+};
 
 type SessionUser = {
   id: string;
@@ -12,7 +12,7 @@ type SessionUser = {
   image?: string | null;
   isAdmin?: boolean;
   subscribedUntil?: string | Date | null;
-}
+};
 
 type UserType = ExtendedUser | SessionUser;
 
@@ -41,7 +41,7 @@ export function getSubscriptionDaysRemaining(user: UserType | null | undefined):
   const now = new Date();
   const subscriptionEnd = new Date(user.subscribedUntil);
   if (subscriptionEnd <= now) return -1;
-  
+
   const diffTime = subscriptionEnd.getTime() - now.getTime();
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
@@ -52,4 +52,4 @@ export function getSubscriptionDaysRemaining(user: UserType | null | undefined):
 export function formatSubscriptionEndDate(user: UserType | null | undefined): string {
   if (!user || !user.subscribedUntil) return 'No active subscription';
   return new Date(user.subscribedUntil).toLocaleDateString();
-} 
+}

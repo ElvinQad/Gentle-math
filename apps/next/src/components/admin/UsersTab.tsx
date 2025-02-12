@@ -65,36 +65,36 @@ export function UsersTab({
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">User Management</h2>
+      <h2 className="text-2xl font-bold text-[color:var(--foreground)]">User Management</h2>
       {isLoading ? (
         <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Loading users...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--primary)] mx-auto"></div>
+          <p className="mt-2 text-[color:var(--muted-foreground)]">Loading users...</p>
         </div>
       ) : (
-        <div className="bg-card rounded-lg border border-border shadow-sm">
+        <div className="bg-[color:var(--card)] rounded-lg border border-[color:var(--border)] shadow-sm">
           <div className="p-6">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4">Name</th>
-                    <th className="text-left py-3 px-4">Email</th>
-                    <th className="text-left py-3 px-4">Created At</th>
-                    <th className="text-left py-3 px-4">Subscription</th>
-                    <th className="text-left py-3 px-4">Admin</th>
-                    <th className="text-left py-3 px-4">Actions</th>
+                  <tr className="border-b border-[color:var(--border)]">
+                    <th className="text-left py-3 px-4 text-[color:var(--foreground)]">Name</th>
+                    <th className="text-left py-3 px-4 text-[color:var(--foreground)]">Email</th>
+                    <th className="text-left py-3 px-4 text-[color:var(--foreground)]">Created At</th>
+                    <th className="text-left py-3 px-4 text-[color:var(--foreground)]">Subscription</th>
+                    <th className="text-left py-3 px-4 text-[color:var(--foreground)]">Admin</th>
+                    <th className="text-left py-3 px-4 text-[color:var(--foreground)]">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {users.map((user) => (
                     <Fragment key={user.id}>
-                      <tr className="border-b border-border hover:bg-accent/50">
+                      <tr className="border-b border-[color:var(--border)] hover:bg-[color:var(--accent)]/50">
                         <td className="py-3 px-4">
                           <div className="flex items-center space-x-2">
                             <button
                               onClick={() => toggleUserExpanded(user.id)}
-                              className="p-1 hover:bg-accent rounded"
+                              className="p-1 hover:bg-[color:var(--accent)] rounded"
                             >
                               {expandedUsers[user.id] ? (
                                 <ChevronDown className="w-4 h-4" />
@@ -102,11 +102,11 @@ export function UsersTab({
                                 <ChevronRight className="w-4 h-4" />
                               )}
                             </button>
-                            <span>{user.name || 'N/A'}</span>
+                            <span className="text-[color:var(--foreground)]">{user.name || 'N/A'}</span>
                           </div>
                         </td>
-                        <td className="py-3 px-4">{user.email}</td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 text-[color:var(--foreground)]">{user.email}</td>
+                        <td className="py-3 px-4 text-[color:var(--foreground)]">
                           {new Date(user.createdAt).toLocaleDateString()}
                         </td>
                         <td className="py-3 px-4">
@@ -114,8 +114,8 @@ export function UsersTab({
                             <span
                               className={`px-2 py-1 rounded-full text-xs font-medium ${
                                 user.subscribedUntil && new Date(user.subscribedUntil) > new Date()
-                                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                  : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                  ? 'bg-[color:var(--color-muted-green)]/10 text-[color:var(--color-muted-green)] dark:bg-[color:var(--color-muted-green)]/30 dark:text-[color:var(--color-muted-green)]'
+                                  : 'bg-[color:var(--color-subtle-yellow)]/10 text-[color:var(--color-subtle-yellow)] dark:bg-[color:var(--color-subtle-yellow)]/30 dark:text-[color:var(--color-subtle-yellow)]'
                               }`}
                             >
                               {user.subscribedUntil
@@ -128,7 +128,7 @@ export function UsersTab({
                               <button
                                 onClick={() => handleSubscription(user.id, 1)}
                                 disabled={isUpdating[user.id]}
-                                className="px-2 py-1 text-xs bg-primary/10 text-primary rounded hover:bg-primary/20 transition-colors disabled:opacity-50"
+                                className="px-2 py-1 text-xs bg-[color:var(--primary)]/10 text-[color:var(--primary)] rounded hover:bg-[color:var(--primary)]/20 transition-colors disabled:opacity-50"
                                 title="Add 1 month"
                               >
                                 +1m
@@ -136,7 +136,7 @@ export function UsersTab({
                               <button
                                 onClick={() => handleSubscription(user.id, 3)}
                                 disabled={isUpdating[user.id]}
-                                className="px-2 py-1 text-xs bg-primary/10 text-primary rounded hover:bg-primary/20 transition-colors disabled:opacity-50"
+                                className="px-2 py-1 text-xs bg-[color:var(--primary)]/10 text-[color:var(--primary)] rounded hover:bg-[color:var(--primary)]/20 transition-colors disabled:opacity-50"
                                 title="Add 3 months"
                               >
                                 +3m
@@ -144,7 +144,7 @@ export function UsersTab({
                               <button
                                 onClick={() => handleSubscription(user.id, 6)}
                                 disabled={isUpdating[user.id]}
-                                className="px-2 py-1 text-xs bg-primary/10 text-primary rounded hover:bg-primary/20 transition-colors disabled:opacity-50"
+                                className="px-2 py-1 text-xs bg-[color:var(--primary)]/10 text-[color:var(--primary)] rounded hover:bg-[color:var(--primary)]/20 transition-colors disabled:opacity-50"
                                 title="Add 6 months"
                               >
                                 +6m
@@ -152,7 +152,7 @@ export function UsersTab({
                               <button
                                 onClick={() => handleSubscription(user.id, 12)}
                                 disabled={isUpdating[user.id]}
-                                className="px-2 py-1 text-xs bg-primary/10 text-primary rounded hover:bg-primary/20 transition-colors disabled:opacity-50"
+                                className="px-2 py-1 text-xs bg-[color:var(--primary)]/10 text-[color:var(--primary)] rounded hover:bg-[color:var(--primary)]/20 transition-colors disabled:opacity-50"
                                 title="Add 1 year"
                               >
                                 +1y
@@ -162,7 +162,7 @@ export function UsersTab({
                                   <button
                                     onClick={() => handleRemoveSubscription(user.id)}
                                     disabled={isUpdating[user.id]}
-                                    className="px-2 py-1 text-xs bg-destructive/10 text-destructive rounded hover:bg-destructive/20 transition-colors disabled:opacity-50"
+                                    className="px-2 py-1 text-xs bg-[color:var(--destructive)]/10 text-[color:var(--destructive)] rounded hover:bg-[color:var(--destructive)]/20 transition-colors disabled:opacity-50"
                                     title="Remove subscription"
                                   >
                                     Remove
@@ -181,12 +181,12 @@ export function UsersTab({
                                 onChange={(e) =>
                                   setCustomMonths({ ...customMonths, [user.id]: e.target.value })
                                 }
-                                className="w-20 px-2 py-1 text-xs rounded border border-border bg-background"
+                                className="w-20 px-2 py-1 text-xs rounded border border-[color:var(--border)] bg-[color:var(--background)] text-[color:var(--foreground)]"
                               />
                               <button
                                 type="submit"
                                 disabled={isUpdating[user.id]}
-                                className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors disabled:opacity-50"
+                                className="px-2 py-1 text-xs bg-[color:var(--primary)] text-[color:var(--primary-foreground)] rounded hover:bg-[color:var(--primary)]/90 transition-colors disabled:opacity-50"
                               >
                                 Add
                               </button>
@@ -197,8 +197,8 @@ export function UsersTab({
                           <button
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
                               user.isAdmin
-                                ? 'bg-primary/10 text-primary'
-                                : 'bg-muted text-muted-foreground'
+                                ? 'bg-[color:var(--primary)]/10 text-[color:var(--primary)]'
+                                : 'bg-[color:var(--muted)] text-[color:var(--muted-foreground)]'
                             }`}
                           >
                             {user.isAdmin ? 'Admin' : 'User'}
@@ -207,7 +207,7 @@ export function UsersTab({
                         <td className="py-3 px-4">
                           <button
                             onClick={() => handleDeleteUser(user.id)}
-                            className="text-destructive hover:text-destructive-foreground hover:bg-destructive/10 px-3 py-1 rounded-lg text-sm transition-colors"
+                            className="text-[color:var(--destructive)] hover:text-[color:var(--destructive-foreground)] hover:bg-[color:var(--destructive)]/10 px-3 py-1 rounded-lg text-sm transition-colors"
                           >
                             Delete
                           </button>
@@ -215,17 +215,17 @@ export function UsersTab({
                       </tr>
                       {expandedUsers[user.id] && (
                         <tr>
-                          <td colSpan={6} className="bg-accent/5 p-4">
+                          <td colSpan={6} className="bg-[color:var(--accent)]/5 p-4">
                             {loadingDetails[user.id] ? (
                               <div className="flex justify-center py-4">
-                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[color:var(--primary)]"></div>
                               </div>
                             ) : userDetails[user.id] ? (
                               <div className="space-y-6">
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                  <div className="bg-card p-4 rounded-lg border">
-                                    <div className="text-sm text-muted-foreground">Last Active</div>
-                                    <div className="text-lg font-medium">
+                                  <div className="bg-[color:var(--card)] p-4 rounded-lg border border-[color:var(--border)]">
+                                    <div className="text-sm text-[color:var(--muted-foreground)]">Last Active</div>
+                                    <div className="text-lg font-medium text-[color:var(--foreground)]">
                                       {userDetails[user.id].user.lastActive
                                         ? new Date(
                                             userDetails[user.id].user.lastActive as string,
@@ -233,25 +233,25 @@ export function UsersTab({
                                         : 'Never'}
                                     </div>
                                   </div>
-                                  <div className="bg-card p-4 rounded-lg border">
-                                    <div className="text-sm text-muted-foreground">
+                                  <div className="bg-[color:var(--card)] p-4 rounded-lg border border-[color:var(--border)]">
+                                    <div className="text-sm text-[color:var(--muted-foreground)]">
                                       Account Created
                                     </div>
-                                    <div className="text-lg font-medium">
+                                    <div className="text-lg font-medium text-[color:var(--foreground)]">
                                       {new Date(
                                         userDetails[user.id].user.createdAt,
                                       ).toLocaleDateString()}
                                     </div>
                                   </div>
-                                  <div className="bg-card p-4 rounded-lg border">
-                                    <div className="text-sm text-muted-foreground">Status</div>
+                                  <div className="bg-[color:var(--card)] p-4 rounded-lg border border-[color:var(--border)]">
+                                    <div className="text-sm text-[color:var(--muted-foreground)]">Status</div>
                                     <div
                                       className={`text-lg font-medium ${
                                         {
-                                          online: 'text-green-500',
-                                          away: 'text-yellow-500',
-                                          inactive: 'text-orange-500',
-                                          offline: 'text-gray-500',
+                                          online: 'text-[color:var(--color-muted-green)]',
+                                          away: 'text-[color:var(--color-subtle-yellow)]',
+                                          inactive: 'text-[color:var(--color-subtle-orange)]',
+                                          offline: 'text-[color:var(--muted-foreground)]',
                                         }[userDetails[user.id].user.status]
                                       }`}
                                     >
@@ -271,10 +271,10 @@ export function UsersTab({
                                   </div>
                                   <div>
                                     <div className="flex justify-between items-center mb-4">
-                                      <h3 className="text-lg font-semibold">Recent Activities</h3>
+                                      <h3 className="text-lg font-semibold text-[color:var(--foreground)]">Recent Activities</h3>
                                       <button
                                         onClick={() => handleClearActivities(user.id)}
-                                        className="flex items-center space-x-1 px-2 py-1 text-xs text-destructive hover:text-destructive-foreground hover:bg-destructive/10 rounded transition-colors"
+                                        className="flex items-center space-x-1 px-2 py-1 text-xs text-[color:var(--destructive)] hover:text-[color:var(--destructive-foreground)] hover:bg-[color:var(--destructive)]/10 rounded transition-colors"
                                         title="Clear all activities"
                                       >
                                         <Trash2 className="w-3 h-3" />
@@ -288,7 +288,7 @@ export function UsersTab({
                                 </div>
                               </div>
                             ) : (
-                              <div className="text-center py-4 text-muted-foreground">
+                              <div className="text-center py-4 text-[color:var(--muted-foreground)]">
                                 Failed to load user details
                               </div>
                             )}

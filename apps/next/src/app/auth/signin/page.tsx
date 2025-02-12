@@ -72,11 +72,11 @@ function SignInContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-[color:var(--background)] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Welcome Back</h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-[color:var(--foreground)]">Welcome Back</h2>
+          <p className="mt-2 text-center text-sm text-[color:var(--muted-foreground)]">
             Sign in to your account to continue
           </p>
         </div>
@@ -85,7 +85,7 @@ function SignInContent() {
           <button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 bg-white text-gray-800 py-2.5 px-4 rounded-lg border hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-3 bg-[color:var(--card)] text-[color:var(--card-foreground)] py-2.5 px-4 rounded-lg border hover:bg-[color:var(--accent)]/10 transition-colors disabled:opacity-50"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -110,18 +110,24 @@ function SignInContent() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
+              <div className="w-full border-t border-[color:var(--border)]" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-50 text-gray-500">Or continue with email</span>
+              <span className="px-2 bg-[color:var(--background)] text-[color:var(--muted-foreground)]">
+                Or continue with email
+              </span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && <div className="p-3 text-sm text-red-500 bg-red-50 rounded-lg">{error}</div>}
+            {error && (
+              <div className="p-3 text-sm text-[color:var(--destructive)] bg-[color:var(--destructive)]/10 rounded-lg">
+                {error}
+              </div>
+            )}
 
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-foreground">
+              <label htmlFor="email" className="text-sm font-medium text-[color:var(--foreground)]">
                 Email
               </label>
               <input
@@ -129,13 +135,13 @@ function SignInContent() {
                 id="email"
                 name="email"
                 required
-                className="w-full px-3 py-2.5 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+                className="w-full px-3 py-2.5 border rounded-lg bg-[color:var(--background)] text-[color:var(--foreground)] focus:ring-2 focus:ring-[color:var(--primary)]/50 focus:border-[color:var(--primary)] outline-none transition-all"
                 placeholder="Enter your email"
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-foreground">
+              <label htmlFor="password" className="text-sm font-medium text-[color:var(--foreground)]">
                 Password
               </label>
               <input
@@ -143,7 +149,7 @@ function SignInContent() {
                 id="password"
                 name="password"
                 required
-                className="w-full px-3 py-2.5 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+                className="w-full px-3 py-2.5 border rounded-lg bg-[color:var(--background)] text-[color:var(--foreground)] focus:ring-2 focus:ring-[color:var(--primary)]/50 focus:border-[color:var(--primary)] outline-none transition-all"
                 placeholder="Enter your password"
               />
             </div>
@@ -151,14 +157,14 @@ function SignInContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-primary text-white py-2.5 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              className="w-full bg-[color:var(--primary)] text-[color:var(--primary-foreground)] py-2.5 rounded-lg font-medium hover:bg-[color:var(--primary)]/90 transition-colors disabled:opacity-50"
             >
               {isLoading ? 'Loading...' : 'Sign In'}
             </button>
 
-            <div className="text-center text-sm text-muted-foreground">
+            <div className="text-center text-sm text-[color:var(--muted-foreground)]">
               Don&apos;t have an account?{' '}
-              <a href="/auth/register" className="text-primary hover:underline font-medium">
+              <a href="/auth/register" className="text-[color:var(--primary)] hover:underline font-medium">
                 Register
               </a>
             </div>

@@ -27,19 +27,6 @@ function sanitizeFilename(filename: string): string {
   return `${sanitized}.${ext}`;
 }
 
-// Function to check if file exists in S3
-async function checkFileExists(key: string): Promise<boolean> {
-  try {
-    await s3Client.send(new HeadObjectCommand({
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: key,
-    }));
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
 // Function to list objects with a prefix
 async function listObjectsWithPrefix(prefix: string) {
   const command = new ListObjectsV2Command({
@@ -47,7 +34,12 @@ async function listObjectsWithPrefix(prefix: string) {
     Prefix: prefix
   });
   
-  return await s3Client.send(command);
+  try {
+    return await s3Client.send(command);
+  } catch {
+    // Handle error without defining unused variable
+    return null;
+  }
 }
 
 export async function POST(req: Request) {
@@ -71,7 +63,7 @@ export async function POST(req: Request) {
     if (contentHash) {
       const objects = await listObjectsWithPrefix('trends/');
       
-      for (const obj of objects.Contents || []) {
+      for (const obj of objects?.Contents || []) {
         try {
           const headCommand = new HeadObjectCommand({
             Bucket: process.env.AWS_BUCKET_NAME,

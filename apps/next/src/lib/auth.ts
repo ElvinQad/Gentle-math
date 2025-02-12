@@ -114,7 +114,12 @@ export const authConfig: NextAuthOptions = {
           image: profile.picture,
         };
       },
-    } as OAuthUserConfig<any>),
+    } as OAuthUserConfig<{
+      sub: string;
+      name: string;
+      email: string;
+      picture: string;
+    }>),
     CredentialsProvider({
       name: 'credentials',
       credentials: {

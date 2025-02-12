@@ -62,18 +62,18 @@ export function DashboardNav() {
     if (isModalOpen) return null;
 
     return (
-      <nav className="fixed bottom-0 left-0 right-0 bg-[hsl(var(--card))] border-t border-[hsl(var(--border))] z-30">
+      <nav className="fixed bottom-0 left-0 right-0 bg-[color:var(--card)] border-t border-[color:var(--border)] z-30">
         <div className="flex justify-around items-center h-16">
           <Link
             href="/dashboard/profile"
-            className={`flex flex-col items-center justify-center px-3 py-2 rounded-lg transition-colors
+            className={`flex flex-col items-center justify-center px-3 py-2 rounded-md transition-colors
               ${
                 pathname === '/dashboard/profile'
-                  ? 'text-[hsl(var(--primary))]'
-                  : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
+                  ? 'text-[color:var(--primary)]'
+                  : 'text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)]'
               }`}
           >
-            <div className="w-5 h-5 rounded-full bg-[hsl(var(--primary))]/10 flex items-center justify-center text-xs font-medium text-[hsl(var(--primary))]">
+            <div className="w-5 h-5 rounded-full bg-[color:var(--primary)]/10 flex items-center justify-center text-xs font-medium text-[color:var(--primary)]">
               {session?.user?.name?.[0] || session?.user?.email?.[0] || '?'}
             </div>
             <span className="text-xs mt-1">Profile</span>
@@ -81,7 +81,7 @@ export function DashboardNav() {
 
           <button
             onClick={() => signOut()}
-            className="flex flex-col items-center justify-center px-3 py-2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] transition-colors"
+            className="flex flex-col items-center justify-center px-3 py-2 text-[color:var(--muted-foreground)] hover:text-[color:var(--destructive)] transition-colors"
           >
             <LogOutIcon className="w-5 h-5" />
             <span className="text-xs mt-1">Sign out</span>
@@ -95,16 +95,16 @@ export function DashboardNav() {
     <nav
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
-      className={`fixed top-0 left-0 h-screen border-r border-[hsl(var(--border))] bg-[hsl(var(--card))] flex flex-col z-30
+      className={`fixed top-0 left-0 h-screen border-r border-[color:var(--border)] bg-[color:var(--card)] flex flex-col z-30
         transition-all duration-300 ease-in-out hidden md:flex
         ${isExpanded ? 'w-64 shadow-lg' : 'w-20'}`}
     >
       <div
-        className={`p-6 border-b border-[hsl(var(--border))] overflow-hidden whitespace-nowrap ${isExpanded ? '' : 'text-center'}`}
+        className={`p-6 border-b border-[color:var(--border)] overflow-hidden whitespace-nowrap ${isExpanded ? '' : 'text-center'}`}
       >
         <Link
           href="/"
-          className="text-2xl font-bold transition-all duration-300 hover:scale-105 text-[hsl(var(--foreground))] hover:text-[hsl(var(--primary))]"
+          className="text-2xl font-bold transition-all duration-300 hover:scale-105 text-[color:var(--foreground)] hover:text-[color:var(--primary)]"
         >
           {isExpanded ? 'Gentle-math' : 'G'}
         </Link>
@@ -122,8 +122,8 @@ export function DashboardNav() {
                 className={`flex items-center px-3 py-2 rounded-lg mb-1 transition-colors group relative
                   ${
                     isPathActive(item.href)
-                      ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]'
-                      : 'text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--foreground))]'
+                      ? 'bg-[color:var(--primary)] text-[color:var(--primary-foreground)]'
+                      : 'text-[color:var(--muted-foreground)] hover:bg-[color:var(--accent)] hover:text-[color:var(--foreground)]'
                   }`}
               >
                 {item.icon && <item.icon className="w-5 h-5 flex-shrink-0" />}
@@ -135,7 +135,7 @@ export function DashboardNav() {
                   {item.title}
                 </span>
                 {!isExpanded && (
-                  <div className="absolute left-20 px-2 py-1 bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] rounded-md opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50">
+                  <div className="absolute left-20 px-2 py-1 bg-[color:var(--popover)] text-[color:var(--popover-foreground)] rounded-md opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50">
                     {item.title}
                   </div>
                 )}
@@ -145,15 +145,15 @@ export function DashboardNav() {
         </div>
       </div>
 
-      <div className={`p-4 border-t border-[hsl(var(--border))] space-y-4 ${isExpanded ? '' : 'items-center'}`}>
+      <div className={`p-4 border-t border-[color:var(--border)] space-y-4 ${isExpanded ? '' : 'items-center'}`}>
         <div className="px-3 py-2 space-y-3">
           <Link
             href="/dashboard/profile"
-            className={`flex items-center w-full rounded-lg transition-colors hover:bg-[hsl(var(--accent))] group relative ${isExpanded ? 'space-x-3' : 'justify-center'} ${
-              pathname === '/dashboard/profile' ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : ''
+            className={`flex items-center w-full rounded-lg transition-colors hover:bg-[color:var(--accent)] group relative ${isExpanded ? 'space-x-3' : 'justify-center'} ${
+              pathname === '/dashboard/profile' ? 'bg-[color:var(--primary)] text-[color:var(--primary-foreground)]' : ''
             }`}
           >
-            <div className="w-10 h-10 rounded-full bg-[hsl(var(--primary))]/10 flex items-center justify-center text-lg font-medium text-[hsl(var(--primary))] flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-[color:var(--primary)]/10 flex items-center justify-center text-lg font-medium text-[color:var(--primary)] flex-shrink-0">
               {session?.user?.name?.[0] || session?.user?.email?.[0] || '?'}
             </div>
             <div
@@ -161,21 +161,21 @@ export function DashboardNav() {
                 isExpanded ? 'opacity-100 relative' : 'opacity-0 absolute pointer-events-none'
               }`}
             >
-              <p className="text-sm font-medium text-[hsl(var(--foreground))] truncate">
+              <p className="text-sm font-medium text-[color:var(--foreground)] truncate">
                 {session?.user?.name || 'User'}
               </p>
-              <p className="text-xs text-[hsl(var(--muted-foreground))] truncate">{session?.user?.email}</p>
+              <p className="text-xs text-[color:var(--muted-foreground)] truncate">{session?.user?.email}</p>
             </div>
             {!isExpanded && (
-              <div className="absolute left-20 px-2 py-1 bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] rounded-md opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50">
+              <div className="absolute left-20 px-2 py-1 bg-[color:var(--popover)] text-[color:var(--popover-foreground)] rounded-md opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50">
                 View Profile
               </div>
             )}
           </Link>
           <button
             onClick={() => signOut()}
-            className={`flex items-center px-3 py-2 rounded-lg text-sm text-[hsl(var(--muted-foreground))] 
-              hover:bg-[hsl(var(--destructive))]/10 hover:text-[hsl(var(--destructive))] transition-colors w-full
+            className={`flex items-center px-3 py-2 rounded-lg text-sm text-[color:var(--muted-foreground)] 
+              hover:bg-[color:var(--destructive)]/10 hover:text-[color:var(--destructive)] transition-colors w-full
               ${isExpanded ? '' : 'justify-center'} group relative`}
           >
             <LogOutIcon className="w-4 h-4 flex-shrink-0" />
@@ -187,7 +187,7 @@ export function DashboardNav() {
               Sign out
             </span>
             {!isExpanded && (
-              <div className="absolute left-20 px-2 py-1 bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] rounded-md opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50">
+              <div className="absolute left-20 px-2 py-1 bg-[color:var(--popover)] text-[color:var(--popover-foreground)] rounded-md opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50">
                 Sign out
               </div>
             )}

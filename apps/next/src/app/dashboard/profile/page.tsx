@@ -112,43 +112,43 @@ export default function ProfilePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Profile Settings</h1>
-        <p className="text-muted-foreground">Manage your account settings and preferences</p>
+        <h1 className="text-3xl font-bold mb-2 text-[color:var(--foreground)]">Profile Settings</h1>
+        <p className="text-[color:var(--muted-foreground)]">Manage your account settings and preferences</p>
       </div>
 
       <div className="grid gap-8 md:grid-cols-2">
         {/* Profile Information */}
-        <section className="bg-card rounded-lg p-6 shadow-xs border border-border">
-          <h2 className="text-2xl font-bold mb-6">Profile Information</h2>
+        <section className="bg-[color:var(--card)] rounded-lg p-6 shadow-xs border border-[color:var(--border)]">
+          <h2 className="text-2xl font-bold mb-6 text-[color:var(--card-foreground)]">Profile Information</h2>
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-medium text-primary">
+              <div className="w-20 h-20 rounded-full bg-[color:var(--primary)]/10 flex items-center justify-center text-2xl font-medium text-[color:var(--primary)]">
                 {session?.user?.name?.[0] || session?.user?.email?.[0] || '?'}
               </div>
               <div>
-                <h3 className="font-medium">{session?.user?.name || 'User'}</h3>
-                <p className="text-sm text-muted-foreground">{session?.user?.email}</p>
+                <h3 className="font-medium text-[color:var(--card-foreground)]">{session?.user?.name || 'User'}</h3>
+                <p className="text-sm text-[color:var(--muted-foreground)]">{session?.user?.email}</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium block mb-1">Display Name</label>
+                <label className="text-sm font-medium block mb-1 text-[color:var(--card-foreground)]">Display Name</label>
                 <input
                   type="text"
                   disabled={!isEditing}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg bg-background text-foreground ring-primary/50 focus:ring-1 focus:border-primary outline-none transition-colors disabled:opacity-50"
+                  className="w-full px-3 py-2 border rounded-lg bg-[color:var(--background)] text-[color:var(--foreground)] focus:ring-2 focus:ring-[color:var(--primary)]/50 focus:border-[color:var(--primary)] outline-none transition-colors disabled:opacity-50"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1">Email</label>
+                <label className="text-sm font-medium block mb-1 text-[color:var(--card-foreground)]">Email</label>
                 <input
                   type="email"
                   disabled
                   value={session?.user?.email || ''}
-                  className="w-full px-3 py-2 border rounded-lg bg-background text-foreground ring-primary/50 focus:ring-1 focus:border-primary outline-none transition-colors disabled:opacity-50"
+                  className="w-full px-3 py-2 border rounded-lg bg-[color:var(--background)] text-[color:var(--foreground)] focus:ring-2 focus:ring-[color:var(--primary)]/50 focus:border-[color:var(--primary)] outline-none transition-colors disabled:opacity-50"
                 />
               </div>
               <button
@@ -160,7 +160,7 @@ export default function ProfilePage() {
                   }
                 }}
                 disabled={isLoading}
-                className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="bg-[color:var(--primary)] text-[color:var(--primary-foreground)] px-4 py-2 rounded-lg hover:bg-[color:var(--primary)]/90 transition-colors disabled:opacity-50"
               >
                 {isLoading ? 'Saving...' : isEditing ? 'Save Changes' : 'Edit Profile'}
               </button>
@@ -169,15 +169,15 @@ export default function ProfilePage() {
         </section>
 
         {/* Subscription Information */}
-        <section className="bg-card rounded-lg p-6 shadow-sm border border-border">
-          <h2 className="text-2xl font-bold mb-6">Subscription</h2>
+        <section className="bg-[color:var(--card)] rounded-lg p-6 shadow-sm border border-[color:var(--border)]">
+          <h2 className="text-2xl font-bold mb-6 text-[color:var(--card-foreground)]">Subscription</h2>
           <div className="space-y-6">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <div
-                  className={`w-3 h-3 rounded-full ${hasActiveSubscription(session?.user) ? 'bg-green-500' : 'bg-red-500'}`}
+                  className={`w-3 h-3 rounded-full ${hasActiveSubscription(session?.user) ? 'bg-[color:var(--color-muted-green)]' : 'bg-[color:var(--color-subtle-red)]'}`}
                 ></div>
-                <span className="font-medium">
+                <span className="font-medium text-[color:var(--card-foreground)]">
                   {hasActiveSubscription(session?.user) ? 'Active' : 'Inactive'}
                 </span>
               </div>
@@ -185,22 +185,22 @@ export default function ProfilePage() {
               {hasActiveSubscription(session?.user) ? (
                 <>
                   <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-[color:var(--muted-foreground)]">
                       Days Remaining:{' '}
-                      <span className="font-medium text-foreground">
+                      <span className="font-medium text-[color:var(--foreground)]">
                         {getSubscriptionDaysRemaining(session?.user)}
                       </span>
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-[color:var(--muted-foreground)]">
                       Expires:{' '}
-                      <span className="font-medium text-foreground">
+                      <span className="font-medium text-[color:var(--foreground)]">
                         {formatSubscriptionEndDate(session?.user)}
                       </span>
                     </p>
                   </div>
                 </>
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-[color:var(--muted-foreground)]">
                   Your subscription has expired. Please renew to access premium features.
                 </p>
               )}
@@ -209,13 +209,13 @@ export default function ProfilePage() {
         </section>
 
         {/* Preferences */}
-        <section className="bg-card rounded-lg p-6 shadow-sm border border-border">
-          <h2 className="text-2xl font-bold mb-6">Preferences</h2>
+        <section className="bg-[color:var(--card)] rounded-lg p-6 shadow-sm border border-[color:var(--border)]">
+          <h2 className="text-2xl font-bold mb-6 text-[color:var(--card-foreground)]">Preferences</h2>
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-medium">Email Notifications</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-medium text-[color:var(--card-foreground)]">Email Notifications</h3>
+                <p className="text-sm text-[color:var(--muted-foreground)]">
                   Receive email updates about your account
                 </p>
               </div>
@@ -226,14 +226,14 @@ export default function ProfilePage() {
                   onChange={(e) => setEmailNotifications(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                <div className="w-11 h-6 bg-[color:var(--muted)] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[color:var(--primary)]/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-[color:var(--color-white)] after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-[color:var(--color-white)] after:border-[color:var(--border)] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[color:var(--primary)]"></div>
               </label>
             </div>
 
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-medium">Dark Mode</h3>
-                <p className="text-sm text-muted-foreground">Toggle between light and dark mode</p>
+                <h3 className="font-medium text-[color:var(--card-foreground)]">Dark Mode</h3>
+                <p className="text-sm text-[color:var(--muted-foreground)]">Toggle between light and dark mode</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -242,50 +242,50 @@ export default function ProfilePage() {
                   onChange={(e) => setTheme(e.target.checked ? 'dark' : 'light')}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                <div className="w-11 h-6 bg-[color:var(--muted)] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[color:var(--primary)]/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-[color:var(--color-white)] after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-[color:var(--color-white)] after:border-[color:var(--border)] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[color:var(--primary)]"></div>
               </label>
             </div>
           </div>
         </section>
 
         {/* Security */}
-        <section className="bg-card rounded-lg p-6 shadow-sm border border-border">
-          <h2 className="text-2xl font-bold mb-6">Security</h2>
+        <section className="bg-[color:var(--card)] rounded-lg p-6 shadow-sm border border-[color:var(--border)]">
+          <h2 className="text-2xl font-bold mb-6 text-[color:var(--card-foreground)]">Security</h2>
           <div className="space-y-6">
             <div>
-              <h3 className="font-medium mb-4">Change Password</h3>
+              <h3 className="font-medium mb-4 text-[color:var(--card-foreground)]">Change Password</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium block mb-1">Current Password</label>
+                  <label className="text-sm font-medium block mb-1 text-[color:var(--card-foreground)]">Current Password</label>
                   <input
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+                    className="w-full px-3 py-2 border rounded-lg bg-[color:var(--background)] text-[color:var(--foreground)] focus:ring-2 focus:ring-[color:var(--primary)]/50 focus:border-[color:var(--primary)] outline-none transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium block mb-1">New Password</label>
+                  <label className="text-sm font-medium block mb-1 text-[color:var(--card-foreground)]">New Password</label>
                   <input
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+                    className="w-full px-3 py-2 border rounded-lg bg-[color:var(--background)] text-[color:var(--foreground)] focus:ring-2 focus:ring-[color:var(--primary)]/50 focus:border-[color:var(--primary)] outline-none transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium block mb-1">Confirm New Password</label>
+                  <label className="text-sm font-medium block mb-1 text-[color:var(--card-foreground)]">Confirm New Password</label>
                   <input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+                    className="w-full px-3 py-2 border rounded-lg bg-[color:var(--background)] text-[color:var(--foreground)] focus:ring-2 focus:ring-[color:var(--primary)]/50 focus:border-[color:var(--primary)] outline-none transition-colors"
                   />
                 </div>
                 <button
                   onClick={handlePasswordUpdate}
                   disabled={isLoading || !currentPassword || !newPassword || !confirmPassword}
-                  className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  className="bg-[color:var(--primary)] text-[color:var(--primary-foreground)] px-4 py-2 rounded-lg hover:bg-[color:var(--primary)]/90 transition-colors disabled:opacity-50"
                 >
                   {isLoading ? 'Updating...' : 'Update Password'}
                 </button>
@@ -295,13 +295,13 @@ export default function ProfilePage() {
         </section>
 
         {/* Connected Accounts */}
-        <section className="bg-card rounded-lg p-6 shadow-sm border border-border">
-          <h2 className="text-2xl font-bold mb-6">Connected Accounts</h2>
+        <section className="bg-[color:var(--card)] rounded-lg p-6 shadow-sm border border-[color:var(--border)]">
+          <h2 className="text-2xl font-bold mb-6 text-[color:var(--card-foreground)]">Connected Accounts</h2>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center justify-between p-4 border rounded-lg border-[color:var(--border)]">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-[#4285F4] rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24">
+                <div className="w-10 h-10 bg-[color:var(--color-soft-blue)] rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-[color:var(--color-white)]" viewBox="0 0 24 24">
                     <path
                       fill="currentColor"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -321,13 +321,13 @@ export default function ProfilePage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-medium">Google</h3>
-                  <p className="text-sm text-muted-foreground">Connected</p>
+                  <h3 className="font-medium text-[color:var(--card-foreground)]">Google</h3>
+                  <p className="text-sm text-[color:var(--muted-foreground)]">Connected</p>
                 </div>
               </div>
               <button
                 onClick={() => toast.info('Google account disconnection not implemented yet')}
-                className="text-sm text-destructive hover:text-destructive-foreground hover:bg-destructive/10 px-3 py-1 rounded-lg transition-colors"
+                className="text-sm text-[color:var(--destructive)] hover:text-[color:var(--destructive-foreground)] hover:bg-[color:var(--destructive)]/10 px-3 py-1 rounded-lg transition-colors"
               >
                 Disconnect
               </button>
@@ -336,13 +336,13 @@ export default function ProfilePage() {
         </section>
 
         {/* Danger Zone */}
-        <section className="bg-card rounded-lg p-6 shadow-sm border border-destructive/20">
-          <h2 className="text-2xl font-bold mb-6 text-destructive">Danger Zone</h2>
+        <section className="bg-[color:var(--card)] rounded-lg p-6 shadow-sm border border-[color:var(--destructive)]/20">
+          <h2 className="text-2xl font-bold mb-6 text-[color:var(--destructive)]">Danger Zone</h2>
           <div className="space-y-4">
             <button
               onClick={handleDeleteAccount}
               disabled={isLoading}
-              className="w-full px-4 py-2 text-sm text-destructive hover:text-destructive-foreground hover:bg-destructive rounded-lg transition-colors disabled:opacity-50"
+              className="w-full px-4 py-2 text-sm text-[color:var(--destructive)] hover:text-[color:var(--destructive-foreground)] hover:bg-[color:var(--destructive)] rounded-lg transition-colors disabled:opacity-50"
             >
               {isLoading ? 'Deleting...' : 'Delete Account'}
             </button>

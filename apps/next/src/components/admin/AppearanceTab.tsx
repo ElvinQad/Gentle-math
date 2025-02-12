@@ -88,17 +88,17 @@ export function AppearanceTab() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-[color:var(--card)] border-[color:var(--border)]">
         <CardHeader>
-          <CardTitle>Background Image</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-[color:var(--card-foreground)]">Background Image</CardTitle>
+          <CardDescription className="text-[color:var(--muted-foreground)]">
             Manage the background image shown on the landing page. Recommended size: 1920x1080px.
             Maximum file size: 5MB.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
+            <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-[color:var(--border)]">
               <Image
                 src={currentBgImage}
                 alt="Current background"
@@ -110,6 +110,7 @@ export function AppearanceTab() {
               <Button
                 disabled={isUploading}
                 onClick={() => document.getElementById('bgImageInput')?.click()}
+                className="bg-[color:var(--primary)] text-[color:var(--primary-foreground)] hover:bg-[color:var(--primary)]/90"
               >
                 {isUploading ? 'Uploading...' : 'Change Background'}
               </Button>

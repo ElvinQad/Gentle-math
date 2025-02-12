@@ -4,10 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Trend } from '@/types/admin';
 import { Modal } from '@/components/ui/Modal';
 import Image from 'next/image';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   AlertDialog,
@@ -21,8 +18,11 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Spinner } from '@/components/ui/spinner';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { signOut } from 'next-auth/react';
+import { DetailsTab } from './tabs/DetailsTab';
+import { ImagesTab } from './tabs/ImagesTab';
+import { DataTab } from './tabs/DataTab';
 
 interface ImagePreview {
   url: string;
@@ -58,7 +58,6 @@ export function TrendsTab() {
     mainImageIndex: 0,
     spreadsheetUrl: '',
   });
-  const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentTab, setCurrentTab] = useState<'details' | 'images' | 'data'>('details');
   const [imageUrls, setImageUrls] = useState<ImagePreview[]>([{ url: '', isMain: true }]);
@@ -67,6 +66,10 @@ export function TrendsTab() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isProcessingSpreadsheet, setIsProcessingSpreadsheet] = useState(false);
+
+  const handleFormDataChange = useCallback((data: Partial<typeof formData>) => {
+    setFormData(prev => ({ ...prev, ...data }));
+  }, []);
 
   useEffect(() => {
     const fetchTrends = async () => {
@@ -83,48 +86,6 @@ export function TrendsTab() {
     };
 
     fetchTrends();
-  }, []);
-  const handleImageUrlChange = (index: number, value: string) => {
-    try {
-      new URL(value);
-      const newImageUrls = [...imageUrls];
-      newImageUrls[index] = { ...newImageUrls[index], url: value };
-      setImageUrls(newImageUrls);
-    } catch {
-      if (value) {
-        toast.error('Please enter a valid URL');
-      }
-    }
-  };
-
-  const addImageUrl = () => {
-    setImageUrls([...imageUrls, { url: '', isMain: false }]);
-  };
-
-  const removeImageUrl = (index: number) => {
-    const newImageUrls = imageUrls.filter((_, i) => i !== index);
-    if (imageUrls[index].isMain && newImageUrls.length > 0) {
-      newImageUrls[0].isMain = true;
-    }
-    setImageUrls(newImageUrls);
-  };
-
-  const setMainImage = (index: number) => {
-    const newImageUrls = imageUrls.map((img, i) => ({
-      ...img,
-      isMain: i === index,
-    }));
-    setImageUrls(newImageUrls);
-  };
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
   }, []);
 
   const handleFileUpload = useCallback(async (files: File[]) => {
@@ -213,23 +174,6 @@ export function TrendsTab() {
     }
   }, []);
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setIsDragging(false);
-
-      const files = Array.from(e.dataTransfer.files).filter((file) =>
-        file.type.startsWith('image/'),
-      );
-      if (files.length === 0) {
-        toast.error('Please drop only image files');
-        return;
-      }
-
-      handleFileUpload(files);
-    },
-    [handleFileUpload],
-  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -308,6 +252,7 @@ export function TrendsTab() {
     setImageUrls([{ url: '', isMain: true }]);
     setIsEditMode(false);
     setSelectedTrend(null);
+    setCurrentTab('details');
   };
 
   const handleEditClick = (trend: Trend) => {
@@ -382,337 +327,6 @@ export function TrendsTab() {
     }
   };
 
-  const renderDetailsTab = () => (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="title">Title</Label>
-        <Input
-          id="title"
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          placeholder="Enter trend title"
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          placeholder="Enter trend description"
-          required
-          rows={4}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="type">Type</Label>
-        <select
-          id="type"
-          value={formData.type}
-          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-          className="w-full px-3 py-2 border rounded-lg bg-background text-foreground"
-          required
-        >
-          <option value="">Select type</option>
-          <option value="Fashion">Fashion</option>
-          <option value="Technology">Technology</option>
-          <option value="Lifestyle">Lifestyle</option>
-          <option value="Business">Business</option>
-        </select>
-      </div>
-    </div>
-  );
-
-  const renderImagesTab = () => (
-    <div className="space-y-8">
-      {/* Upload Area */}
-      <div
-        className={`relative border-2 border-dashed rounded-lg p-8 transition-colors ${
-          isDragging ? 'border-primary bg-primary/5' : 'border-border'
-        }`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          onChange={(e) => handleFileUpload(Array.from(e.target.files || []))}
-        />
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-            <svg
-              className="w-8 h-8 text-primary"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
-          <div>
-            <p className="text-lg font-medium">Drop images here or click to upload</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Support for PNG, JPG, JPEG, GIF up to 5MB
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Image URLs */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <Label>Image URLs</Label>
-          <Button type="button" variant="ghost" size="sm" onClick={addImageUrl}>
-            Add URL
-          </Button>
-        </div>
-
-        {imageUrls.map((img, index) => (
-          <div key={index} className="flex gap-2">
-            <Input
-              value={img.url}
-              onChange={(e) => handleImageUrlChange(index, e.target.value)}
-              placeholder="Enter image URL"
-            />
-            <Button
-              type="button"
-              variant={img.isMain ? 'default' : 'outline'}
-              size="icon"
-              onClick={() => setMainImage(index)}
-              className="shrink-0"
-            >
-              {img.isMain ? (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                  />
-                </svg>
-              )}
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              size="icon"
-              onClick={() => removeImageUrl(index)}
-              className="shrink-0"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </Button>
-          </div>
-        ))}
-      </div>
-
-      {/* Image Previews */}
-      {imageUrls.some((img) => isValidUrl(img.url)) && (
-        <div className="space-y-4">
-          <Label>Preview</Label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {imageUrls.map((img, index) => {
-              if (!img.url || !isValidUrl(img.url)) return null;
-
-              return (
-                <div key={`url-${index}`} className="relative group aspect-video">
-                  <Image
-                    src={img.url || '/placeholder-image.jpg'}
-                    alt={`Preview ${index + 1}`}
-                    fill
-                    className="object-cover rounded-lg"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/placeholder-image.jpg';
-                      
-                      // Show a more detailed error message with retry option
-                      toast.error(
-                        `Failed to load image: ${img.url}`,
-                        {
-                          description: 'The image might be private. Try signing in as admin and using the fix-images endpoint.',
-                          action: {
-                            label: 'Fix Permissions',
-                            onClick: async () => {
-                              try {
-                                const response = await fetch('/api/admin/trends/fix-images', {
-                                  method: 'POST',
-                                });
-                                
-                                if (!response.ok) {
-                                  if (response.status === 401) {
-                                    toast.error('Please sign in as admin first');
-                                    return;
-                                  }
-                                  throw new Error('Failed to fix image permissions');
-                                }
-                                
-                                // Retry loading the image
-                                target.src = img.url;
-                                toast.success('Image permissions updated. Retrying...');
-                              } catch (error) {
-                                toast.error('Failed to fix image permissions. Please try again.');
-                              }
-                            }
-                          },
-                          duration: 10000
-                        }
-                      );
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
-                    <Button
-                      type="button"
-                      variant={img.isMain ? 'default' : 'secondary'}
-                      size="sm"
-                      onClick={() => setMainImage(index)}
-                    >
-                      {img.isMain ? 'Main' : 'Set Main'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => removeImageUrl(index)}
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderDataTab = () => (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="spreadsheet">Google Spreadsheet URL</Label>
-        <div className="flex gap-2">
-          <Input
-            id="spreadsheet"
-            type="url"
-            value={formData.spreadsheetUrl}
-            onChange={(e) => setFormData({ ...formData, spreadsheetUrl: e.target.value })}
-            placeholder="Enter Google Spreadsheet URL"
-          />
-          {isEditMode && (
-            <Button
-              type="button"
-              onClick={handleProcessSpreadsheet}
-              disabled={isProcessingSpreadsheet || !formData.spreadsheetUrl}
-            >
-              {isProcessingSpreadsheet ? (
-                <>
-                  <Spinner className="mr-2 h-4 w-4" />
-                  Processing...
-                </>
-              ) : (
-                'Process Data'
-              )}
-            </Button>
-          )}
-        </div>
-        <div className="text-sm space-y-1">
-          <p className="text-muted-foreground">
-            The spreadsheet should have &apos;trend&apos; and &apos;date&apos; columns
-          </p>
-          <p className="text-yellow-600 dark:text-yellow-500">
-            Note: You must be signed in with Google to process spreadsheet data. If you&apos;re using regular login, you&apos;ll need to sign out and sign in with Google first.
-          </p>
-        </div>
-      </div>
-
-      {/* Add Data Preview Section */}
-      {selectedTrend?.analytics && selectedTrend.analytics.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="font-medium">Data Preview</h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border">
-              <thead>
-                <tr>
-                  <th className="px-4 py-2 text-left">Month</th>
-                  <th className="px-4 py-2 text-left">Actual</th>
-                  <th className="px-4 py-2 text-left">Forecast</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {selectedTrend.analytics[0].dates.map((date, index) => (
-                  <tr key={index}>
-                    <td className="px-4 py-2">{new Date(date).toISOString().slice(0, 7)}</td>
-                    <td className="px-4 py-2">{selectedTrend.analytics[0].values[index] ?? '—'}</td>
-                    <td className="px-4 py-2">{selectedTrend.analytics[0].values[index]}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            <p>
-              • Historical data points:{' '}
-              {selectedTrend.analytics[0].dates.length -
-                selectedTrend.analytics[0].values.filter((v) => v === null).length}
-            </p>
-            <p>
-              • Forecast points:{' '}
-              {selectedTrend.analytics[0].values.filter((v) => v === null).length}
-            </p>
-            <p>
-              • Maximum value: {Math.max(...selectedTrend.analytics[0].values.map((v) => v ?? 0))}
-            </p>
-            <p>
-              • Average value:{' '}
-              {(
-                selectedTrend.analytics[0].values.reduce((sum, v) => sum + (v ?? 0), 0) /
-                selectedTrend.analytics[0].values.length
-              ).toFixed(2)}
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
   const handleDeleteTrend = async (trendId: string) => {
     try {
       setIsDeleting(true);
@@ -736,160 +350,16 @@ export function TrendsTab() {
     }
   };
 
-  const renderDetailModal = () => {
-    if (!selectedTrend) return null;
-
-    // Convert analytics to chart data format
-    const chartData = selectedTrend?.analytics?.[0]
-      ? selectedTrend.analytics[0].dates.map((date, i) => ({
-          month: new Date(date).toISOString().slice(0, 7),
-          actual: selectedTrend.analytics[0].values[i],
-          forecast: selectedTrend.analytics[0].values[i],
-        }))
-      : [];
-
-    return (
-      <Modal
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        title="Trend Details"
-      >
-        <div className="space-y-6">
-          {/* Trend Images */}
-          <div className="aspect-video relative rounded-lg overflow-hidden">
-            {selectedTrend.imageUrls?.[selectedTrend.mainImageIndex] ? (
-              <Image
-                src={selectedTrend.imageUrls[selectedTrend.mainImageIndex]}
-                alt={selectedTrend.title || 'Trend image'}
-                fill
-                className="object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-muted flex items-center justify-center">
-                <span className="text-muted-foreground">No image</span>
-              </div>
-            )}
-          </div>
-
-          {/* Trend Information */}
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Title</h3>
-              <p className="text-lg">{selectedTrend.title}</p>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Description</h3>
-              <p className="text-base">{selectedTrend.description}</p>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Type</h3>
-              <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
-                {selectedTrend.type}
-              </span>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Created At</h3>
-              <p className="text-base">{new Date(selectedTrend.createdAt).toLocaleDateString()}</p>
-            </div>
-
-            {/* Image Gallery */}
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-2">All Images</h3>
-              <div className="grid grid-cols-4 gap-2">
-                {selectedTrend.imageUrls?.map((url, index) => {
-                  if (!url) return null;
-                  return (
-                    <div key={index} className="relative aspect-video rounded-lg overflow-hidden">
-                      <Image
-                        src={url}
-                        alt={`${selectedTrend.title || 'Trend'} - Image ${index + 1}`}
-                        fill
-                        className="object-cover"
-                      />
-                      {index === selectedTrend.mainImageIndex && (
-                        <div className="absolute top-1 right-1 bg-primary text-primary-foreground text-xs px-1 rounded">
-                          Main
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-6 border-t">
-            <Button variant="secondary" onClick={() => handleEditClick(selectedTrend!)}>
-              Edit
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive">Delete Trend</Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the trend and remove
-                    all associated data.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => handleDeleteTrend(selectedTrend.id)}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    disabled={isDeleting}
-                  >
-                    {isDeleting ? 'Deleting...' : 'Delete'}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-
-            <Button variant="outline" onClick={() => setIsDetailModalOpen(false)}>
-              Close
-            </Button>
-          </div>
-
-          {/* Area Chart */}
-          <div className="mt-6">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">Trend Data</h3>
-            <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="month"
-                tickFormatter={(str) => {
-                  const date = new Date(str);
-                  return date.toLocaleDateString('en-US', { month: 'short' });
-                }}
-              />
-              <YAxis />
-              <Tooltip
-                labelFormatter={(value) => {
-                  const date = new Date(value);
-                  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-                }}
-              />
-              <Legend />
-              <Area type="monotone" dataKey="actual" stroke="#8884d8" activeDot={{ r: 8 }} />
-              <Area type="monotone" dataKey="forecast" stroke="#82ca9d" />
-            </AreaChart>
-          </div>
-        </div>
-      </Modal>
-    );
-  };
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Trends</h2>
-        <Button onClick={() => setIsModalOpen(true)}>Add New Trend</Button>
+        <h2 className="text-2xl font-semibold text-[color:var(--foreground)]">Trends</h2>
+        <Button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-[color:var(--primary)] text-[color:var(--primary-foreground)] hover:bg-[color:var(--primary)]/90 transition-colors"
+        >
+          Add New Trend
+        </Button>
       </div>
 
       <Modal
@@ -899,97 +369,348 @@ export function TrendsTab() {
           resetForm();
         }}
         title={isEditMode ? 'Edit Trend' : 'Create New Trend'}
+        className="bg-[color:var(--background)] border border-[color:var(--border)] shadow-lg rounded-lg max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto"
       >
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <Tabs
             value={currentTab}
             onValueChange={(value) => setCurrentTab(value as 'details' | 'images' | 'data')}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="images">Images</TabsTrigger>
-              <TabsTrigger value="data">Data</TabsTrigger>
-            </TabsList>
+            <div className="sticky top-0 z-10 bg-[color:var(--background)] pb-4">
+              <TabsList className="w-full grid grid-cols-3 bg-[color:var(--muted)] rounded-lg p-1">
+                <TabsTrigger 
+                  value="details"
+                  className="rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out-expo
+                    data-[state=active]:bg-[color:var(--background)] data-[state=active]:text-[color:var(--foreground)]
+                    data-[state=active]:shadow-sm data-[state=active]:scale-[0.98]
+                    hover:text-[color:var(--foreground)]/90"
+                >
+                  Details
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="images"
+                  className="rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out-expo
+                    data-[state=active]:bg-[color:var(--background)] data-[state=active]:text-[color:var(--foreground)]
+                    data-[state=active]:shadow-sm data-[state=active]:scale-[0.98]
+                    hover:text-[color:var(--foreground)]/90"
+                >
+                  Images
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="data"
+                  className="rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out-expo
+                    data-[state=active]:bg-[color:var(--background)] data-[state=active]:text-[color:var(--foreground)]
+                    data-[state=active]:shadow-sm data-[state=active]:scale-[0.98]
+                    hover:text-[color:var(--foreground)]/90"
+                >
+                  Data
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-            <TabsContent value="details" className="pt-4">
-              {renderDetailsTab()}
-            </TabsContent>
+            <div className="mt-4">
+              <TabsContent value="details" className="focus-visible:outline-none">
+                <DetailsTab formData={formData} setFormData={handleFormDataChange} />
+              </TabsContent>
 
-            <TabsContent value="images" className="pt-4">
-              {renderImagesTab()}
-            </TabsContent>
+              <TabsContent value="images" className="focus-visible:outline-none">
+                <ImagesTab 
+                  imageUrls={imageUrls} 
+                  setImageUrls={setImageUrls} 
+                  onFileUpload={handleFileUpload} 
+                />
+              </TabsContent>
 
-            <TabsContent value="data" className="pt-4">
-              {renderDataTab()}
-            </TabsContent>
+              <TabsContent value="data" className="focus-visible:outline-none">
+                <DataTab 
+                  formData={formData}
+                  setFormData={handleFormDataChange}
+                  selectedTrend={selectedTrend}
+                  isProcessingSpreadsheet={isProcessingSpreadsheet}
+                  onProcessSpreadsheet={handleProcessSpreadsheet}
+                  isEditMode={isEditMode}
+                />
+              </TabsContent>
+            </div>
           </Tabs>
 
-          <div className="flex justify-end gap-3 pt-6 border-t">
-            <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting
-                ? isEditMode
-                  ? 'Updating...'
-                  : 'Creating...'
-                : isEditMode
-                  ? 'Update Trend'
-                  : 'Create Trend'}
-            </Button>
+          <div className="sticky bottom-0 z-10 bg-[color:var(--background)] pt-4 border-t border-[color:var(--border)] mt-6">
+            <div className="flex justify-end gap-3">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => {
+                  setIsModalOpen(false);
+                  resetForm();
+                }}
+                className="text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] transition-colors"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-[color:var(--primary)] text-[color:var(--primary-foreground)] hover:bg-[color:var(--primary)]/90 transition-colors"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Spinner className="mr-2 h-4 w-4" />
+                    {isEditMode ? 'Updating...' : 'Creating...'}
+                  </>
+                ) : (
+                  isEditMode ? 'Update Trend' : 'Create Trend'
+                )}
+              </Button>
+            </div>
           </div>
         </form>
       </Modal>
 
       {/* Trends Grid */}
       {isLoading ? (
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Loading trends...</p>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-[color:var(--primary)] border-t-transparent mx-auto"></div>
+          <p className="mt-4 text-[color:var(--muted-foreground)]">Loading trends...</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {trends.map((trend) => (
             <Card
               key={trend.id}
-              className="p-4 cursor-pointer hover:shadow-lg transition-shadow"
+              className="group hover:shadow-lg transition-all duration-300 ease-out-expo bg-[color:var(--card)] border-[color:var(--border)] overflow-hidden"
               onClick={() => {
                 setSelectedTrend(trend);
                 setIsDetailModalOpen(true);
               }}
             >
-              <div className="aspect-video relative mb-4 rounded-lg overflow-hidden">
+              <div className="aspect-video relative overflow-hidden">
                 {trend.imageUrls?.[trend.mainImageIndex] ? (
                   <Image
                     src={trend.imageUrls[trend.mainImageIndex]}
                     alt={trend.title || 'Trend image'}
                     fill
-                    className="object-cover"
+                    className="object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
                   />
                 ) : (
-                  <div className="w-full h-full bg-muted flex items-center justify-center">
-                    <span className="text-muted-foreground">No image</span>
+                  <div className="w-full h-full bg-[color:var(--muted)] flex items-center justify-center">
+                    <span className="text-[color:var(--muted-foreground)]">No image</span>
                   </div>
                 )}
               </div>
-              <h3 className="text-lg font-semibold mb-2">{trend.title}</h3>
-              <p className="text-sm text-muted-foreground mb-4">{trend.description}</p>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">
-                  {new Date(trend.createdAt).toLocaleDateString()}
-                </span>
-                <span className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
-                  {trend.type}
-                </span>
+              <div className="p-4">
+                <h3 className="text-lg font-semibold mb-2 text-[color:var(--card-foreground)]">{trend.title}</h3>
+                <p className="text-sm text-[color:var(--muted-foreground)] mb-4 line-clamp-2">{trend.description}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-[color:var(--muted-foreground)]">
+                    {new Date(trend.createdAt).toLocaleDateString()}
+                  </span>
+                  <span className="px-2 py-1 text-xs rounded-full bg-[color:var(--primary)]/10 text-[color:var(--primary)]">
+                    {trend.type}
+                  </span>
+                </div>
               </div>
             </Card>
           ))}
         </div>
       )}
 
-      {/* Render Detail Modal */}
-      {renderDetailModal()}
+      {/* Detail Modal */}
+      <Modal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        title="Trend Details"
+        className="bg-[color:var(--background)] border border-[color:var(--border)] shadow-lg rounded-lg max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto"
+      >
+        {selectedTrend && (
+          <div className="space-y-4">
+            {/* Trend Images */}
+            <div className="h-[300px] sm:h-[400px] relative rounded-lg overflow-hidden bg-[color:var(--muted)]">
+              {selectedTrend.imageUrls?.[selectedTrend.mainImageIndex] ? (
+                <Image
+                  src={selectedTrend.imageUrls[selectedTrend.mainImageIndex]}
+                  alt={selectedTrend.title || 'Trend image'}
+                  fill
+                  className="object-cover transition-transform duration-700 ease-out-expo hover:scale-105"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className="text-[color:var(--muted-foreground)]">No image</span>
+                </div>
+              )}
+            </div>
+
+            {/* Trend Information and Analytics */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Left Column - Basic Info */}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Title</h3>
+                  <p className="text-lg font-medium text-[color:var(--foreground)]">{selectedTrend.title}</p>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Description</h3>
+                  <p className="text-base text-[color:var(--foreground)]">{selectedTrend.description}</p>
+                </div>
+
+                <div className="flex gap-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Type</h3>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[color:var(--primary)]/10 text-[color:var(--primary)]">
+                      {selectedTrend.type}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Created</h3>
+                    <p className="text-sm text-[color:var(--foreground)]">
+                      {new Date(selectedTrend.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Analytics Summary */}
+                {selectedTrend.analytics?.[0] && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
+                      <h4 className="text-sm font-medium text-[color:var(--muted-foreground)]">Latest Value</h4>
+                      <p className="mt-1 text-xl font-semibold text-[color:var(--foreground)]">
+                        {selectedTrend.analytics[0].values[selectedTrend.analytics[0].values.length - 1]}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
+                      <h4 className="text-sm font-medium text-[color:var(--muted-foreground)]">Growth Rate</h4>
+                      <p className="mt-1 text-xl font-semibold text-[color:var(--foreground)]">
+                        {((selectedTrend.analytics[0].values[selectedTrend.analytics[0].values.length - 1] /
+                          selectedTrend.analytics[0].values[0] - 1) * 100).toFixed(1)}%
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column - Chart and Images */}
+              <div className="space-y-4">
+                {/* Analytics Chart */}
+                {selectedTrend.analytics?.[0] && (
+                  <div className="p-4 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
+                    <h3 className="text-sm font-medium text-[color:var(--muted-foreground)] mb-4">Trend Analytics</h3>
+                    <div className="w-full overflow-x-auto">
+                      <AreaChart
+                        width={450}
+                        height={200}
+                        data={selectedTrend.analytics[0].dates.map((date, i) => ({
+                          date: new Date(date).toISOString().slice(0, 7),
+                          value: selectedTrend.analytics[0].values[i],
+                        }))}
+                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                        <XAxis
+                          dataKey="date"
+                          stroke="var(--muted-foreground)"
+                          tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short' })}
+                        />
+                        <YAxis stroke="var(--muted-foreground)" />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'var(--card)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '0.5rem',
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="value"
+                          stroke="var(--primary)"
+                          fill="var(--primary)"
+                          fillOpacity={0.1}
+                        />
+                      </AreaChart>
+                    </div>
+                  </div>
+                )}
+
+                {/* Image Gallery */}
+                <div>
+                  <h3 className="text-sm font-medium text-[color:var(--muted-foreground)] mb-3">Image Gallery</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    {selectedTrend.imageUrls?.map((url, index) => {
+                      if (!url) return null;
+                      return (
+                        <div key={index} className="group relative aspect-video rounded-lg overflow-hidden bg-[color:var(--muted)]">
+                          <Image
+                            src={url}
+                            alt={`${selectedTrend.title || 'Trend'} - Image ${index + 1}`}
+                            fill
+                            className="object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
+                          />
+                          {index === selectedTrend.mainImageIndex && (
+                            <div className="absolute top-2 right-2 bg-[color:var(--primary)] text-[color:var(--primary-foreground)] text-xs px-2 py-0.5 rounded-full">
+                              Main
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-[color:var(--border)]">
+              <Button 
+                variant="secondary" 
+                onClick={() => handleEditClick(selectedTrend)}
+                className="bg-[color:var(--secondary)] text-[color:var(--secondary-foreground)] hover:bg-[color:var(--secondary)]/90 transition-colors"
+              >
+                Edit
+              </Button>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="destructive"
+                    className="bg-[color:var(--destructive)] text-[color:var(--destructive-foreground)] hover:bg-[color:var(--destructive)]/90 transition-colors"
+                  >
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-[color:var(--background)] border border-[color:var(--border)]">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-[color:var(--foreground)]">Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription className="text-[color:var(--muted-foreground)]">
+                      This action cannot be undone. This will permanently delete the trend and remove all associated data.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-[color:var(--secondary)] text-[color:var(--secondary-foreground)] hover:bg-[color:var(--secondary)]/90">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => handleDeleteTrend(selectedTrend.id)}
+                      className="bg-[color:var(--destructive)] text-[color:var(--destructive-foreground)] hover:bg-[color:var(--destructive)]/90"
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? 'Deleting...' : 'Delete'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              <Button 
+                variant="outline" 
+                onClick={() => setIsDetailModalOpen(false)}
+                className="border-[color:var(--border)] text-[color:var(--foreground)] hover:bg-[color:var(--muted)]/50 transition-colors"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

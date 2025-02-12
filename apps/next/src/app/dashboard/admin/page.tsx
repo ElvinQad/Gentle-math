@@ -164,14 +164,40 @@ export default function AdminPage() {
         <p className="text-muted-foreground">Manage users, trends, and system settings</p>
       </div>
 
-      <Tabs defaultValue="users" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="trends">Trends</TabsTrigger>
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="users" className="relative space-y-6">
+        <div className="sticky top-0 z-10 bg-[color:var(--background)] border-b border-[color:var(--border)] pb-4">
+          <TabsList className="w-full grid grid-cols-3 bg-[color:var(--muted)] rounded-lg p-1">
+            <TabsTrigger 
+              value="users"
+              className="rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out-expo
+                data-[state=active]:bg-[color:var(--background)] data-[state=active]:text-[color:var(--foreground)]
+                data-[state=active]:shadow-sm data-[state=active]:scale-[0.98]
+                hover:text-[color:var(--foreground)]/90"
+            >
+              Users
+            </TabsTrigger>
+            <TabsTrigger 
+              value="trends"
+              className="rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out-expo
+                data-[state=active]:bg-[color:var(--background)] data-[state=active]:text-[color:var(--foreground)]
+                data-[state=active]:shadow-sm data-[state=active]:scale-[0.98]
+                hover:text-[color:var(--foreground)]/90"
+            >
+              Trends
+            </TabsTrigger>
+            <TabsTrigger 
+              value="appearance"
+              className="rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out-expo
+                data-[state=active]:bg-[color:var(--background)] data-[state=active]:text-[color:var(--foreground)]
+                data-[state=active]:shadow-sm data-[state=active]:scale-[0.98]
+                hover:text-[color:var(--foreground)]/90"
+            >
+              Appearance
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-        <TabsContent value="users" className="space-y-6">
+        <TabsContent value="users" className="space-y-6 focus-visible:outline-none">
           <UsersTab
             users={users}
             isLoading={isLoading}

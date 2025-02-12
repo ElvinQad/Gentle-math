@@ -7,20 +7,20 @@ export default function AboutPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="min-h-screen pt-24 bg-[hsl(var(--background))]">
+    <div className="min-h-screen pt-24 bg-[color:var(--background)]">
       <div className="max-w-7xl mx-auto px-6">
         {/* Hero Section */}
         <section className="mb-32 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--primary)_/_0.1)] to-[hsl(206_100%_50%_/_0.1)] rounded-3xl -z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[color:var(--primary)]/10 to-[color:var(--color-soft-blue)]/40 rounded-3xl -z-10" />
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6 py-8 md:py-12">
-              <h1 className="text-4xl md:text-6xl font-bold leading-tight text-[hsl(var(--foreground))]">
+              <h1 className="text-4xl md:text-6xl font-bold leading-tight text-[color:var(--foreground)]">
                 {t('about.hero.title')}
-                <span className="block text-[hsl(var(--primary))]">
+                <span className="block text-[color:var(--primary)]">
                   {t('about.hero.subtitle')}
                 </span>
               </h1>
-              <p className="text-lg md:text-xl text-[hsl(var(--muted-foreground))] max-w-2xl">
+              <p className="text-lg md:text-xl text-[color:var(--muted-foreground)] max-w-2xl">
                 {t('about.hero.description')}
               </p>
             </div>
@@ -44,24 +44,24 @@ export default function AboutPage() {
               fill
               className="object-cover hover:scale-105 transition-transform duration-500"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--color-charcoal)]/50 to-transparent" />
           </div>
           <div className="space-y-6 md:space-y-8 order-1 md:order-2">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
+            <h2 className="text-3xl md:text-4xl font-bold text-[color:var(--foreground)] leading-tight">
               {t('about.mission.title')}
             </h2>
             <div className="space-y-6">
-              <p className="text-lg text-muted-foreground">{t('about.mission.description1')}</p>
-              <p className="text-lg text-muted-foreground">{t('about.mission.description2')}</p>
+              <p className="text-lg text-[color:var(--muted-foreground)]">{t('about.mission.description1')}</p>
+              <p className="text-lg text-[color:var(--muted-foreground)]">{t('about.mission.description2')}</p>
             </div>
             <div className="grid grid-cols-2 gap-6 pt-6">
-              <div className="bg-card p-6 rounded-xl border shadow-lg">
-                <div className="text-3xl font-bold text-primary mb-2">98%</div>
-                <div className="text-sm text-muted-foreground">{t('about.stats.accuracy')}</div>
+              <div className="bg-[color:var(--card)] p-6 rounded-xl border shadow-lg">
+                <div className="text-3xl font-bold text-[color:var(--primary)] mb-2">98%</div>
+                <div className="text-sm text-[color:var(--muted-foreground)]">{t('about.stats.accuracy')}</div>
               </div>
-              <div className="bg-card p-6 rounded-xl border shadow-lg">
-                <div className="text-3xl font-bold text-primary mb-2">500+</div>
-                <div className="text-sm text-muted-foreground">{t('about.stats.brands')}</div>
+              <div className="bg-[color:var(--card)] p-6 rounded-xl border shadow-lg">
+                <div className="text-3xl font-bold text-[color:var(--primary)] mb-2">500+</div>
+                <div className="text-sm text-[color:var(--muted-foreground)]">{t('about.stats.brands')}</div>
               </div>
             </div>
           </div>
@@ -69,7 +69,7 @@ export default function AboutPage() {
 
         {/* Features Grid */}
         <section className="mb-16 md:mb-32">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 md:mb-16 text-foreground">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 md:mb-16 text-[color:var(--foreground)]">
             {t('about.features.title')}
           </h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
@@ -113,11 +113,11 @@ export default function AboutPage() {
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="group bg-card p-8 rounded-xl shadow-lg border hover:shadow-2xl transition-all hover:-translate-y-1"
+                className="group bg-[color:var(--card)] p-8 rounded-xl shadow-lg border hover:shadow-2xl transition-all hover:-translate-y-1"
               >
-                <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+                <div className="w-14 h-14 bg-[color:var(--primary)]/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-[color:var(--primary)]/20 transition-colors">
                   <svg
-                    className="w-7 h-7 text-primary"
+                    className="w-7 h-7 text-[color:var(--primary)]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -125,8 +125,8 @@ export default function AboutPage() {
                     {feature.icon}
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-4 text-card-foreground">{feature.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+                <h3 className="text-xl font-semibold mb-4 text-[color:var(--card-foreground)]">{feature.title}</h3>
+                <p className="text-[color:var(--muted-foreground)] leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -134,7 +134,7 @@ export default function AboutPage() {
 
         {/* Team Section */}
         <section className="mb-16 md:mb-32">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 md:mb-16 text-foreground">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 md:mb-16 text-[color:var(--foreground)]">
             {t('about.team.title')}
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
@@ -168,10 +168,10 @@ export default function AboutPage() {
                     fill
                     className="object-cover group-hover:scale-110 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--color-charcoal)]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground">{member.name}</h3>
-                <p className="text-sm text-muted-foreground">{member.role}</p>
+                <h3 className="text-lg font-semibold text-[color:var(--foreground)]">{member.name}</h3>
+                <p className="text-sm text-[color:var(--muted-foreground)]">{member.role}</p>
               </div>
             ))}
           </div>

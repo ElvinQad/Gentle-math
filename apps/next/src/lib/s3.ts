@@ -35,7 +35,7 @@ async function checkFileExists(key: string): Promise<boolean> {
       Key: key,
     }));
     return true;
-  } catch (error) {
+  } catch  {
     return false;
   }
 }
@@ -96,7 +96,7 @@ export async function uploadToS3(file: File, baseKey: string) {
           });
           return publicUrl;
         }
-      } catch (error) {
+      } catch  {
         console.log(`Attempt ${i + 1}: File not yet accessible, retrying...`);
       }
       

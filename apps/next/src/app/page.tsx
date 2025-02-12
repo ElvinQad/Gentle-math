@@ -44,7 +44,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen">
       <section className="relative h-screen flex items-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-900/40 to-blue-900/40 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[color:var(--color-lavender)]/40 to-[color:var(--color-soft-blue)]/40 z-10" />
         <div className="absolute inset-0">
           <Image
             src={bgImage}
@@ -57,26 +57,26 @@ export default function LandingPage() {
 
         <div className="relative z-20 max-w-5xl mx-auto px-6">
           <div className="space-y-6 animate-fade-in">
-            <h1 className="text-4xl md:text-7xl font-bold text-white mb-6 leading-tight">
+            <h1 className="text-4xl md:text-7xl font-bold text-[color:var(--color-white)] mb-6 leading-tight">
               {t('landing.hero.title')}
-              <span className="block bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
+              <span className="block bg-clip-text text-transparent bg-gradient-to-r from-[color:var(--color-soft-blue)] to-[color:var(--color-teal)]">
                 {t('landing.hero.subtitle')}
               </span>
             </h1>
-            <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl animate-slide-up">
+            <p className="text-lg md:text-xl text-[color:var(--color-white)]/90 mb-8 max-w-2xl animate-slide-up">
               {t('landing.hero.description')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 animate-slide-up">
               <Link
                 href={session ? '/dashboard' : '/trends'}
-                className="w-full sm:w-auto text-center inline-block bg-blue-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg"
+                className="w-full sm:w-auto text-center inline-block bg-[color:var(--primary)] text-[color:var(--primary-foreground)] px-8 py-3 rounded-lg font-semibold hover:bg-[color:var(--primary)]/90 hover:scale-105 transition-all duration-300 shadow-lg"
                 onClick={!session ? handleGetStarted : undefined}
               >
                 {session ? t('common.dashboard') : t('common.getStarted')}
               </Link>
               <Link
                 href="/about"
-                className="w-full sm:w-auto text-center inline-block text-white border-2 border-white/80 px-8 py-3 rounded-lg font-semibold hover:bg-white/20 transition-all duration-300"
+                className="w-full sm:w-auto text-center inline-block text-[color:var(--color-white)] border-2 border-[color:var(--color-white)]/80 px-8 py-3 rounded-lg font-semibold hover:bg-[color:var(--color-white)]/20 transition-all duration-300"
               >
                 {t('common.learnMore')}
               </Link>
@@ -85,16 +85,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-32 bg-background">
+      <section className="py-32 bg-[color:var(--background)]">
         <div className="max-w-7xl mx-auto px-6">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 md:mb-20 text-foreground">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 md:mb-20 text-[color:var(--foreground)]">
             {t('landing.features.title')}
           </h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
-            <div className="group bg-card p-8 rounded-xl shadow-lg border hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+            <div className="group bg-[color:var(--card)] p-8 rounded-xl shadow-lg border hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+              <div className="w-12 h-12 bg-[color:var(--primary)]/10 rounded-lg flex items-center justify-center mb-6">
                 <svg
-                  className="w-6 h-6 text-primary"
+                  className="w-6 h-6 text-[color:var(--primary)]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -107,15 +107,15 @@ export default function LandingPage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-card-foreground">
+              <h3 className="text-xl font-semibold mb-4 text-[color:var(--card-foreground)]">
                 {t('landing.features.realtime.title')}
               </h3>
-              <p className="text-muted-foreground">{t('landing.features.realtime.description')}</p>
+              <p className="text-[color:var(--muted-foreground)]">{t('landing.features.realtime.description')}</p>
             </div>
-            <div className="group bg-card p-8 rounded-xl shadow-lg border hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+            <div className="group bg-[color:var(--card)] p-8 rounded-xl shadow-lg border hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+              <div className="w-12 h-12 bg-[color:var(--primary)]/10 rounded-lg flex items-center justify-center mb-6">
                 <svg
-                  className="w-6 h-6 text-primary"
+                  className="w-6 h-6 text-[color:var(--primary)]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -128,17 +128,17 @@ export default function LandingPage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-card-foreground">
+              <h3 className="text-xl font-semibold mb-4 text-[color:var(--card-foreground)]">
                 {t('landing.features.predictive.title')}
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-[color:var(--muted-foreground)]">
                 {t('landing.features.predictive.description')}
               </p>
             </div>
-            <div className="group bg-card p-8 rounded-xl shadow-lg border hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+            <div className="group bg-[color:var(--card)] p-8 rounded-xl shadow-lg border hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+              <div className="w-12 h-12 bg-[color:var(--primary)]/10 rounded-lg flex items-center justify-center mb-6">
                 <svg
-                  className="w-6 h-6 text-primary"
+                  className="w-6 h-6 text-[color:var(--primary)]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -157,10 +157,10 @@ export default function LandingPage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-card-foreground">
+              <h3 className="text-xl font-semibold mb-4 text-[color:var(--card-foreground)]">
                 {t('landing.features.market.title')}
               </h3>
-              <p className="text-muted-foreground">{t('landing.features.market.description')}</p>
+              <p className="text-[color:var(--muted-foreground)]">{t('landing.features.market.description')}</p>
             </div>
           </div>
         </div>

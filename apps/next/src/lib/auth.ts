@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import { prisma } from '@/lib/db';
 import { compare, hash } from 'bcryptjs';
+import { OAuthUserConfig } from 'next-auth/providers/oauth';
 
 // Add this type definition at the top of the file, after the imports
 type SessionEventMetadata = {
@@ -102,9 +103,18 @@ export const authConfig: NextAuthOptions = {
           scope: 'openid email profile https://www.googleapis.com/auth/spreadsheets.readonly',
           prompt: 'consent',
           access_type: 'offline',
+          response_type: 'code',
         },
       },
-    }),
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+        };
+      },
+    } as OAuthUserConfig<any>),
     CredentialsProvider({
       name: 'credentials',
       credentials: {

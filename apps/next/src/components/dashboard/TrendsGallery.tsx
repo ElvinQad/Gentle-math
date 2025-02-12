@@ -146,6 +146,11 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 priority={index === 0}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/placeholder-image.jpg'; // Replace with your fallback image
+                  console.warn('Image failed to load:', trend.imageUrls[0]);
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-4 space-y-1">

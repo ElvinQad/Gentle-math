@@ -38,6 +38,14 @@ const isValidUrl = (url: string) => {
   }
 };
 
+// Function to calculate content hash using Web Crypto API
+async function calculateContentHash(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const hashBuffer = await window.crypto.subtle.digest('SHA-256', buffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 export function TrendsTab() {
   const [trends, setTrends] = useState<Trend[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -122,12 +130,27 @@ export function TrendsTab() {
   const handleFileUpload = useCallback(async (files: File[]) => {
     try {
       const uploadedUrls: string[] = [];
+      const uniqueFiles = new Map<string, File>();
 
+      // First, filter out duplicate files by comparing their sizes and names
       for (const file of files) {
+        const key = `${file.size}-${file.name}`;
+        if (!uniqueFiles.has(key)) {
+          uniqueFiles.set(key, file);
+        } else {
+          console.log('Skipping potential duplicate file:', file.name);
+        }
+      }
+
+      for (const file of Array.from(uniqueFiles.values())) {
+        // Calculate content hash
+        const contentHash = await calculateContentHash(file);
+
         console.log('Uploading file:', {
           name: file.name,
           type: file.type,
           size: file.size,
+          contentHash
         });
 
         const response = await fetch('/api/admin/upload', {
@@ -136,6 +159,7 @@ export function TrendsTab() {
           body: JSON.stringify({
             filename: file.name,
             contentType: file.type,
+            contentHash
           }),
         });
 
@@ -145,9 +169,18 @@ export function TrendsTab() {
           throw new Error('Failed to get upload URL');
         }
 
-        const { presignedUrl, publicUrl } = await response.json();
+        const data = await response.json();
+        
+        // If duplicate was found, use the existing URL
+        if (data.isDuplicate) {
+          console.log('Using existing file:', data.publicUrl);
+          toast.info(`File "${file.name}" already exists, using existing file`);
+          uploadedUrls.push(data.publicUrl);
+          continue;
+        }
 
-        const uploadResponse = await fetch(presignedUrl, {
+        // Upload the file
+        const uploadResponse = await fetch(data.presignedUrl, {
           method: 'PUT',
           body: file,
           headers: {
@@ -159,11 +192,11 @@ export function TrendsTab() {
           throw new Error(`Upload failed: ${uploadResponse.statusText}`);
         }
 
-        if (!isValidUrl(publicUrl)) {
-          throw new Error(`Invalid URL received from server: ${publicUrl}`);
+        if (!isValidUrl(data.publicUrl)) {
+          throw new Error(`Invalid URL received from server: ${data.publicUrl}`);
         }
 
-        uploadedUrls.push(publicUrl);
+        uploadedUrls.push(data.publicUrl);
       }
 
       // Update imageUrls state with the new URLs
@@ -517,7 +550,39 @@ export function TrendsTab() {
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.src = '/placeholder-image.jpg';
-                      toast.error(`Failed to load image: ${img.url}`);
+                      
+                      // Show a more detailed error message with retry option
+                      toast.error(
+                        `Failed to load image: ${img.url}`,
+                        {
+                          description: 'The image might be private. Try signing in as admin and using the fix-images endpoint.',
+                          action: {
+                            label: 'Fix Permissions',
+                            onClick: async () => {
+                              try {
+                                const response = await fetch('/api/admin/trends/fix-images', {
+                                  method: 'POST',
+                                });
+                                
+                                if (!response.ok) {
+                                  if (response.status === 401) {
+                                    toast.error('Please sign in as admin first');
+                                    return;
+                                  }
+                                  throw new Error('Failed to fix image permissions');
+                                }
+                                
+                                // Retry loading the image
+                                target.src = img.url;
+                                toast.success('Image permissions updated. Retrying...');
+                              } catch (error) {
+                                toast.error('Failed to fix image permissions. Please try again.');
+                              }
+                            }
+                          },
+                          duration: 10000
+                        }
+                      );
                     }}
                   />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">

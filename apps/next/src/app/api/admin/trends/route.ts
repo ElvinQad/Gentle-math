@@ -36,6 +36,54 @@ export async function POST(req: Request) {
 
     const data = await req.json();
 
+    // Verify all images are accessible before creating the trend
+    const imageVerificationPromises = data.imageUrls.map(async (url: string) => {
+      const maxRetries = 10;
+      const retryDelay = 1000;
+      let lastError = null;
+
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          console.log(`Verifying image (attempt ${i + 1}/${maxRetries}): ${url}`);
+          const response = await fetch(url, { 
+            method: 'HEAD',
+            headers: {
+              'Cache-Control': 'no-cache'
+            }
+          });
+          
+          if (response.ok) {
+            console.log(`Image verified accessible: ${url}`);
+            return { success: true, url };
+          }
+          
+          lastError = `HTTP ${response.status}: ${response.statusText}`;
+        } catch (error) {
+          console.log(`Attempt ${i + 1}: Image not yet accessible: ${url}`);
+          lastError = error instanceof Error ? error.message : 'Unknown error';
+        }
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      }
+      
+      console.warn(`Image not accessible after ${maxRetries} attempts:`, {
+        url,
+        lastError
+      });
+      return { success: false, url, error: lastError };
+    });
+
+    const verificationResults = await Promise.all(imageVerificationPromises);
+    const failedImages = verificationResults.filter(result => !result.success);
+    
+    if (failedImages.length > 0) {
+      console.error('Some images are not accessible:', failedImages);
+      // Instead of just warning, we'll return an error response
+      return NextResponse.json({
+        error: 'Some images are not accessible',
+        details: failedImages
+      }, { status: 400 });
+    }
+
     // Create the trend with analytics
     const trend = await prisma.trend.create({
       data: {
@@ -62,7 +110,6 @@ export async function POST(req: Request) {
         const sheetData = await getSheetData(data.spreadsheetUrl);
         const trendData = convertSheetDataToTrendData(sheetData);
 
-        // Update analytics with processed data
         await prisma.analytics.update({
           where: { trendId: trend.id },
           data: {
@@ -72,13 +119,15 @@ export async function POST(req: Request) {
         });
       } catch (error) {
         console.error('Failed to process spreadsheet:', error);
-        // Don't fail the entire request if spreadsheet processing fails
       }
     }
 
     return NextResponse.json(trend);
   } catch (error) {
     console.error('Failed to create trend:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return NextResponse.json({
+      error: 'Failed to create trend',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }

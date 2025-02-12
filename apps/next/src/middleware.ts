@@ -35,5 +35,6 @@ export const config = {
     '/api/admin/:path*',
     '/api/user/:path*',
     '/api/trends/:path*',
+    // Remove the catch-all pattern that was causing the loop
   ],
 };

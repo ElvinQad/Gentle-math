@@ -1,29 +1,25 @@
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const config = {
+  reactStrictMode: true,
+  transpilePackages: ["@repo/ui"],
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '*.s3.*.amazonaws.com',
-        pathname: '/trends/**',
+        hostname: '**.amazonaws.com',
+        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: '**', // For other external URLs
       },
     ],
+    minimumCacheTTL: 60,
   },
   // i18n: {
   //   locales: ['en', 'ru'],
   //   defaultLocale: 'en',
-  //   domains: [
-  //     {
-  //       domain: 'example.ru',
-  //       defaultLocale: 'ru',
-  //     },
-  //   ],
   // },
 };
 
-export default nextConfig;
+export default config;

@@ -51,21 +51,32 @@ export async function getSheetData(spreadsheetUrl: string): Promise<SheetData> {
     }
 
     const rows = response.data.values;
+    console.log('Raw spreadsheet data:', rows);
 
     // Skip header row and process data
     const data = rows.slice(1).reduce<SheetData>(
       (acc, [date, value]) => {
         if (date && !isNaN(Number(value))) {
-          acc.dates.push(date);
-          acc.values.push(Number(value));
+          // Parse date in DD.MM.YYYY format
+          const [day, month, year] = date.split('.');
+          if (day && month && year) {
+            const parsedDate = new Date(Number(year), Number(month) - 1, Number(day));
+            console.log('Processing date:', { original: date, parsed: parsedDate.toISOString() });
+            if (!isNaN(parsedDate.getTime())) {
+              acc.dates.push(parsedDate.toISOString().split('T')[0]);
+              acc.values.push(Number(value));
+            }
+          }
         }
         return acc;
       },
       { dates: [], values: [] },
     );
 
+    console.log('Processed sheet data:', data);
+
     if (data.dates.length === 0 || data.values.length === 0) {
-      throw new Error('No valid data found in the spreadsheet. Please ensure the sheet contains valid dates in column A and numbers in column B.');
+      throw new Error('No valid data found in the spreadsheet. Please ensure the sheet contains valid dates (DD.MM.YYYY) in column A and numbers in column B.');
     }
 
     return data;
@@ -87,8 +98,11 @@ export function convertSheetDataToTrendData(data: SheetData) {
   const maxValue = Math.max(...values);
   const normalizedValues = values.map((value) => Math.round((value / maxValue) * 100));
 
-  return {
+  const result = {
     dates,
     values: normalizedValues,
   };
+  
+  console.log('Converted trend data:', result);
+  return result;
 }

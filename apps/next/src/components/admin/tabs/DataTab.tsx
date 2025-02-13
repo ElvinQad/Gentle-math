@@ -25,11 +25,28 @@ export function DataTab({
   isEditMode,
 }: DataTabProps) {
   const chartData = selectedTrend?.analytics?.[0]
-    ? selectedTrend.analytics[0].dates.map((date, i) => ({
-        month: new Date(date).toISOString().slice(0, 7),
-        actual: selectedTrend.analytics[0].values[i],
-        forecast: selectedTrend.analytics[0].values[i],
-      }))
+    ? selectedTrend.analytics[0].dates.map((date, i) => {
+        const currentDate = new Date(date);
+        const displayDate = currentDate.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        }).replace(/\//g, '.');
+        const now = new Date();
+        const isCurrentMonth = currentDate.getMonth() === now.getMonth() && 
+                             currentDate.getFullYear() === now.getFullYear();
+        const isActual = currentDate < now || 
+                        (currentDate.getMonth() < now.getMonth() && 
+                         currentDate.getFullYear() === now.getFullYear());
+        const value = selectedTrend.analytics[0].values[i];
+
+        return {
+          month: currentDate.toISOString().slice(0, 7),
+          displayDate,
+          actual: isActual ? value : null,
+          forecast: (!isActual || isCurrentMonth) ? value : null,
+        };
+      })
     : [];
 
   return (
@@ -95,10 +112,10 @@ export function DataTab({
                 {chartData.map((data, index) => (
                   <tr key={index}>
                     <td className="px-4 py-2 text-sm text-[color:var(--foreground)]">
-                      {new Date(data.month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                      {data.displayDate}
                     </td>
                     <td className="px-4 py-2 text-sm text-[color:var(--foreground)]">{data.actual ?? '—'}</td>
-                    <td className="px-4 py-2 text-sm text-[color:var(--foreground)]">{data.forecast}</td>
+                    <td className="px-4 py-2 text-sm text-[color:var(--foreground)]">{data.forecast ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -112,14 +129,22 @@ export function DataTab({
               margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
               className="w-full h-[300px]"
             >
+              <defs>
+                <linearGradient id="actualGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-soft-blue)" stopOpacity={0.2}/>
+                  <stop offset="95%" stopColor="var(--color-soft-blue)" stopOpacity={0.05}/>
+                </linearGradient>
+                <linearGradient id="predictedGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-muted-green)" stopOpacity={0.2}/>
+                  <stop offset="95%" stopColor="var(--color-muted-green)" stopOpacity={0.05}/>
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis
-                dataKey="month"
+                dataKey="displayDate"
                 stroke="var(--muted-foreground)"
-                tickFormatter={(str) => {
-                  const date = new Date(str);
-                  return date.toLocaleDateString('en-US', { month: 'short' });
-                }}
+                tickFormatter={(date) => date.split('.').slice(0, 2).join('.')}
+                tick={{ fontSize: 12 }}
               />
               <YAxis stroke="var(--muted-foreground)" />
               <Tooltip
@@ -128,26 +153,53 @@ export function DataTab({
                   border: '1px solid var(--border)',
                   borderRadius: '0.5rem',
                 }}
-                labelFormatter={(value) => {
-                  const date = new Date(value);
-                  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                formatter={(value: number, name: string, props: any) => {
+                  const item = props.payload;
+                  const now = new Date();
+                  const itemDate = new Date(item.month);
+                  const isCurrentMonth = itemDate.getMonth() === now.getMonth() && 
+                                       itemDate.getFullYear() === now.getFullYear();
+                  
+                  // For current month, show Value
+                  if (isCurrentMonth) {
+                    if (name === 'actual') return [null, null];
+                    return [`${value.toFixed(1)}%`, 'Value'];
+                  }
+                  
+                  // For future dates, show Predicted
+                  if (item.forecast !== undefined && !isCurrentMonth) {
+                    if (name === 'actual') return [null, null];
+                    return [`${value.toFixed(1)}%`, 'Predicted'];
+                  }
+                  
+                  // For past dates, show Actual
+                  return [`${value.toFixed(1)}%`, 'Actual'];
                 }}
+                labelFormatter={(value) => value}
               />
               <Legend />
               <Area
                 type="monotone"
                 dataKey="actual"
-                stroke="var(--primary)"
-                fill="var(--primary)"
+                name="Actual"
+                stroke="var(--color-soft-blue)"
+                fill="url(#actualGradient)"
                 fillOpacity={0.1}
-                activeDot={{ r: 8 }}
+                strokeWidth={2}
+                dot={{ fill: 'var(--color-soft-blue)', r: 2 }}
+                activeDot={{ r: 4, strokeWidth: 1 }}
               />
               <Area
                 type="monotone"
                 dataKey="forecast"
-                stroke="var(--accent)"
-                fill="var(--accent)"
+                name="Forecast"
+                stroke="var(--color-muted-green)"
+                fill="url(#predictedGradient)"
                 fillOpacity={0.1}
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                dot={{ fill: 'var(--color-muted-green)', r: 2 }}
+                activeDot={{ r: 4, strokeWidth: 1 }}
               />
             </AreaChart>
           </div>

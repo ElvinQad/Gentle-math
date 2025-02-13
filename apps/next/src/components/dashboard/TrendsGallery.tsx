@@ -361,30 +361,41 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                               data={(selectedTrend?.analytics?.[0]?.dates || []).map((date, i) => {
                                 const currentDate = new Date(date);
                                 const now = new Date();
-                                const isActual = currentDate <= now;
+                                const isCurrentMonth = currentDate.getMonth() === now.getMonth() && 
+                                                     currentDate.getFullYear() === now.getFullYear();
+                                const isActual = currentDate < now || 
+                                               (currentDate.getMonth() < now.getMonth() && 
+                                                currentDate.getFullYear() === now.getFullYear());
+                                const value = selectedTrend?.analytics?.[0]?.values?.[i] || 0;
+                                
                                 return {
                                   date: currentDate.toISOString().slice(0, 7),
-                                  actual: isActual ? selectedTrend?.analytics?.[0]?.values?.[i] || 0 : undefined,
-                                  predicted: !isActual ? selectedTrend?.analytics?.[0]?.values?.[i] || 0 : undefined,
+                                  displayDate: currentDate.toLocaleDateString('en-GB', { 
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric'
+                                  }).replace(/\//g, '.'),
+                                  actual: isActual ? value : undefined,
+                                  predicted: (!isActual || isCurrentMonth) ? value : undefined,
                                 };
                               })}
                               margin={{ top: 10, right: 30, left: 10, bottom: 0 }}
                             >
                               <defs>
                                 <linearGradient id="actualGradient" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.2}/>
-                                  <stop offset="95%" stopColor="var(--primary)" stopOpacity={0.05}/>
+                                  <stop offset="5%" stopColor="var(--color-soft-blue)" stopOpacity={0.2}/>
+                                  <stop offset="95%" stopColor="var(--color-soft-blue)" stopOpacity={0.05}/>
                                 </linearGradient>
                                 <linearGradient id="predictedGradient" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.2}/>
-                                  <stop offset="95%" stopColor="var(--accent)" stopOpacity={0.05}/>
+                                  <stop offset="5%" stopColor="var(--color-muted-green)" stopOpacity={0.2}/>
+                                  <stop offset="95%" stopColor="var(--color-muted-green)" stopOpacity={0.05}/>
                                 </linearGradient>
                               </defs>
                               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.5} />
                               <XAxis
-                                dataKey="date"
+                                dataKey="displayDate"
                                 stroke="var(--muted-foreground)"
-                                tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short' })}
+                                tickFormatter={(date) => date.split('.').slice(0, 2).join('.')}
                                 tick={{ fontSize: 12 }}
                               />
                               <YAxis 
@@ -399,14 +410,29 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                                   borderRadius: '0.5rem',
                                   fontSize: '12px',
                                 }}
-                                formatter={(value: number, name: string) => [
-                                  `${value.toFixed(1)}%`,
-                                  name === 'actual' ? 'Actual' : 'Predicted'
-                                ]}
-                                labelFormatter={(date) => new Date(date).toLocaleDateString('en-US', { 
-                                  month: 'long',
-                                  year: 'numeric'
-                                })}
+                                formatter={(value: number, name: string, props: any) => {
+                                  const item = props.payload;
+                                  const now = new Date();
+                                  const itemDate = new Date(item.date);
+                                  const isCurrentMonth = itemDate.getMonth() === now.getMonth() && 
+                                                       itemDate.getFullYear() === now.getFullYear();
+                                  
+                                  // For current month, show Value
+                                  if (isCurrentMonth) {
+                                    if (name === 'actual') return [null, null];
+                                    return [`${value.toFixed(1)}%`, 'Value'];
+                                  }
+                                  
+                                  // For future dates, show Predicted
+                                  if (item.predicted !== undefined && !isCurrentMonth) {
+                                    if (name === 'actual') return [null, null];
+                                    return [`${value.toFixed(1)}%`, 'Predicted'];
+                                  }
+                                  
+                                  // For past dates, show Actual
+                                  return [`${value.toFixed(1)}%`, 'Actual'];
+                                }}
+                                labelFormatter={(date) => date}
                               />
                               <Legend 
                                 verticalAlign="top" 
@@ -415,8 +441,8 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                               />
                               <ReferenceLine
                                 x={new Date().toISOString().slice(0, 7)}
-                                stroke="var(--primary)"
-                                strokeWidth={1.5}
+                                stroke="var(--muted-foreground)"
+                                strokeWidth={1}
                                 strokeDasharray="3 3"
                                 label={{
                                   value: 'Current',
@@ -429,26 +455,26 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                                 type="monotone"
                                 dataKey="actual"
                                 name="Actual"
-                                stroke="var(--primary)"
+                                stroke="var(--color-soft-blue)"
                                 strokeWidth={2}
                                 fill="url(#actualGradient)"
                                 isAnimationActive={true}
                                 animationDuration={1000}
-                                dot={{ fill: 'var(--primary)', r: 2 }}
+                                dot={{ fill: 'var(--color-soft-blue)', r: 2 }}
                                 activeDot={{ r: 4, strokeWidth: 1 }}
                               />
                               <Area
                                 type="monotone"
                                 dataKey="predicted"
                                 name="Predicted"
-                                stroke="var(--accent)"
+                                stroke="var(--color-muted-green)"
                                 strokeWidth={2}
                                 strokeDasharray="5 5"
                                 fill="url(#predictedGradient)"
                                 isAnimationActive={true}
                                 animationDuration={1000}
                                 animationBegin={1000}
-                                dot={{ fill: 'var(--accent)', r: 2 }}
+                                dot={{ fill: 'var(--color-muted-green)', r: 2 }}
                                 activeDot={{ r: 4, strokeWidth: 1 }}
                               />
                             </AreaChart>

@@ -16,6 +16,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     const { spreadsheetUrl } = await req.json();
+    console.log('Processing spreadsheet:', { spreadsheetUrl });
     
     if (!spreadsheetUrl || !spreadsheetUrl.trim()) {
       return new NextResponse(
@@ -26,10 +27,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     // Get the trend ID
     const { id } = await params;
+    console.log('Trend ID:', id);
 
     // Verify trend exists
     const existingTrend = await prisma.trend.findUnique({
       where: { id },
+      include: { analytics: true }
     });
 
     if (!existingTrend) {
@@ -39,26 +42,33 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       );
     }
 
+    console.log('Existing trend:', existingTrend);
+
     try {
       // Fetch and process spreadsheet data
       const sheetData = await getSheetData(spreadsheetUrl);
+      console.log('Sheet data fetched:', sheetData);
+      
       const trendData = convertSheetDataToTrendData(sheetData);
+      console.log('Trend data converted:', trendData);
 
       // Create or update analytics
-      await prisma.analytics.upsert({
+      const analytics = await prisma.analytics.upsert({
         where: {
           trendId: id,
         },
         create: {
           trendId: id,
-          dates: trendData.dates,
+          dates: trendData.dates.map(d => d.toISOString()),
           values: trendData.values,
         },
         update: {
-          dates: trendData.dates,
+          dates: trendData.dates.map(d => d.toISOString()),
           values: trendData.values,
         },
       });
+
+      console.log('Analytics updated:', analytics);
 
       // Get updated trend with analytics
       const updatedTrend = await prisma.trend.findUnique({
@@ -66,12 +76,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         include: { analytics: true },
       });
 
+      console.log('Updated trend:', updatedTrend);
+
       return NextResponse.json(updatedTrend);
     } catch (error) {
       console.error('Spreadsheet processing error:', error);
       return new NextResponse(
         JSON.stringify({ 
-          message: error instanceof Error ? error.message : 'Failed to process spreadsheet data'
+          message: error instanceof Error ? error.message : 'Failed to process spreadsheet data',
+          error: error instanceof Error ? error.stack : undefined
         }),
         { status: 400 }
       );
@@ -80,7 +93,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     console.error('Failed to process spreadsheet:', error);
     return new NextResponse(
       JSON.stringify({ 
-        message: 'Internal server error while processing spreadsheet'
+        message: 'Internal server error while processing spreadsheet',
+        error: error instanceof Error ? error.stack : undefined
       }),
       { status: 500 }
     );

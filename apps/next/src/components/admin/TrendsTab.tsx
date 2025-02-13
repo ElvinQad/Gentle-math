@@ -288,15 +288,23 @@ export function TrendsTab() {
       if (!trendId) {
         throw new Error('No trend selected');
       }
+
+      console.log('Processing spreadsheet for trend:', {
+        trendId,
+        spreadsheetUrl: formData.spreadsheetUrl
+      });
+
       const response = await fetch(`/api/admin/trends/${trendId}/spreadsheet`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ spreadsheetUrl: formData.spreadsheetUrl }),
       });
 
+      const responseData = await response.json();
+      console.log('Spreadsheet processing response:', responseData);
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const errorMessage = errorData?.message || 'Failed to process spreadsheet';
+        const errorMessage = responseData?.message || 'Failed to process spreadsheet';
         
         if (errorMessage.includes('Google authentication required')) {
           toast.error(
@@ -316,8 +324,24 @@ export function TrendsTab() {
         throw new Error(errorMessage);
       }
 
-      const updatedTrend = await response.json();
-      setTrends(trends.map((t) => (t.id === updatedTrend.id ? updatedTrend : t)));
+      // Update the trends state with the new data
+      setTrends(prevTrends => {
+        const newTrends = prevTrends.map(t => 
+          t.id === responseData.id ? { ...t, ...responseData } : t
+        );
+        console.log('Updating trends state:', {
+          previous: prevTrends,
+          updated: newTrends,
+          receivedData: responseData
+        });
+        return newTrends;
+      });
+
+      // Also update the selected trend if it's the one being modified
+      if (selectedTrend?.id === responseData.id) {
+        setSelectedTrend(responseData);
+      }
+      
       toast.success('Spreadsheet data processed successfully');
     } catch (error) {
       console.error('Failed to process spreadsheet:', error);

@@ -35,7 +35,7 @@ export async function GET() {
     const errorDetails = {
       message: error instanceof Error ? error.message : 'Unknown error',
       type: error instanceof Error ? error.constructor.name : typeof error,
-      code: (error as any)?.code,
+      code: (error as { code?: string | number })?.code,
     };
     
     console.error('Failed to check sheets status:', errorDetails);

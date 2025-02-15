@@ -6,6 +6,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Trend } from '@/types/admin';
 import { RequestSheetsAccess } from '@/components/admin/RequestSheetsAccess';
 import { useSession } from 'next-auth/react';
+import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 
 interface ChartDataPoint {
   date: string;
@@ -159,7 +160,7 @@ export function DataTab({
                     dataKey="displayDate"
                     stroke="var(--muted-foreground)"
                     tickFormatter={(date) => {
-                      const [day, month, year] = date.split('.');
+                      const [month, year] = date.split('.');
                       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                       return `${monthNames[parseInt(month, 10) - 1]} ${year}`;
                     }}
@@ -177,27 +178,29 @@ export function DataTab({
                       borderRadius: '0.5rem',
                       fontSize: '12px',
                     }}
-                    formatter={(value: number, name: string, props: any) => {
-                      const item = props.payload;
+                    formatter={(value: ValueType, name: NameType, entry: { payload?: { date?: string; predicted?: number } }) => {
+                      const payload = entry?.payload;
+                      if (!payload) return [null, null];
+                      
                       const now = new Date();
-                      const itemDate = new Date(item.date);
+                      const itemDate = new Date(payload.date ?? '');
                       const isCurrentMonth = itemDate.getMonth() === now.getMonth() && 
-                                           itemDate.getFullYear() === now.getFullYear();
+                                         itemDate.getFullYear() === now.getFullYear();
                       
                       // For current month, show Value
                       if (isCurrentMonth) {
                         if (name === 'actual') return [null, null];
-                        return [`${value.toFixed(1)}%`, 'Value'];
+                        return [`${(value as number).toFixed(1)}%`, 'Value'];
                       }
                       
                       // For future dates, show Predicted
-                      if (item.predicted !== undefined && !isCurrentMonth) {
+                      if (payload.predicted !== undefined && !isCurrentMonth) {
                         if (name === 'actual') return [null, null];
-                        return [`${value.toFixed(1)}%`, 'Predicted'];
+                        return [`${(value as number).toFixed(1)}%`, 'Predicted'];
                       }
                       
                       // For past dates, show Actual
-                      return [`${value.toFixed(1)}%`, 'Actual'];
+                      return [`${(value as number).toFixed(1)}%`, 'Actual'];
                     }}
                     labelFormatter={(date) => date}
                   />

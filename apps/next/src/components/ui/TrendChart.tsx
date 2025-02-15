@@ -9,6 +9,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from 'recharts';
+import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 
 interface TrendChartProps {
   dates: (string | Date)[];
@@ -121,10 +122,12 @@ export function TrendChart({ dates, values, height = 300, isYearlyView = false }
               borderRadius: '0.5rem',
               fontSize: '12px',
             }}
-            formatter={(value: number, name: string, props: any) => {
-              const item = props.payload;
+            formatter={(value: ValueType, name: NameType, entry: { payload?: { date?: string; predicted?: number } }) => {
+              const payload = entry?.payload;
+              if (!payload) return [null, null];
+              
               const now = new Date();
-              const itemDate = new Date(item.date);
+              const itemDate = new Date(payload.date ?? '');
               const isCurrentMonth = itemDate.getMonth() === now.getMonth() && 
                                    itemDate.getFullYear() === now.getFullYear();
               
@@ -133,7 +136,7 @@ export function TrendChart({ dates, values, height = 300, isYearlyView = false }
                 return [`${value}%`, 'Value'];
               }
               
-              if (item.predicted !== undefined && !isCurrentMonth) {
+              if (payload.predicted !== undefined && !isCurrentMonth) {
                 if (name === 'actual') return [null, null];
                 return [`${value}%`, 'Predicted'];
               }

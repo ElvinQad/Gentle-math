@@ -14,9 +14,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <ModalContext.Provider value={{ isModalOpen, setIsModalOpen }}>
         <div className="flex min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
           <DashboardNav />
-          <main className="flex-1 pl-0 md:pl-20 transition-all duration-300 ease-out-expo relative z-0 pb-20 md:pb-0">
-            <div className="container p-4 md:p-8">
-              <div className="rounded-lg bg-[color:var(--card)] shadow-sm border border-[color:var(--border)] p-6">
+          <main className="flex-1 pl-0 md:pl-20 transition-all duration-700 ease-out-expo relative z-0 pb-20 md:pb-0">
+            <div className="container p-4 md:p-8 transition-all duration-500 ease-out-expo">
+              <div 
+                className="rounded-lg bg-[color:var(--card)] shadow-sm border border-[color:var(--border)] p-6 
+                  transition-all duration-500 ease-out-expo transform hover:shadow-lg 
+                  hover:shadow-[color:var(--primary)]/5"
+              >
                 <AnimatePresence mode="wait">
                   <PageTransition>{children}</PageTransition>
                 </AnimatePresence>

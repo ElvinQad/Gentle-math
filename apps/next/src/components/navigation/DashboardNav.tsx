@@ -106,7 +106,7 @@ export function DashboardNav() {
           href="/"
           className="text-2xl font-bold transition-all duration-300 hover:scale-105 text-[color:var(--foreground)] hover:text-[color:var(--primary)]"
         >
-          {isExpanded ? 'Gentle-math' : 'G'}
+          {isExpanded ? 'Gentlemath' : 'G'}
         </Link>
       </div>
 

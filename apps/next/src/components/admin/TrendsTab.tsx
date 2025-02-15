@@ -18,11 +18,14 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Spinner } from '@/components/ui/spinner';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { signOut } from 'next-auth/react';
 import { DetailsTab } from './tabs/DetailsTab';
 import { ImagesTab } from './tabs/ImagesTab';
 import { DataTab } from './tabs/DataTab';
+import { TrendChart } from '@/components/ui/TrendChart';
+import { calculateGrowthRate, getLatestValue } from '@/utils/trends';
+import { Switch } from '@/components/ui/switch';
+import { AgeSegmentPie } from '@/components/ui/AgeSegmentPie';
 
 interface ImagePreview {
   url: string;
@@ -50,6 +53,7 @@ export function TrendsTab() {
   const [trends, setTrends] = useState<Trend[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isYearlyView, setIsYearlyView] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -600,14 +604,13 @@ export function TrendsTab() {
                     <div className="p-3 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
                       <h4 className="text-sm font-medium text-[color:var(--muted-foreground)]">Latest Value</h4>
                       <p className="mt-1 text-xl font-semibold text-[color:var(--foreground)]">
-                        {selectedTrend.analytics[0].values[selectedTrend.analytics[0].values.length - 1]}
+                        {getLatestValue(selectedTrend.analytics[0].values)}%
                       </p>
                     </div>
                     <div className="p-3 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
                       <h4 className="text-sm font-medium text-[color:var(--muted-foreground)]">Growth Rate</h4>
                       <p className="mt-1 text-xl font-semibold text-[color:var(--foreground)]">
-                        {((selectedTrend.analytics[0].values[selectedTrend.analytics[0].values.length - 1] /
-                          selectedTrend.analytics[0].values[0] - 1) * 100).toFixed(1)}%
+                        {calculateGrowthRate(selectedTrend.analytics[0].values).toFixed(1)}%
                       </p>
                     </div>
                   </div>
@@ -619,39 +622,42 @@ export function TrendsTab() {
                 {/* Analytics Chart */}
                 {selectedTrend.analytics?.[0] && (
                   <div className="p-4 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
-                    <h3 className="text-sm font-medium text-[color:var(--muted-foreground)] mb-4">Trend Analytics</h3>
-                    <div className="w-full overflow-x-auto">
-                      <AreaChart
-                        width={450}
-                        height={200}
-                        data={selectedTrend.analytics[0].dates.map((date, i) => ({
-                          date: new Date(date).toISOString().slice(0, 7),
-                          value: selectedTrend.analytics[0].values[i],
-                        }))}
-                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                        <XAxis
-                          dataKey="date"
-                          stroke="var(--muted-foreground)"
-                          tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short' })}
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Trend Analytics</h3>
+                      {selectedTrend.analytics[0].dates.length > 10 && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-[color:var(--muted-foreground)]">
+                            {isYearlyView ? 'Yearly View' : 'Monthly View'}
+                          </span>
+                          <Switch
+                            checked={isYearlyView}
+                            onCheckedChange={setIsYearlyView}
+                            className="data-[state=checked]:bg-[color:var(--primary)]"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="h-[300px] w-full">
+                        <TrendChart
+                          dates={selectedTrend.analytics[0].dates}
+                          values={selectedTrend.analytics[0].values}
+                          isYearlyView={isYearlyView}
                         />
-                        <YAxis stroke="var(--muted-foreground)" />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: 'var(--card)',
-                            border: '1px solid var(--border)',
-                            borderRadius: '0.5rem',
-                          }}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="value"
-                          stroke="var(--primary)"
-                          fill="var(--primary)"
-                          fillOpacity={0.1}
-                        />
-                      </AreaChart>
+                      </div>
+                      {selectedTrend.analytics[0].ageSegments && (
+                        <div className="h-[300px] w-full">
+                          <div className="mb-2 text-sm font-medium text-[color:var(--muted-foreground)]">
+                            Age Distribution
+                          </div>
+                          <AgeSegmentPie
+                            data={selectedTrend.analytics[0].ageSegments.map(segment => ({
+                              name: segment.name,
+                              value: segment.value
+                            }))}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

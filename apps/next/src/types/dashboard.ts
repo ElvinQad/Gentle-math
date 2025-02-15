@@ -1,3 +1,5 @@
+import { Analytics } from './admin';
+
 export interface Trend {
   id: string;
   title: string;
@@ -7,11 +9,8 @@ export interface Trend {
   mainImageIndex: number;
   createdAt: string;
   updatedAt: string;
-  analytics?: {
-    id: string;
-    dates: Date[];
-    values: number[];
-  }[];
+  spreadsheetUrl?: string;
+  analytics?: Analytics[];
   data?: Array<{
     month: string;
     actual: number | null;

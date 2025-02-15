@@ -13,7 +13,9 @@ export async function GET() {
     }
 
     const trends = await prisma.trend.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: {
+        createdAt: 'desc',
+      },
       include: {
         analytics: true,
       },
@@ -21,8 +23,9 @@ export async function GET() {
 
     return NextResponse.json(trends);
   } catch (error) {
-    console.error('Failed to fetch trends:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Failed to fetch trends:', { message: errorMessage });
+    return NextResponse.json({ error: 'Failed to fetch trends' }, { status: 500 });
   }
 }
 

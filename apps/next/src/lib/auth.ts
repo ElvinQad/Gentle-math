@@ -73,6 +73,16 @@ async function trackSessionEvent(
   }
 }
 
+// Function to check if email is admin
+function isAdminEmail(email: string): boolean {
+  const adminEmails = [
+    process.env.ABBASOV,
+    process.env.QADIROV,
+  ].filter(Boolean).map(email => email?.toLowerCase());
+  
+  return adminEmails.includes(email.toLowerCase());
+}
+
 export const authConfig: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
@@ -100,7 +110,7 @@ export const authConfig: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
-          scope: 'openid email profile https://www.googleapis.com/auth/spreadsheets.readonly',
+          scope: 'openid email profile',
           prompt: 'consent',
           access_type: 'offline',
           response_type: 'code',
@@ -207,51 +217,24 @@ export const authConfig: NextAuthOptions = {
     },
   },
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user, account }) {
       try {
-        // Check if user exists
-        const existingUser = await prisma.user.findUnique({
-          where: { email: user.email || undefined },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            image: true,
-            isAdmin: true,
-            emailVerified: true,
-          },
-        });
-
-        // If user doesn't exist, create one
-        if (!existingUser && user.email) {
-          const newUser = await prisma.user.create({
-            data: {
-              email: user.email,
-              name: user.name,
-              image: user.image,
-              emailVerified: new Date(),
-              // Set isAdmin based on your criteria, e.g., first user or specific email domains
-              isAdmin: false,
-            },
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              image: true,
-              isAdmin: true,
-            },
-          });
-          // Update the user object with admin status
-          user.isAdmin = newUser.isAdmin;
-        } else if (existingUser) {
-          // Update the user object with existing admin status
-          user.isAdmin = existingUser.isAdmin;
+        if (account?.provider === 'google' && user.email) {
+          // Check if user is admin
+          const isAdmin = isAdminEmail(user.email);
+          
+          // Store admin status in user object
+          user.isAdmin = isAdmin;
+          
+          // For admin users, we'll handle sheets access separately
+          // through a dedicated endpoint that will be called after login
+          
+          return true;
         }
-
         return true;
       } catch (error) {
-        console.error('Sign in error:', error);
-        return false;
+        console.error('Sign in callback error:', error);
+        return true;
       }
     },
     async jwt({ token, account, user }) {

@@ -2,8 +2,17 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Trend } from '@/types/admin';
+import { RequestSheetsAccess } from '@/components/admin/RequestSheetsAccess';
+import { useSession } from 'next-auth/react';
+
+interface ChartDataPoint {
+  date: string;
+  displayDate: string;
+  actual?: number;
+  predicted?: number;
+}
 
 interface DataTabProps {
   formData: {
@@ -24,37 +33,41 @@ export function DataTab({
   onProcessSpreadsheet,
   isEditMode,
 }: DataTabProps) {
-  const chartData = selectedTrend?.analytics?.[0]
-    ? selectedTrend.analytics[0].dates.map((date, i) => {
-        const currentDate = new Date(date);
-        const displayDate = currentDate.toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric'
-        }).replace(/\//g, '.');
+  const { data: session } = useSession();
+  
+  const rawChartData: ChartDataPoint[] = selectedTrend?.analytics?.[0]?.dates
+    ? selectedTrend.analytics[0].dates.map((dateStr: string, i: number) => {
+        const currentDate = new Date(dateStr);
         const now = new Date();
         const isCurrentMonth = currentDate.getMonth() === now.getMonth() && 
                              currentDate.getFullYear() === now.getFullYear();
-        const isActual = currentDate < now || 
-                        (currentDate.getMonth() < now.getMonth() && 
-                         currentDate.getFullYear() === now.getFullYear());
-        const value = selectedTrend.analytics[0].values[i];
+        const isPredicted = currentDate > now;
+        const value = selectedTrend.analytics?.[0]?.values[i] ?? 0;
 
         return {
-          month: currentDate.toISOString().slice(0, 7),
-          displayDate,
-          actual: isActual ? value : null,
-          forecast: (!isActual || isCurrentMonth) ? value : null,
+          date: currentDate.toISOString().slice(0, 7),
+          displayDate: currentDate.toLocaleDateString('en-GB', {
+            month: 'short',
+            year: 'numeric'
+          }),
+          actual: isCurrentMonth || !isPredicted ? value : undefined,
+          predicted: isPredicted || isCurrentMonth ? value : undefined,
         };
       })
     : [];
 
+  // No need for additional connection logic since January 2025 already has both values
+  const chartData = rawChartData;
+
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="spreadsheet" className="text-sm font-medium text-[color:var(--muted-foreground)]">
-          Google Spreadsheet URL
-        </Label>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="spreadsheet" className="text-sm font-medium text-[color:var(--muted-foreground)]">
+            Google Spreadsheet URL
+          </Label>
+          <RequestSheetsAccess />
+        </div>
         <div className="flex gap-2">
           <Input
             id="spreadsheet"
@@ -69,7 +82,7 @@ export function DataTab({
             <Button
               type="button"
               onClick={onProcessSpreadsheet}
-              disabled={isProcessingSpreadsheet || !formData.spreadsheetUrl}
+              disabled={isProcessingSpreadsheet || !formData.spreadsheetUrl || !session?.accessToken}
               className="bg-[color:var(--primary)] text-[color:var(--primary-foreground)]
                 hover:bg-[color:var(--primary)]/90 disabled:opacity-50"
             >
@@ -88,10 +101,11 @@ export function DataTab({
           <p className="text-[color:var(--muted-foreground)]">
             The spreadsheet should have &apos;trend&apos; and &apos;date&apos; columns
           </p>
-          <p className="text-[color:var(--color-warm-orange)] dark:text-[color:var(--color-warm-orange)]/90">
-            Note: You must be signed in with Google to process spreadsheet data. If you&apos;re using regular login, 
-            you&apos;ll need to sign out and sign in with Google first.
-          </p>
+          {!session?.accessToken && (
+            <p className="text-[color:var(--color-warm-orange)] dark:text-[color:var(--color-warm-orange)]/90">
+              Please connect your Google account using the button above to access spreadsheet data.
+            </p>
+          )}
         </div>
       </div>
 
@@ -105,7 +119,7 @@ export function DataTab({
                 <tr>
                   <th className="px-4 py-2 text-left text-sm font-medium text-[color:var(--muted-foreground)]">Month</th>
                   <th className="px-4 py-2 text-left text-sm font-medium text-[color:var(--muted-foreground)]">Actual</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-[color:var(--muted-foreground)]">Forecast</th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-[color:var(--muted-foreground)]">Predicted</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[color:var(--border)]">
@@ -115,7 +129,7 @@ export function DataTab({
                       {data.displayDate}
                     </td>
                     <td className="px-4 py-2 text-sm text-[color:var(--foreground)]">{data.actual ?? '—'}</td>
-                    <td className="px-4 py-2 text-sm text-[color:var(--foreground)]">{data.forecast ?? '—'}</td>
+                    <td className="px-4 py-2 text-sm text-[color:var(--foreground)]">{data.predicted ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -124,84 +138,116 @@ export function DataTab({
 
           {/* Chart */}
           <div className="p-4 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
-            <AreaChart 
-              data={chartData} 
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-              className="w-full h-[300px]"
-            >
-              <defs>
-                <linearGradient id="actualGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--color-soft-blue)" stopOpacity={0.2}/>
-                  <stop offset="95%" stopColor="var(--color-soft-blue)" stopOpacity={0.05}/>
-                </linearGradient>
-                <linearGradient id="predictedGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--color-muted-green)" stopOpacity={0.2}/>
-                  <stop offset="95%" stopColor="var(--color-muted-green)" stopOpacity={0.05}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis
-                dataKey="displayDate"
-                stroke="var(--muted-foreground)"
-                tickFormatter={(date) => date.split('.').slice(0, 2).join('.')}
-                tick={{ fontSize: 12 }}
-              />
-              <YAxis stroke="var(--muted-foreground)" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'var(--card)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '0.5rem',
-                }}
-                formatter={(value: number, name: string, props: any) => {
-                  const item = props.payload;
-                  const now = new Date();
-                  const itemDate = new Date(item.month);
-                  const isCurrentMonth = itemDate.getMonth() === now.getMonth() && 
-                                       itemDate.getFullYear() === now.getFullYear();
-                  
-                  // For current month, show Value
-                  if (isCurrentMonth) {
-                    if (name === 'actual') return [null, null];
-                    return [`${value.toFixed(1)}%`, 'Value'];
-                  }
-                  
-                  // For future dates, show Predicted
-                  if (item.forecast !== undefined && !isCurrentMonth) {
-                    if (name === 'actual') return [null, null];
-                    return [`${value.toFixed(1)}%`, 'Predicted'];
-                  }
-                  
-                  // For past dates, show Actual
-                  return [`${value.toFixed(1)}%`, 'Actual'];
-                }}
-                labelFormatter={(value) => value}
-              />
-              <Legend />
-              <Area
-                type="monotone"
-                dataKey="actual"
-                name="Actual"
-                stroke="var(--color-soft-blue)"
-                fill="url(#actualGradient)"
-                fillOpacity={0.1}
-                strokeWidth={2}
-                dot={{ fill: 'var(--color-soft-blue)', r: 2 }}
-                activeDot={{ r: 4, strokeWidth: 1 }}
-              />
-              <Area
-                type="monotone"
-                dataKey="forecast"
-                name="Forecast"
-                stroke="var(--color-muted-green)"
-                fill="url(#predictedGradient)"
-                fillOpacity={0.1}
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                dot={{ fill: 'var(--color-muted-green)', r: 2 }}
-                activeDot={{ r: 4, strokeWidth: 1 }}
-              />
-            </AreaChart>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={chartData}
+                  margin={{ top: 10, right: 30, left: 10, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="actualGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--color-soft-blue)" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="var(--color-soft-blue)" stopOpacity={0.05}/>
+                    </linearGradient>
+                    <linearGradient id="predictedGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--color-muted-green)" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="var(--color-muted-green)" stopOpacity={0.05}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.5} />
+                  <XAxis
+                    dataKey="displayDate"
+                    stroke="var(--muted-foreground)"
+                    tickFormatter={(date) => {
+                      const [day, month, year] = date.split('.');
+                      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                      return `${monthNames[parseInt(month, 10) - 1]} ${year}`;
+                    }}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
+                    stroke="var(--muted-foreground)" 
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value) => `${value}%`}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--card)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '0.5rem',
+                      fontSize: '12px',
+                    }}
+                    formatter={(value: number, name: string, props: any) => {
+                      const item = props.payload;
+                      const now = new Date();
+                      const itemDate = new Date(item.date);
+                      const isCurrentMonth = itemDate.getMonth() === now.getMonth() && 
+                                           itemDate.getFullYear() === now.getFullYear();
+                      
+                      // For current month, show Value
+                      if (isCurrentMonth) {
+                        if (name === 'actual') return [null, null];
+                        return [`${value.toFixed(1)}%`, 'Value'];
+                      }
+                      
+                      // For future dates, show Predicted
+                      if (item.predicted !== undefined && !isCurrentMonth) {
+                        if (name === 'actual') return [null, null];
+                        return [`${value.toFixed(1)}%`, 'Predicted'];
+                      }
+                      
+                      // For past dates, show Actual
+                      return [`${value.toFixed(1)}%`, 'Actual'];
+                    }}
+                    labelFormatter={(date) => date}
+                  />
+                  <Legend 
+                    verticalAlign="top" 
+                    height={36}
+                    formatter={(value) => value.charAt(0).toUpperCase() + value.slice(1)}
+                  />
+                  <ReferenceLine
+                    x={new Date().toISOString().slice(0, 7)}
+                    stroke="var(--muted-foreground)"
+                    strokeWidth={1}
+                    strokeDasharray="3 3"
+                    label={{
+                      value: 'Current',
+                      position: 'top',
+                      fill: 'var(--muted-foreground)',
+                      fontSize: 12
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="actual"
+                    name="Actual"
+                    stroke="var(--color-soft-blue)"
+                    strokeWidth={2}
+                    fill="url(#actualGradient)"
+                    isAnimationActive={true}
+                    animationDuration={1000}
+                    dot={{ fill: 'var(--color-soft-blue)', r: 2 }}
+                    activeDot={{ r: 4, strokeWidth: 1 }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="predicted"
+                    name="Predicted"
+                    stroke="var(--color-muted-green)"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    fill="url(#predictedGradient)"
+                    isAnimationActive={true}
+                    animationDuration={1000}
+                    animationBegin={1000}
+                    dot={{ fill: 'var(--color-muted-green)', r: 2 }}
+                    activeDot={{ r: 4, strokeWidth: 1 }}
+                    connectNulls={true}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           {/* Statistics */}
@@ -209,25 +255,25 @@ export function DataTab({
             <div className="p-4 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
               <p className="text-sm font-medium text-[color:var(--muted-foreground)]">Historical Data Points</p>
               <p className="mt-2 text-2xl font-semibold text-[color:var(--foreground)]">
-                {chartData.filter(d => d.actual !== null).length}
+                {chartData.filter(d => d.actual !== undefined).length}
               </p>
             </div>
             <div className="p-4 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
               <p className="text-sm font-medium text-[color:var(--muted-foreground)]">Forecast Points</p>
               <p className="mt-2 text-2xl font-semibold text-[color:var(--foreground)]">
-                {chartData.filter(d => d.actual === null).length}
+                {chartData.filter(d => d.actual === undefined).length}
               </p>
             </div>
             <div className="p-4 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
               <p className="text-sm font-medium text-[color:var(--muted-foreground)]">Maximum Value</p>
               <p className="mt-2 text-2xl font-semibold text-[color:var(--foreground)]">
-                {Math.max(...chartData.map(d => d.actual ?? 0))}
+                {Math.max(...chartData.map(d => d.actual ?? d.predicted ?? 0))}%
               </p>
             </div>
             <div className="p-4 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
               <p className="text-sm font-medium text-[color:var(--muted-foreground)]">Average Value</p>
               <p className="mt-2 text-2xl font-semibold text-[color:var(--foreground)]">
-                {(chartData.reduce((sum, d) => sum + (d.actual ?? 0), 0) / chartData.length).toFixed(2)}
+                {(chartData.reduce((sum, d) => sum + (d.actual ?? d.predicted ?? 0), 0) / chartData.length).toFixed(2)}%
               </p>
             </div>
           </div>

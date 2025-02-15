@@ -45,7 +45,7 @@ export function MainNav() {
                     : 'text-[color:var(--foreground)] font-bold'
                 }
               >
-                Gentle-math
+                Gentlemath
               </span>
             </Link>
 

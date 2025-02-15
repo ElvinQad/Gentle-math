@@ -62,6 +62,16 @@ export interface TrendData {
   forecast: number;
 }
 
+export interface Analytics {
+  id: string;
+  dates: string[];
+  values: number[];
+  ageSegments?: Array<{
+    name: string;
+    value: number;
+  }>;
+}
+
 export interface Trend {
   id: string;
   title: string;
@@ -71,11 +81,6 @@ export interface Trend {
   mainImageIndex: number;
   createdAt: string;
   updatedAt: string;
-  analytics: {
-    id: string;
-    dates: Date[];
-    values: number[];
-  }[];
-  data?: TrendData[];
   spreadsheetUrl?: string;
+  analytics?: Analytics[];
 }

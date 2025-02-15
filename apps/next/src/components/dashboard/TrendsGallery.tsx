@@ -1,21 +1,13 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  Legend,
-  ReferenceLine,
-} from 'recharts';
 import { type Trend } from '@/types/dashboard';
 import Image from 'next/image';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useModal } from '../navigation/DashboardNav';
+import { TrendChart } from '@/components/ui/TrendChart';
+import { Switch } from '@/components/ui/switch';
+import { AgeSegmentPie } from '@/components/ui/AgeSegmentPie';
 
 interface TrendsGalleryProps {
   trends?: Trend[];
@@ -29,6 +21,7 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isYearlyView, setIsYearlyView] = useState(false);
   const { setIsModalOpen } = useModal();
 
   useEffect(() => {
@@ -90,28 +83,28 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
 
   // Define reusable classes for consistent styling
   const cardClasses = 'bg-[color:var(--background-secondary)] rounded-lg overflow-hidden ' +
-    'cursor-pointer break-inside-avoid group transform transition-all duration-300 ease-out-expo ' +
+    'cursor-pointer break-inside-avoid group transform transition-all duration-500 ease-out-expo ' +
     'hover:shadow-lg hover:-translate-y-1 hover:shadow-[color:var(--color-soft-blue)]/10';
 
   const imageOverlayClasses = 'absolute inset-0 bg-gradient-to-t from-[color:var(--color-charcoal)]/60 to-transparent ' +
-    'transition-opacity duration-300 ease-out-expo';
+    'transition-opacity duration-500 ease-out-expo';
 
   const titleClasses = 'font-semibold text-base md:text-lg text-white line-clamp-2 ' +
-    'transition-transform duration-300 ease-out-expo group-hover:translate-y-0';
+    'transition-transform duration-500 ease-out-expo group-hover:translate-y-0';
 
   const descriptionClasses = 'text-sm text-white/80 line-clamp-2 ' +
-    'transition-transform duration-300 ease-out-expo group-hover:translate-y-0';
+    'transition-transform duration-500 ease-out-expo group-hover:translate-y-0';
 
   const tagClasses = 'inline-block px-2 py-1 text-xs rounded-full ' +
     'bg-[color:var(--color-soft-blue)]/10 text-[color:var(--color-soft-blue)] ' +
-    'transition-all duration-300 ease-out-expo group-hover:bg-[color:var(--color-soft-blue)]/20';
+    'transition-all duration-500 ease-out-expo group-hover:bg-[color:var(--color-soft-blue)]/20';
 
   const modalClasses = 'fixed inset-0 bg-[color:var(--color-charcoal)]/80 backdrop-blur-sm z-50 ' +
     'flex items-center justify-center';
 
   const modalContentClasses = 'bg-[color:var(--background)] rounded-lg sm:rounded-2xl shadow-xl ' +
     'border border-[color:var(--border)] overflow-hidden ' +
-    'transition-all duration-300 ease-out-expo';
+    'transition-all duration-700 ease-out-expo';
 
   if (isLoading) {
     return (
@@ -145,28 +138,51 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
     <>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 auto-rows-[200px] md:auto-rows-[250px]">
         {trends.map((trend, index) => (
-          <div
+          <motion.div
             key={trend.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.8,
+              delay: index * 0.1,
+              ease: [0.19, 1, 0.22, 1]
+            }}
+            whileHover={{ 
+              y: -8,
+              transition: { duration: 0.5, ease: [0.19, 1, 0.22, 1] }
+            }}
             className={`${cardClasses} ${index % 5 === 0 ? 'row-span-2 col-span-2' : ''}`}
             onClick={(e) => handleTrendSelect(trend, e)}
           >
-            <div className="relative h-full w-full">
-              <Image
-                src={trend.imageUrls[trend.mainImageIndex || 0]}
-                alt={trend.title}
-                fill
-                className="object-cover transition-transform duration-500 ease-out-expo group-hover:scale-105"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                priority={index === 0}
-              />
+            <div className="relative h-full w-full overflow-hidden">
+              <motion.div
+                initial={{ scale: 1 }}
+                whileHover={{ scale: 1.08 }}
+                transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
+                className="relative h-full w-full"
+              >
+                <Image
+                  src={trend.imageUrls[trend.mainImageIndex || 0]}
+                  alt={trend.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  priority={index === 0}
+                />
+              </motion.div>
               <div className={imageOverlayClasses} />
-              <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2 transform transition-transform duration-300 ease-out-expo">
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                whileHover={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5, ease: [0.19, 1, 0.22, 1] }}
+                className="absolute bottom-0 left-0 right-0 p-4 space-y-2"
+              >
                 <h3 className={titleClasses}>{trend.title}</h3>
                 <p className={descriptionClasses}>{trend.description}</p>
                 <span className={tagClasses}>{trend.type}</span>
-              </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
@@ -177,12 +193,16 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setSelectedTrend(null)}
+            onClick={() => {
+              setSelectedTrend(null);
+              setSelectedImagePosition(null);
+              setCurrentImageIndex(0);
+            }}
             className={modalClasses}
           >
             <motion.div
               className={`${modalContentClasses} ${
-                isMobile ? 'fixed inset-0 w-full h-full' : 'w-full max-w-5xl'
+                isMobile ? 'fixed inset-0 w-full h-full' : 'w-full max-w-7xl'
               }`}
               onClick={(e) => e.stopPropagation()}
               initial={
@@ -209,8 +229,8 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                       position: 'fixed',
                       top: '50%',
                       left: '50%',
-                      width: 'min(1200px, 95vw)',
-                      height: 'auto',
+                      width: 'min(1400px, 95vw)',
+                      height: 'min(800px, 90vh)',
                       x: '-50%',
                       y: '-50%',
                     }
@@ -288,9 +308,9 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
               </div>
 
               {/* Image Section */}
-              <div className={`relative flex flex-col ${isMobile ? 'h-full' : 'lg:flex-row'}`}>
+              <div className={`relative flex flex-col ${isMobile ? 'h-full' : 'lg:flex-row h-full'}`}>
                 {/* Image Section */}
-                <div className={`${isMobile ? 'h-[40%]' : 'lg:w-2/5'}`}>
+                <div className={`${isMobile ? 'h-[40%]' : 'lg:w-[45%] h-full'}`}>
                   <div className="relative h-full">
                     <AnimatePresence initial={false} custom={direction}>
                       <motion.div
@@ -335,7 +355,7 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                 </div>
 
                 {/* Content Section */}
-                <div className={`${isMobile ? 'h-[60%]' : 'lg:w-3/5'} bg-[color:var(--background)] flex flex-col`}>
+                <div className={`${isMobile ? 'h-[60%]' : 'lg:w-[55%] h-full'} bg-[color:var(--background)] flex flex-col`}>
                   <div className="h-full overflow-y-auto overscroll-y-contain touch-pan-y">
                     <div className="p-4 sm:p-6 space-y-6">
                       <div className="space-y-4">
@@ -355,130 +375,42 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
 
                       {/* Chart */}
                       {selectedTrend?.analytics?.[0]?.dates && selectedTrend?.analytics?.[0]?.values && (
-                        <div className="h-[300px] w-full">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart
-                              data={(selectedTrend?.analytics?.[0]?.dates || []).map((date, i) => {
-                                const currentDate = new Date(date);
-                                const now = new Date();
-                                const isCurrentMonth = currentDate.getMonth() === now.getMonth() && 
-                                                     currentDate.getFullYear() === now.getFullYear();
-                                const isActual = currentDate < now || 
-                                               (currentDate.getMonth() < now.getMonth() && 
-                                                currentDate.getFullYear() === now.getFullYear());
-                                const value = selectedTrend?.analytics?.[0]?.values?.[i] || 0;
-                                
-                                return {
-                                  date: currentDate.toISOString().slice(0, 7),
-                                  displayDate: currentDate.toLocaleDateString('en-GB', { 
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric'
-                                  }).replace(/\//g, '.'),
-                                  actual: isActual ? value : undefined,
-                                  predicted: (!isActual || isCurrentMonth) ? value : undefined,
-                                };
-                              })}
-                              margin={{ top: 10, right: 30, left: 10, bottom: 0 }}
-                            >
-                              <defs>
-                                <linearGradient id="actualGradient" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="var(--color-soft-blue)" stopOpacity={0.2}/>
-                                  <stop offset="95%" stopColor="var(--color-soft-blue)" stopOpacity={0.05}/>
-                                </linearGradient>
-                                <linearGradient id="predictedGradient" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="var(--color-muted-green)" stopOpacity={0.2}/>
-                                  <stop offset="95%" stopColor="var(--color-muted-green)" stopOpacity={0.05}/>
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.5} />
-                              <XAxis
-                                dataKey="displayDate"
-                                stroke="var(--muted-foreground)"
-                                tickFormatter={(date) => date.split('.').slice(0, 2).join('.')}
-                                tick={{ fontSize: 12 }}
+                        <div className="space-y-6">
+                          {/* View Toggle - Only show if data spans more than 10 months */}
+                          {selectedTrend.analytics[0].dates.length > 10 && (
+                            <div className="flex items-center justify-end gap-2">
+                              <span className="text-sm text-[color:var(--muted-foreground)]">
+                                {isYearlyView ? 'Yearly View' : 'Monthly View'}
+                              </span>
+                              <Switch
+                                checked={isYearlyView}
+                                onCheckedChange={setIsYearlyView}
+                                className="data-[state=checked]:bg-[color:var(--primary)]"
                               />
-                              <YAxis 
-                                stroke="var(--muted-foreground)" 
-                                tick={{ fontSize: 12 }}
-                                tickFormatter={(value) => `${value}%`}
+                            </div>
+                          )}
+                          <div className="grid grid-cols-1 gap-6">
+                            <div className="h-[350px] w-full">
+                              <TrendChart
+                                dates={selectedTrend.analytics[0].dates}
+                                values={selectedTrend.analytics[0].values}
+                                isYearlyView={isYearlyView}
                               />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: 'var(--card)',
-                                  border: '1px solid var(--border)',
-                                  borderRadius: '0.5rem',
-                                  fontSize: '12px',
-                                }}
-                                formatter={(value: number, name: string, props: any) => {
-                                  const item = props.payload;
-                                  const now = new Date();
-                                  const itemDate = new Date(item.date);
-                                  const isCurrentMonth = itemDate.getMonth() === now.getMonth() && 
-                                                       itemDate.getFullYear() === now.getFullYear();
-                                  
-                                  // For current month, show Value
-                                  if (isCurrentMonth) {
-                                    if (name === 'actual') return [null, null];
-                                    return [`${value.toFixed(1)}%`, 'Value'];
-                                  }
-                                  
-                                  // For future dates, show Predicted
-                                  if (item.predicted !== undefined && !isCurrentMonth) {
-                                    if (name === 'actual') return [null, null];
-                                    return [`${value.toFixed(1)}%`, 'Predicted'];
-                                  }
-                                  
-                                  // For past dates, show Actual
-                                  return [`${value.toFixed(1)}%`, 'Actual'];
-                                }}
-                                labelFormatter={(date) => date}
-                              />
-                              <Legend 
-                                verticalAlign="top" 
-                                height={36}
-                                formatter={(value) => value.charAt(0).toUpperCase() + value.slice(1)}
-                              />
-                              <ReferenceLine
-                                x={new Date().toISOString().slice(0, 7)}
-                                stroke="var(--muted-foreground)"
-                                strokeWidth={1}
-                                strokeDasharray="3 3"
-                                label={{
-                                  value: 'Current',
-                                  position: 'top',
-                                  fill: 'var(--muted-foreground)',
-                                  fontSize: 12
-                                }}
-                              />
-                              <Area
-                                type="monotone"
-                                dataKey="actual"
-                                name="Actual"
-                                stroke="var(--color-soft-blue)"
-                                strokeWidth={2}
-                                fill="url(#actualGradient)"
-                                isAnimationActive={true}
-                                animationDuration={1000}
-                                dot={{ fill: 'var(--color-soft-blue)', r: 2 }}
-                                activeDot={{ r: 4, strokeWidth: 1 }}
-                              />
-                              <Area
-                                type="monotone"
-                                dataKey="predicted"
-                                name="Predicted"
-                                stroke="var(--color-muted-green)"
-                                strokeWidth={2}
-                                strokeDasharray="5 5"
-                                fill="url(#predictedGradient)"
-                                isAnimationActive={true}
-                                animationDuration={1000}
-                                animationBegin={1000}
-                                dot={{ fill: 'var(--color-muted-green)', r: 2 }}
-                                activeDot={{ r: 4, strokeWidth: 1 }}
-                              />
-                            </AreaChart>
-                          </ResponsiveContainer>
+                            </div>
+                            {selectedTrend.analytics[0].ageSegments && (
+                              <div className="h-[350px] w-full">
+                                <div className="mb-2 text-sm font-medium text-[color:var(--muted-foreground)]">
+                                  Age Distribution
+                                </div>
+                                <AgeSegmentPie
+                                  data={selectedTrend.analytics[0].ageSegments.map(segment => ({
+                                    name: segment.name,
+                                    value: segment.value
+                                  }))}
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
 
@@ -517,6 +449,23 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                   </div>
                 </div>
               </div>
+
+              {/* Close Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedTrend(null);
+                  setSelectedImagePosition(null);
+                  setCurrentImageIndex(0);
+                }}
+                className="absolute top-4 right-4 p-2 rounded-full bg-[color:var(--background)]/10 
+                  text-[color:var(--foreground)] backdrop-blur-sm z-50 transition-all duration-300 
+                  hover:bg-[color:var(--background)]/20"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </motion.div>
           </motion.div>
         )}

@@ -1,6 +1,8 @@
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { TREND_TYPES } from '@/types/trends';
 
 interface DetailsTabProps {
   formData: {
@@ -25,12 +27,14 @@ export function DetailsTab({ formData, setFormData }: DetailsTabProps) {
           id="title"
           value={formData.title}
           onChange={(e) => setFormData({ title: e.target.value })}
-          placeholder="Enter trend title"
+          placeholder="Enter a descriptive title for the trend"
           required
-          className="w-full px-4 py-2 bg-[color:var(--background)] border border-[color:var(--border)] rounded-lg
-            focus:ring-2 focus:ring-[color:var(--primary)]/20 focus:border-[color:var(--primary)]
-            placeholder:text-[color:var(--muted-foreground)]/50"
+          className="flex-1 bg-[color:var(--background)] border border-[color:var(--border)]
+            focus:ring-2 focus:ring-[color:var(--primary)]/20 focus:border-[color:var(--primary)]"
         />
+        <p className="text-sm text-[color:var(--muted-foreground)]">
+          Choose a clear, concise title that describes the trend
+        </p>
       </div>
 
       <div className="space-y-2">
@@ -44,13 +48,16 @@ export function DetailsTab({ formData, setFormData }: DetailsTabProps) {
           id="description"
           value={formData.description}
           onChange={(e) => setFormData({ description: e.target.value })}
-          placeholder="Enter trend description"
+          placeholder="Provide a detailed description of the trend and its significance"
           required
           rows={4}
-          className="w-full px-4 py-2 bg-[color:var(--background)] border border-[color:var(--border)] rounded-lg
+          className="flex-1 bg-[color:var(--background)] border border-[color:var(--border)]
             focus:ring-2 focus:ring-[color:var(--primary)]/20 focus:border-[color:var(--primary)]
-            placeholder:text-[color:var(--muted-foreground)]/50 resize-none"
+            resize-none min-h-[120px]"
         />
+        <p className="text-sm text-[color:var(--muted-foreground)]">
+          Include key details about the trend, its impact, and relevance
+        </p>
       </div>
 
       <div className="space-y-2">
@@ -60,21 +67,32 @@ export function DetailsTab({ formData, setFormData }: DetailsTabProps) {
         >
           Type
         </Label>
-        <select
-          id="type"
+        <Select
           value={formData.type}
-          onChange={(e) => setFormData({ type: e.target.value })}
-          className="w-full px-4 py-2 bg-[color:var(--background)] border border-[color:var(--border)] rounded-lg
-            focus:ring-2 focus:ring-[color:var(--primary)]/20 focus:border-[color:var(--primary)]
-            text-[color:var(--foreground)]"
-          required
+          onValueChange={(value: string) => setFormData({ type: value })}
         >
-          <option value="">Select type</option>
-          <option value="Fashion">Fashion</option>
-          <option value="Technology">Technology</option>
-          <option value="Lifestyle">Lifestyle</option>
-          <option value="Business">Business</option>
-        </select>
+          <SelectTrigger
+            id="type"
+            className="w-full bg-[color:var(--background)] border border-[color:var(--border)]
+              focus:ring-2 focus:ring-[color:var(--primary)]/20 focus:border-[color:var(--primary)]"
+          >
+            <SelectValue placeholder="Select trend category" />
+          </SelectTrigger>
+          <SelectContent>
+            {TREND_TYPES.map((type) => (
+              <SelectItem
+                key={type.value}
+                value={type.value}
+                className="cursor-pointer hover:bg-[color:var(--accent)] hover:text-[color:var(--accent-foreground)]"
+              >
+                {type.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-sm text-[color:var(--muted-foreground)]">
+          Choose the most relevant category for your trend
+        </p>
       </div>
     </div>
   );

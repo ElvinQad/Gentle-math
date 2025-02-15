@@ -19,6 +19,11 @@ model User {
   isAdmin         Boolean   @default(false)
   subscribedUntil DateTime?
   activities      UserActivity[]
+  
+  // Google Sheets related fields
+  sheetsAccessToken  String?
+  sheetsRefreshToken String?
+  sheetsTokenExpiry  DateTime?
 }
 
 model VerificationToken {
@@ -44,12 +49,13 @@ model Trend {
 }
 
 model Analytics {
-  id        String     @id @default(cuid())
-  createdAt DateTime   @default(now())
-  trendId   String     @unique
-  dates     DateTime[]
-  values    Int[]
-  trend     Trend      @relation(fields: [trendId], references: [id])
+  id          String     @id @default(cuid())
+  createdAt   DateTime   @default(now())
+  trendId     String     @unique
+  dates       DateTime[]
+  values      Int[]
+  ageSegments Json?      // Store age segments as JSON array of { name: string, value: number }
+  trend       Trend      @relation(fields: [trendId], references: [id])
 
   @@index([createdAt])
 }

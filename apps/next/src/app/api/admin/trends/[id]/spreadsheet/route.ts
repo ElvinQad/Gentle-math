@@ -47,10 +47,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     try {
       // Fetch and process spreadsheet data
       const sheetData = await getSheetData(spreadsheetUrl);
-      console.log('Sheet data fetched:', sheetData);
+      console.log('Raw sheet data fetched:', sheetData);
       
       const trendData = convertSheetDataToTrendData(sheetData);
-      console.log('Trend data converted:', trendData);
+      console.log('Processed trend data:', {
+        dates: trendData.dates.map(d => d.toISOString()),
+        values: trendData.values,
+        ageSegments: trendData.ageSegments
+      });
 
       // Create or update analytics
       const analytics = await prisma.analytics.upsert({
@@ -61,10 +65,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           trendId: id,
           dates: trendData.dates.map(d => d.toISOString()),
           values: trendData.values,
+          ageSegments: trendData.ageSegments || []
         },
         update: {
           dates: trendData.dates.map(d => d.toISOString()),
           values: trendData.values,
+          ageSegments: trendData.ageSegments || []
         },
       });
 

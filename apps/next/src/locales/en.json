@@ -20,6 +20,7 @@
     },
     "features": {
       "title": "Platform Features",
+      "description": "Discover how our AI-powered platform revolutionizes fashion trend analysis with these key features.",
       "realtime": {
         "title": "Real-time Analysis",
         "description": "Get instant insights into emerging fashion trends and market movements."
@@ -31,6 +32,18 @@
       "market": {
         "title": "Market Insights",
         "description": "Deep dive into market segments and consumer behavior patterns."
+      },
+      "ai": {
+        "title": "AI Technology",
+        "description": "Leverage cutting-edge artificial intelligence to analyze fashion data at scale."
+      },
+      "insights": {
+        "title": "Smart Insights",
+        "description": "Transform complex data into actionable recommendations for your business."
+      },
+      "secure": {
+        "title": "Enterprise Security",
+        "description": "Your data is protected with industry-leading security and encryption."
       }
     }
   },

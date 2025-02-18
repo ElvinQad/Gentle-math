@@ -11,7 +11,7 @@ export default function TrendsPage() {
   useEffect(() => {
     async function fetchTrends() {
       try {
-        const response = await fetch('/api/admin/trends');
+        const response = await fetch('/api/trends');
         if (!response.ok) throw new Error('Failed to fetch trends');
         const data = await response.json();
         setTrends(data);

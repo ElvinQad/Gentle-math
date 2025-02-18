@@ -33,18 +33,8 @@ function SignInContent() {
 
       if (result?.error) {
         setError('Invalid email or password');
-      } else {
-        // Handle domain-based redirect
-        const currentDomain = window.location.hostname;
-        const isRuDomain = currentDomain.endsWith('.ru');
-        const redirectUrl = result?.url || callbackUrl;
-
-        // Ensure redirect URL matches the current domain
-        if (isRuDomain && !redirectUrl.includes('.ru')) {
-          window.location.href = redirectUrl.replace(/\.[^.]+(\:[0-9]+)?\//, '.ru$1/');
-        } else {
-          window.location.href = redirectUrl;
-        }
+      } else if (result?.url) {
+        window.location.href = result.url;
       }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred. Please try again.');
@@ -56,15 +46,10 @@ function SignInContent() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      const currentDomain = window.location.hostname;
-      const isRuDomain = currentDomain.endsWith('.ru');
-
-      // Ensure the callback URL uses the correct domain
-      const adjustedCallbackUrl = isRuDomain
-        ? callbackUrl.replace(/\.[^.]+(\:[0-9]+)?\//, '.ru$1/')
-        : callbackUrl;
-
-      await signIn('google', { callbackUrl: adjustedCallbackUrl });
+      await signIn('google', { 
+        callbackUrl: '/dashboard',
+        redirect: true
+      });
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Google sign in failed. Please try again.');
       setIsLoading(false);

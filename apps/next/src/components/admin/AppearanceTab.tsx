@@ -8,7 +8,7 @@ import Image from 'next/image';
 
 export function AppearanceTab() {
   const [isUploading, setIsUploading] = useState(false);
-  const [currentBgImage, setCurrentBgImage] = useState<string>('/bg.avif');
+  const [currentBgImage, setCurrentBgImage] = useState<string>('');
 
   useEffect(() => {
     const fetchCurrentBgImage = async () => {
@@ -99,12 +99,18 @@ export function AppearanceTab() {
         <CardContent>
           <div className="space-y-4">
             <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-[color:var(--border)]">
-              <Image
-                src={currentBgImage}
-                alt="Current background"
-                fill
-                className="object-cover"
-              />
+              {currentBgImage ? (
+                <Image
+                  src={currentBgImage}
+                  alt="Current background"
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center bg-muted">
+                  <p className="text-muted-foreground">No background image set</p>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-4">
               <Button

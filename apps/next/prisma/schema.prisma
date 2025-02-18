@@ -8,44 +8,52 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  name            String?
-  email           String?   @unique
-  emailVerified   DateTime?
-  image           String?
-  password        String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  isAdmin         Boolean   @default(false)
-  subscribedUntil DateTime?
-  activities      UserActivity[]
-  
-  // Google Sheets related fields
+  id                 String         @id @default(cuid())
+  name               String?
+  email              String?        @unique
+  emailVerified      DateTime?
+  image              String?
+  password           String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  isAdmin            Boolean        @default(false)
+  subscribedUntil    DateTime?
   sheetsAccessToken  String?
   sheetsRefreshToken String?
   sheetsTokenExpiry  DateTime?
+  activities         UserActivity[]
 }
 
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String?
+  parentId    String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  trends      Trend[]
 
-  @@unique([identifier, token])
+  @@index([parentId])
 }
 
 model Trend {
-  id            String   @id @default(cuid())
-  title         String
-  description   String
-  type          String
-  imageUrls     String[]
-  mainImageIndex Int     @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  analytics     Analytics[]
+  id             String     @id @default(cuid())
+  title          String
+  description    String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  imageUrls      String[]
+  type           String
+  mainImageIndex Int        @default(0)
+  analytics      Analytics?
+  categoryId     String?
+  category       Category?  @relation(fields: [categoryId], references: [id])
 
   @@index([createdAt])
+  @@index([categoryId])
 }
 
 model Analytics {
@@ -54,20 +62,33 @@ model Analytics {
   trendId     String     @unique
   dates       DateTime[]
   values      Int[]
-  ageSegments Json?      // Store age segments as JSON array of { name: string, value: number }
-  trend       Trend      @relation(fields: [trendId], references: [id])
+  ageSegments Json?
+  trend       Trend      @relation(fields: [trendId], references: [id], map: "Analytics_trend_fkey")
+  colorTrend  ColorTrend? @relation(fields: [trendId], references: [id], map: "Analytics_colorTrend_fkey")
 
   @@index([createdAt])
 }
 
-// New model for tracking user activity
+model ColorTrend {
+  id          String     @id @default(cuid())
+  name        String
+  hex         String
+  imageUrl    String
+  popularity  Int
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  analytics   Analytics?
+
+  @@index([createdAt])
+}
+
 model UserActivity {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      String   // e.g., 'login', 'logout', 'api_call'
+  type      String
   timestamp DateTime @default(now())
-  metadata  Json?    // Additional data like IP, user agent, etc.
+  metadata  Json?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([timestamp])

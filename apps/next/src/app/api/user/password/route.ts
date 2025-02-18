@@ -6,35 +6,60 @@ import bcrypt from 'bcryptjs';
 
 export async function PUT(req: Request) {
   try {
+    console.log('Password update request received');
+    
     const session = await getServerSession(authConfig);
+    console.log('Session:', { 
+      hasSession: !!session, 
+      hasUser: !!session?.user,
+      email: session?.user?.email 
+    });
+    
     if (!session?.user?.email) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      console.log('No session or email found');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { currentPassword, newPassword } = await req.json();
+    const body = await req.json();
+    console.log('Request body received:', { 
+      hasCurrentPassword: !!body.currentPassword,
+      hasNewPassword: !!body.newPassword 
+    });
+    
+    const { currentPassword, newPassword } = body;
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
     });
+    
+    console.log('User lookup result:', { 
+      found: !!user,
+      hasExistingPassword: !!user?.password 
+    });
 
     if (!user) {
-      return new NextResponse('User not found', { status: 404 });
+      console.log('User not found in database');
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     // If user has no password (Google auth), allow setting a new one without current password
     if (!user.password) {
+      console.log('Setting initial password for Google auth user');
       const hashedPassword = await bcrypt.hash(newPassword, 12);
       await prisma.user.update({
         where: { email: session.user.email },
         data: { password: hashedPassword },
       });
-      return new NextResponse('Password set successfully');
+      return NextResponse.json({ message: 'Password set successfully' });
     }
 
     // For users with existing password, verify current password
     const isValid = await bcrypt.compare(currentPassword, user.password);
+    console.log('Password validation:', { isValid });
+    
     if (!isValid) {
-      return new NextResponse('Invalid current password', { status: 400 });
+      console.log('Invalid current password');
+      return NextResponse.json({ error: 'Invalid current password' }, { status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 12);
@@ -44,9 +69,10 @@ export async function PUT(req: Request) {
       data: { password: hashedPassword },
     });
 
-    return new NextResponse('Password updated successfully');
+    console.log('Password updated successfully');
+    return NextResponse.json({ message: 'Password updated successfully' });
   } catch (error) {
     console.error('Password update error:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

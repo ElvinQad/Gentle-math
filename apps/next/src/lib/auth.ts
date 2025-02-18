@@ -101,6 +101,9 @@ export const authConfig: NextAuthOptions = {
         sameSite: 'lax',
         path: '/',
         secure: process.env.NODE_ENV === 'production',
+        domain: process.env.NODE_ENV === 'production' 
+          ? `.${process.env.DEFAULT_DOMAIN}` 
+          : undefined
       },
     },
   },
@@ -188,16 +191,41 @@ export const authConfig: NextAuthOptions = {
   events: {
     async signIn({ user, account }) {
       try {
-        // Get the user from our database first
-        const dbUser = await prisma.user.findUnique({
-          where: { email: user.email || undefined },
-        });
+        if (account?.provider === 'google') {
+          // Create or update user in database when signing in with Google
+          const dbUser = await prisma.user.upsert({
+            where: { email: user.email || '' },
+            create: {
+              email: user.email,
+              name: user.name,
+              image: user.image,
+              emailVerified: new Date(),
+              isAdmin: isAdminEmail(user.email || ''),
+            },
+            update: {
+              name: user.name,
+              image: user.image,
+              emailVerified: new Date(),
+            },
+          });
 
-        if (dbUser?.id) {
+          // Track the session event
           await trackSessionEvent(dbUser.id, 'session.login', {
-            provider: account?.provider,
+            provider: account.provider,
             timestamp: new Date().toISOString(),
           });
+        } else {
+          // For non-Google sign-ins, just track the event if user exists
+          const dbUser = await prisma.user.findUnique({
+            where: { email: user.email || undefined },
+          });
+
+          if (dbUser?.id) {
+            await trackSessionEvent(dbUser.id, 'session.login', {
+              provider: account?.provider,
+              timestamp: new Date().toISOString(),
+            });
+          }
         }
       } catch (error) {
         console.error('Sign in event error:', error);
@@ -206,7 +234,6 @@ export const authConfig: NextAuthOptions = {
     async signOut({ token }) {
       try {
         if (token?.id) {
-          // Use token.id instead of token.sub
           await trackSessionEvent(token.id as string, 'session.logout', {
             timestamp: new Date().toISOString(),
           });
@@ -217,42 +244,39 @@ export const authConfig: NextAuthOptions = {
     },
   },
   callbacks: {
-    async signIn({ user, account }) {
-      try {
-        if (account?.provider === 'google' && user.email) {
-          // Check if user is admin
-          const isAdmin = isAdminEmail(user.email);
-          
-          // Store admin status in user object
-          user.isAdmin = isAdmin;
-          
-          // For admin users, we'll handle sheets access separately
-          // through a dedicated endpoint that will be called after login
-          
-          return true;
-        }
-        return true;
-      } catch (error) {
-        console.error('Sign in callback error:', error);
-        return true;
+    async signIn({ account }) {
+      if (account?.provider === 'google') {
+        return true; // Always allow Google sign in
       }
+      return true;
     },
     async jwt({ token, account, user }) {
       try {
         // Handle initial sign in
         if (account && user) {
-          return {
-            ...token,
-            accessToken: account.access_token,
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            isAdmin: user.isAdmin || false,
-            subscribedUntil: user.subscribedUntil || null,
-          };
+          // For Google sign in, get the user from database to ensure we have the correct ID
+          if (account.provider === 'google') {
+            const dbUser = await prisma.user.findUnique({
+              where: { email: user.email || '' },
+              select: {
+                id: true,
+                isAdmin: true,
+                subscribedUntil: true,
+              },
+            });
+            if (dbUser) {
+              token.id = dbUser.id;
+              token.isAdmin = dbUser.isAdmin;
+              token.subscribedUntil = dbUser.subscribedUntil?.toISOString() || null;
+            }
+          } else {
+            token.id = user.id;
+            token.isAdmin = user.isAdmin || false;
+            token.subscribedUntil = user.subscribedUntil || null;
+          }
+          token.accessToken = account.access_token;
         }
 
-        // On subsequent calls, return the token
         return token;
       } catch (error) {
         console.error('Error updating JWT:', error);
@@ -268,21 +292,19 @@ export const authConfig: NextAuthOptions = {
         session.user.subscribedUntil = token.subscribedUntil as string | null;
       }
 
-      // Add access token to session
       session.accessToken = token.accessToken;
 
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Strip nested callback URLs
-      const cleanUrl = url.split('?')[0];
-
-      // If the URL is relative or matches the base URL, return it
-      if (url.startsWith('/') || url.startsWith(baseUrl)) {
-        return cleanUrl;
+      // Allow relative URLs
+      if (url.startsWith('/')) {
+        return `${baseUrl}${url}`;
       }
-
-      // Default to base URL
+      // Allow callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) {
+        return url;
+      }
       return baseUrl;
     },
   },

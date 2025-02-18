@@ -10,6 +10,9 @@ import { User, UserDetails } from '@/types/admin';
 import { UsersTab } from '@/components/admin/UsersTab';
 import { TrendsTab } from '@/components/admin/TrendsTab';
 import { AppearanceTab } from '@/components/admin/AppearanceTab';
+import { ColorTrendsTab } from '@/components/admin/ColorTrendsTab';
+import { CategoriesTab } from '@/components/admin/CategoriesTab';
+import { BulkImportTab } from '@/components/admin/BulkImportTab';
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -166,7 +169,7 @@ export default function AdminPage() {
 
       <Tabs defaultValue="users" className="relative space-y-6">
         <div className="sticky top-0 z-10 bg-[color:var(--background)] border-b border-[color:var(--border)] pb-4">
-          <TabsList className="w-full grid grid-cols-3 bg-[color:var(--muted)] rounded-lg p-1">
+          <TabsList className="w-full grid grid-cols-6 bg-[color:var(--muted)] rounded-lg p-1">
             <TabsTrigger 
               value="users"
               className="rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out-expo
@@ -184,6 +187,33 @@ export default function AdminPage() {
                 hover:text-[color:var(--foreground)]/90"
             >
               Trends
+            </TabsTrigger>
+            <TabsTrigger 
+              value="colors"
+              className="rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out-expo
+                data-[state=active]:bg-[color:var(--background)] data-[state=active]:text-[color:var(--foreground)]
+                data-[state=active]:shadow-sm data-[state=active]:scale-[0.98]
+                hover:text-[color:var(--foreground)]/90"
+            >
+              Colors
+            </TabsTrigger>
+            <TabsTrigger 
+              value="categories"
+              className="rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out-expo
+                data-[state=active]:bg-[color:var(--background)] data-[state=active]:text-[color:var(--foreground)]
+                data-[state=active]:shadow-sm data-[state=active]:scale-[0.98]
+                hover:text-[color:var(--foreground)]/90"
+            >
+              Categories
+            </TabsTrigger>
+            <TabsTrigger 
+              value="bulk-import"
+              className="rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out-expo
+                data-[state=active]:bg-[color:var(--background)] data-[state=active]:text-[color:var(--foreground)]
+                data-[state=active]:shadow-sm data-[state=active]:scale-[0.98]
+                hover:text-[color:var(--foreground)]/90"
+            >
+              Bulk Import
             </TabsTrigger>
             <TabsTrigger 
               value="appearance"
@@ -217,6 +247,18 @@ export default function AdminPage() {
 
         <TabsContent value="trends">
           <TrendsTab />
+        </TabsContent>
+
+        <TabsContent value="colors">
+          <ColorTrendsTab />
+        </TabsContent>
+
+        <TabsContent value="categories">
+          <CategoriesTab />
+        </TabsContent>
+
+        <TabsContent value="bulk-import">
+          <BulkImportTab />
         </TabsContent>
 
         <TabsContent value="appearance">

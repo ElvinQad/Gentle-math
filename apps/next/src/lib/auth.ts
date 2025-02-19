@@ -95,12 +95,29 @@ export const authConfig: NextAuthOptions = {
   },
   cookies: {
     sessionToken: {
-      name: 'next-auth.session-token',
+      name: `${process.env.VERCEL_ENV ? '__Secure-' : ''}next-auth.session-token`,
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production'
+        secure: !!process.env.VERCEL_ENV,
+      },
+    },
+    callbackUrl: {
+      name: `${process.env.VERCEL_ENV ? '__Secure-' : ''}next-auth.callback-url`,
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: !!process.env.VERCEL_ENV,
+      },
+    },
+    csrfToken: {
+      name: `${process.env.VERCEL_ENV ? '__Host-' : ''}next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: !!process.env.VERCEL_ENV,
       },
     },
   },

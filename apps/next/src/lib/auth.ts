@@ -100,8 +100,7 @@ export const authConfig: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: true,
-        domain: process.env.DEFAULT_DOMAIN
+        secure: process.env.NODE_ENV === 'production'
       },
     },
   },

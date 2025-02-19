@@ -1,3 +1,7 @@
+import type { Configuration } from 'webpack';
+
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
@@ -20,6 +24,15 @@ const config = {
   //   locales: ['en', 'ru'],
   //   defaultLocale: 'en',
   // },
+  webpack: (config: Configuration) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+    };
+    return config;
+  },
 };
 
 export default config;
+
+

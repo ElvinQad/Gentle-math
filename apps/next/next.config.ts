@@ -25,6 +25,7 @@ const config = {
   //   defaultLocale: 'en',
   // },
   webpack: (config: Configuration) => {
+    config.resolve = config.resolve || {};
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': path.resolve(__dirname, 'src'),

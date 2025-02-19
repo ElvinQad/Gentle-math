@@ -1,13 +1,7 @@
 /** @type {import('next').NextConfig} */
-import type { NextConfig } from 'next';
-
-const config: NextConfig = {
+const config = {
   reactStrictMode: true,
   transpilePackages: ["@repo/ui"],
-  experimental: {
-    esmExternals: true,
-  },
-  serverExternalPackages: [],
   images: {
     remotePatterns: [
       {

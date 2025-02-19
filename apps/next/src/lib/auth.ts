@@ -102,7 +102,7 @@ export const authConfig: NextAuthOptions = {
         path: '/',
         secure: process.env.NODE_ENV === 'production',
         domain: process.env.NODE_ENV === 'production' 
-          ? `.${process.env.DEFAULT_DOMAIN}` 
+          ? process.env.DEFAULT_DOMAIN 
           : undefined
       },
     },
@@ -114,10 +114,9 @@ export const authConfig: NextAuthOptions = {
       authorization: {
         params: {
           scope: 'openid email profile',
-          prompt: 'consent',
           access_type: 'offline',
-          response_type: 'code',
-        },
+          response_type: 'code'
+        }
       },
       profile(profile) {
         return {

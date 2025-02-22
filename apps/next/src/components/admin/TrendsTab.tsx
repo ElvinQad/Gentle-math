@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
-import { Trend } from '@/types/admin';
+import { Trend as DashboardTrend } from '@/types/dashboard';
+import { Trend as ApiTrend } from '@/types/trends';
 import { Modal } from '@/components/ui/Modal';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,10 @@ import { calculateGrowthRate, getLatestValue } from '@/utils/trends';
 import { Switch } from '@/components/ui/switch';
 import { AgeSegmentPie } from '@/components/ui/AgeSegmentPie';
 
+type Trend = Omit<DashboardTrend & ApiTrend, 'categoryId'> & {
+  categoryId: string;
+};
+
 interface ImagePreview {
   url: string;
   isMain: boolean;
@@ -49,18 +54,26 @@ async function calculateContentHash(file: File): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+interface TrendFormData extends Omit<Partial<Trend>, 'title' | 'description'> {
+  title: string;
+  description: string;
+  spreadsheetUrl: string;
+  categoryId: string;
+}
+
 export function TrendsTab() {
   const [trends, setTrends] = useState<Trend[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isYearlyView, setIsYearlyView] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<TrendFormData>({
     title: '',
     description: '',
     type: '',
     imageUrls: [''],
     mainImageIndex: 0,
     spreadsheetUrl: '',
+    categoryId: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentTab, setCurrentTab] = useState<'details' | 'images' | 'data'>('details');
@@ -208,6 +221,7 @@ export function TrendsTab() {
             imageUrls: validImageUrls,
             mainImageIndex: mainImageIndex >= 0 ? mainImageIndex : 0,
             spreadsheetUrl: formData.spreadsheetUrl.trim(),
+            categoryId: formData.categoryId,
           }),
         },
       );
@@ -252,6 +266,7 @@ export function TrendsTab() {
       imageUrls: [''],
       mainImageIndex: 0,
       spreadsheetUrl: '',
+      categoryId: '',
     });
     setImageUrls([{ url: '', isMain: true }]);
     setIsEditMode(false);
@@ -269,6 +284,7 @@ export function TrendsTab() {
       imageUrls: trend.imageUrls,
       mainImageIndex: trend.mainImageIndex,
       spreadsheetUrl: trend.spreadsheetUrl || '',
+      categoryId: trend.categoryId,
     });
     setImageUrls(
       trend.imageUrls.map((url, index) => ({

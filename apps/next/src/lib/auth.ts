@@ -74,7 +74,7 @@ async function trackSessionEvent(
 }
 
 // Function to check if email is admin
-function isAdminEmail(email: string): boolean {
+export function isAdminEmail(email: string): boolean {
   const adminEmails = [
     process.env.ABBASOV,
     process.env.QADIROV,
@@ -85,7 +85,6 @@ function isAdminEmail(email: string): boolean {
 
 export const authConfig: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development',
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -186,11 +185,19 @@ export const authConfig: NextAuthOptions = {
           throw new Error('Invalid password');
         }
 
+        // Update user's admin status if it has changed
+        if (user.email && isAdminEmail(user.email) !== user.isAdmin) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { isAdmin: isAdminEmail(user.email) },
+          });
+        }
+
         return {
           id: user.id,
           email: user.email,
           name: user.name,
-          isAdmin: user.isAdmin,
+          isAdmin: user.email ? isAdminEmail(user.email) : false,
           subscribedUntil: user.subscribedUntil?.toISOString() || null,
         };
       },

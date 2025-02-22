@@ -4,8 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Modal } from '@/components/ui/Modal';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { signOut } from 'next-auth/react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,15 +23,11 @@ import { Spinner } from '@/components/ui/spinner';
 import { TrendChart } from '@/components/ui/TrendChart';
 import { ColorDetailsTab } from './tabs/ColorDetailsTab';
 import { ImagesTab } from './tabs/ImagesTab';
-import Image from 'next/image';
 import { Switch } from '@/components/ui/switch';
-
-interface ColorFormData {
-  name: string;
-  hex: string;
-  imageUrl: string;
-  popularity: number;
-}
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { RequestSheetsAccess } from '@/components/admin/RequestSheetsAccess';
+import { AgeSegmentPie } from '@/components/ui/AgeSegmentPie';
 
 interface ImagePreview {
   url: string;
@@ -43,10 +41,25 @@ interface ColorTrend {
   imageUrl: string;
   popularity: number;
   createdAt: string;
+  palette1?: string | null;
+  palette2?: string | null;
+  palette3?: string | null;
+  palette4?: string | null;
+  palette5?: string | null;
   analytics?: {
     dates: string[];
     values: number[];
+    ageSegments?: Array<{ name: string; value: number }>;
   };
+  spreadsheetUrl?: string;
+}
+
+interface ColorFormData {
+  name: string;
+  hex: string;
+  imageUrl: string;
+  popularity: number;
+  spreadsheetUrl: string;
 }
 
 const isValidUrl = (url: string) => {
@@ -73,9 +86,11 @@ export function ColorTrendsTab() {
     hex: '',
     imageUrl: '',
     popularity: 0,
+    spreadsheetUrl: '',
   });
-  const [imageUrls, setImageUrls] = useState<ImagePreview[]>([{ url: '', isMain: true }]);
+  const [imageUrls, setImageUrls] = useState<ImagePreview[]>([]);
   const [isYearlyView, setIsYearlyView] = useState(false);
+  const [isProcessingSpreadsheet, setIsProcessingSpreadsheet] = useState(false);
 
   const fetchColorTrends = async () => {
     try {
@@ -111,20 +126,38 @@ export function ColorTrendsTab() {
       }
 
       for (const file of Array.from(uniqueFiles.values())) {
-        const formData = new FormData();
-        formData.append('file', file);
-
+        // First, get the presigned URL from our API
         const response = await fetch('/api/admin/upload', {
           method: 'POST',
-          body: formData,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            filename: file.name,
+            contentType: file.type,
+          }),
         });
 
         if (!response.ok) {
-          throw new Error('Failed to upload image');
+          throw new Error('Failed to get upload URL');
         }
 
-        const data = await response.json();
-        uploadedUrls.push(data.url);
+        const { presignedUrl, publicUrl } = await response.json();
+
+        // Upload the file using the presigned URL
+        const uploadResponse = await fetch(presignedUrl, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': file.type,
+          },
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload file');
+        }
+
+        uploadedUrls.push(publicUrl);
       }
 
       // Update imageUrls state with the new URLs
@@ -208,8 +241,9 @@ export function ColorTrendsTab() {
       hex: '',
       imageUrl: '',
       popularity: 0,
+      spreadsheetUrl: '',
     });
-    setImageUrls([{ url: '', isMain: true }]);
+    setImageUrls([]);
     setIsEditMode(false);
     setSelectedTrend(null);
     setCurrentTab('details');
@@ -223,10 +257,118 @@ export function ColorTrendsTab() {
       hex: trend.hex,
       imageUrl: trend.imageUrl,
       popularity: trend.popularity,
+      spreadsheetUrl: trend.spreadsheetUrl || '',
     });
     setImageUrls([{ url: trend.imageUrl, isMain: true }]);
     setIsModalOpen(true);
     setIsDetailModalOpen(false);
+  };
+
+  const handleProcessSpreadsheet = async () => {
+    if (!formData.spreadsheetUrl) {
+      toast.error('No spreadsheet URL provided');
+      return;
+    }
+
+    try {
+      setIsProcessingSpreadsheet(true);
+
+      // If we're in edit mode, use the selected trend ID
+      // If we're creating a new trend, first create it and then process the spreadsheet
+      let trendId = selectedTrend?.id;
+
+      if (!trendId) {
+        // Create the trend first
+        const mainImage = imageUrls.find((img) => img.isMain);
+        if (!mainImage || !isValidUrl(mainImage.url)) {
+          throw new Error('Please select a main image');
+        }
+
+        const createResponse = await fetch('/api/admin/colors', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...formData,
+            imageUrl: mainImage.url,
+          }),
+        });
+
+        if (!createResponse.ok) {
+          const data = await createResponse.json();
+          throw new Error(data.message || 'Failed to create color trend');
+        }
+
+        const newTrend = await createResponse.json();
+        trendId = newTrend.id;
+        setSelectedTrend(newTrend);
+      }
+
+      console.log('Processing spreadsheet for trend:', {
+        trendId,
+        spreadsheetUrl: formData.spreadsheetUrl
+      });
+
+      const response = await fetch(`/api/admin/colors/${trendId}/spreadsheet`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spreadsheetUrl: formData.spreadsheetUrl }),
+      });
+
+      const responseData = await response.json();
+      console.log('Spreadsheet processing response:', responseData);
+
+      if (!response.ok) {
+        const errorMessage = responseData?.message || 'Failed to process spreadsheet';
+        
+        if (errorMessage.includes('Google authentication required')) {
+          toast.error(
+            'Google Sign-in Required',
+            {
+              description: 'Please sign out and sign in with Google to access spreadsheet data.',
+              action: {
+                label: 'Sign Out',
+                onClick: () => signOut({ callbackUrl: '/' })
+              },
+              duration: 10000
+            }
+          );
+          return;
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      // Update the trends state with the new data
+      setColorTrends(prevTrends => {
+        const newTrends = prevTrends.map(t => 
+          t.id === responseData.id ? { ...t, ...responseData } : t
+        );
+        console.log('Updating trends state:', {
+          previous: prevTrends,
+          updated: newTrends,
+          receivedData: responseData
+        });
+        return newTrends;
+      });
+
+      // Also update the selected trend if it's the one being modified
+      if (selectedTrend?.id === responseData.id) {
+        setSelectedTrend(responseData);
+      }
+      
+      toast.success('Spreadsheet data processed successfully');
+
+      // If we just created a new trend, close the modal and reset the form
+      if (!selectedTrend?.id) {
+        setIsModalOpen(false);
+        resetForm();
+      }
+    } catch (error) {
+      console.error('Failed to process spreadsheet:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to process spreadsheet data');
+    } finally {
+      setIsProcessingSpreadsheet(false);
+    }
   };
 
   if (isLoading) {
@@ -310,36 +452,101 @@ export function ColorTrendsTab() {
               </TabsContent>
 
               <TabsContent value="analytics" className="focus-visible:outline-none">
-                {selectedTrend?.analytics ? (
-                  <div className="p-4 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Trend Analytics</h3>
-                      {selectedTrend.analytics.dates.length > 10 && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-[color:var(--muted-foreground)]">
-                            {isYearlyView ? 'Yearly View' : 'Monthly View'}
-                          </span>
-                          <Switch
-                            checked={isYearlyView}
-                            onCheckedChange={setIsYearlyView}
-                            className="data-[state=checked]:bg-[color:var(--primary)]"
-                          />
-                        </div>
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-medium text-[color:var(--foreground)]">Analytics Data</h3>
+                        <p className="text-sm text-[color:var(--muted-foreground)]">
+                          Connect a Google Spreadsheet to visualize trend data
+                        </p>
+                      </div>
+                      <RequestSheetsAccess />
+                    </div>
+
+                    <div className="grid gap-4">
+                      <div className="space-y-2">
+                        <Label 
+                          htmlFor="spreadsheetUrl"
+                          className="text-sm font-medium text-[color:var(--muted-foreground)]"
+                        >
+                          Google Spreadsheet URL
+                        </Label>
+                        <Input
+                          id="spreadsheetUrl"
+                          value={formData.spreadsheetUrl}
+                          onChange={(e) => setFormData(prev => ({ ...prev, spreadsheetUrl: e.target.value }))}
+                          placeholder="https://docs.google.com/spreadsheets/d/..."
+                          className="bg-[color:var(--background)] border border-[color:var(--border)]
+                            focus:ring-2 focus:ring-[color:var(--primary)]/20 focus:border-[color:var(--primary)]"
+                        />
+                        <p className="text-sm text-[color:var(--muted-foreground)]">
+                          Enter the URL of your Google Spreadsheet containing the trend data
+                        </p>
+                      </div>
+
+                      {formData.spreadsheetUrl && (
+                        <Button
+                          type="button"
+                          onClick={handleProcessSpreadsheet}
+                          disabled={isProcessingSpreadsheet || !formData.spreadsheetUrl}
+                          className="w-full bg-[color:var(--primary)] text-[color:var(--primary-foreground)] hover:bg-[color:var(--primary)]/90"
+                        >
+                          {isProcessingSpreadsheet ? (
+                            <>
+                              <Spinner className="mr-2 h-4 w-4" />
+                              Processing Spreadsheet...
+                            </>
+                          ) : (
+                            'Process Spreadsheet'
+                          )}
+                        </Button>
                       )}
                     </div>
-                    <div className="h-[300px] w-full">
-                      <TrendChart
-                        dates={selectedTrend.analytics.dates}
-                        values={selectedTrend.analytics.values}
-                        isYearlyView={isYearlyView}
-                      />
+                  </div>
+
+                  {selectedTrend?.analytics && (
+                    <div className="p-4 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Trend Analytics</h3>
+                        {selectedTrend.analytics.dates.length > 10 && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-[color:var(--muted-foreground)]">
+                              {isYearlyView ? 'Yearly View' : 'Monthly View'}
+                            </span>
+                            <Switch
+                              checked={isYearlyView}
+                              onCheckedChange={setIsYearlyView}
+                              className="data-[state=checked]:bg-[color:var(--primary)]"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="h-[300px] w-full">
+                          <TrendChart
+                            dates={selectedTrend.analytics.dates}
+                            values={selectedTrend.analytics.values}
+                            isYearlyView={isYearlyView}
+                          />
+                        </div>
+                        {selectedTrend.analytics.ageSegments && (
+                          <div className="h-[300px] w-full">
+                            <div className="mb-2 text-sm font-medium text-[color:var(--muted-foreground)]">
+                              Age Distribution
+                            </div>
+                            <AgeSegmentPie
+                              data={selectedTrend.analytics.ageSegments.map(segment => ({
+                                name: segment.name,
+                                value: segment.value
+                              }))}
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-[color:var(--muted-foreground)]">
-                    No analytics data available
-                  </div>
-                )}
+                  )}
+                </div>
               </TabsContent>
             </div>
           </Tabs>
@@ -464,6 +671,32 @@ export function ColorTrendsTab() {
                     <span className="text-[color:var(--foreground)]">{selectedTrend.hex}</span>
                   </div>
                 </div>
+
+                {(selectedTrend.palette1 || selectedTrend.palette2 || selectedTrend.palette3 || 
+                  selectedTrend.palette4 || selectedTrend.palette5) && (
+                  <div>
+                    <h3 className="text-sm font-medium text-[color:var(--muted-foreground)] mb-2">Color Palette</h3>
+                    <div className="flex flex-wrap gap-3">
+                      {[
+                        selectedTrend.palette1,
+                        selectedTrend.palette2,
+                        selectedTrend.palette3,
+                        selectedTrend.palette4,
+                        selectedTrend.palette5
+                      ].filter(Boolean).map((color, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <div
+                            className="w-6 h-6 rounded-full border border-[color:var(--border)]"
+                            style={{ backgroundColor: color || undefined }}
+                          />
+                          <span className="text-sm font-mono text-[color:var(--muted-foreground)]">
+                            {color}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4">
@@ -523,7 +756,14 @@ export function ColorTrendsTab() {
                     variant="destructive"
                     className="bg-[color:var(--destructive)] text-[color:var(--destructive-foreground)] hover:bg-[color:var(--destructive)]/90"
                   >
-                    Delete
+                    {isDeleting ? (
+                      <>
+                        <Spinner className="mr-2 h-4 w-4" />
+                        Deleting...
+                      </>
+                    ) : (
+                      'Delete'
+                    )}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent className="bg-[color:var(--background)] border border-[color:var(--border)]">
@@ -536,7 +776,10 @@ export function ColorTrendsTab() {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="bg-[color:var(--secondary)] text-[color:var(--secondary-foreground)] hover:bg-[color:var(--secondary)]/90">
+                    <AlertDialogCancel 
+                      className="bg-[color:var(--secondary)] text-[color:var(--secondary-foreground)] hover:bg-[color:var(--secondary)]/90"
+                      disabled={isDeleting}
+                    >
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction

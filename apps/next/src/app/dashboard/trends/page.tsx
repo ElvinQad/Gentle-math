@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { TrendsGallery } from '@/components/dashboard/TrendsGallery';
-import { type Trend } from '@/types/dashboard';
+import { type Trend } from '@/types/trends';
 
 export default function TrendsPage() {
   const [trends, setTrends] = useState<Trend[]>([]);

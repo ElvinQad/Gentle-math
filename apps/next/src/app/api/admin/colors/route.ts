@@ -46,13 +46,24 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
 
-    // Validate hex color format
+    // Validate hex color format for main color and palette colors
     const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
     if (!hexColorRegex.test(data.hex)) {
       return NextResponse.json({
         error: 'Invalid hex color',
         message: 'Hex color must be in format #RRGGBB or #RGB'
       }, { status: 400 });
+    }
+
+    // Validate palette colors if provided
+    const paletteColors = ['palette1', 'palette2', 'palette3', 'palette4', 'palette5'];
+    for (const key of paletteColors) {
+      if (data[key] && !hexColorRegex.test(data[key])) {
+        return NextResponse.json({
+          error: 'Invalid palette color',
+          message: `Palette color ${key} must be in format #RRGGBB or #RGB`
+        }, { status: 400 });
+      }
     }
 
     // Validate popularity range
@@ -93,13 +104,18 @@ export async function POST(req: Request) {
       Math.floor(baseValue + Math.random() * (data.popularity - baseValue))
     );
 
-    // Create the color trend with analytics
+    // Create the color trend with analytics and palette colors
     const colorTrend = await prisma.colorTrend.create({
       data: {
         name: data.name,
         hex: data.hex,
         imageUrl: data.imageUrl,
         popularity: data.popularity,
+        palette1: data.palette1 || null,
+        palette2: data.palette2 || null,
+        palette3: data.palette3 || null,
+        palette4: data.palette4 || null,
+        palette5: data.palette5 || null,
         analytics: {
           create: {
             dates,

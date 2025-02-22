@@ -1,0 +1,333 @@
+{
+  "categories": [
+    {
+      "name": "Summer Fashion",
+      "slug": "summer-fashion",
+      "description": "Latest summer fashion trends",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/trends/aea3c4c4-74f2-4945-bae5-ca9a3f630fb7-frame-1-79-.png"
+    },
+    {
+      "name": "Beachwear",
+      "slug": "beachwear",
+      "description": "Trendy beach outfits and accessories",
+      "parentSlug": "summer-fashion",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/trends/76d5f495-725e-4de9-b534-2ed86478d797-5244708595667429223.jpg"
+    },
+    {
+      "name": "Evening Wear",
+      "slug": "evening-wear",
+      "description": "Elegant evening fashion trends",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/trends/b29ad016-771e-48b9-8f94-fb633c1a7eee-whatsapp-image-2025-02-15-at-6-18-07-pm-2-.jpeg"
+    },
+    {
+      "name": "Streetwear",
+      "slug": "streetwear",
+      "description": "Urban fashion and street style trends",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/trends/bdb675b6-96ea-4625-a166-049f182051c9-d903b4e6fff91e7131e195da4032cee1.jpg"
+    },
+    {
+      "name": "Sneakers",
+      "slug": "sneakers",
+      "description": "Latest sneaker trends and releases",
+      "parentSlug": "streetwear",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/categories/sneakers-main.jpg"
+    },
+    {
+      "name": "Urban Accessories",
+      "slug": "urban-accessories",
+      "description": "Street style accessories and jewelry",
+      "parentSlug": "streetwear",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/categories/urban-accessories-main.jpg"
+    },
+    {
+      "name": "Sustainable Fashion",
+      "slug": "sustainable-fashion",
+      "description": "Eco-friendly and sustainable fashion trends",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/categories/sustainable-fashion-main.jpg"
+    },
+    {
+      "name": "Eco Materials",
+      "slug": "eco-materials",
+      "description": "Sustainable materials and fabrics",
+      "parentSlug": "sustainable-fashion",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/categories/eco-materials-main.jpg"
+    }
+  ],
+  "trends": [
+    {
+      "title": "Urban Minimalism",
+      "description": "Clean lines and monochromatic palettes dominating street fashion",
+      "type": "Style Movement",
+      "imageUrls": [
+        "https://gentlemath.s3.amazonaws.com/trends/0c7aa714-8fc0-4668-85b9-ec87d184dbe4-e6f6d8c04ce2e4c819efe00d0ae17f0f.jpg",
+        "https://gentlemath.s3.amazonaws.com/trends/3d2d79e9-088c-4319-9500-3beda18757e6-whatsapp-20image-202025-01-26-20at-2012-02-45-20pm-enhanced.png"
+      ],
+      "mainImageIndex": 0,
+      "categorySlug": "streetwear",
+      "analytics": {
+        "dates": [
+          "2024-01-01T00:00:00.000Z",
+          "2024-03-01T00:00:00.000Z",
+          "2024-06-01T00:00:00.000Z",
+          "2024-09-01T00:00:00.000Z",
+          "2024-12-01T00:00:00.000Z",
+          "2025-03-01T00:00:00.000Z",
+          "2025-06-01T00:00:00.000Z",
+          "2025-08-31T00:00:00.000Z"
+        ],
+        "values": [65, 75, 85, 88, 90, 92, 95, 97],
+        "ageSegments": {
+          "18-24": 45,
+          "25-34": 35,
+          "35-44": 15,
+          "45+": 5
+        }
+      }
+    },
+    {
+      "title": "Sustainable Beachwear",
+      "description": "Eco-friendly swimwear and beach accessories made from recycled materials",
+      "type": "Sustainable Fashion",
+      "imageUrls": [
+        "https://gentlemath.s3.amazonaws.com/trends/76d5f495-725e-4de9-b534-2ed86478d797-5244708595667429223.jpg",
+        "https://gentlemath.s3.amazonaws.com/trends/dab91240-d0bc-4b61-a14f-b999a591ba81-5244708595667429225.jpg"
+      ],
+      "mainImageIndex": 0,
+      "categorySlug": "beachwear",
+      "analytics": {
+        "dates": [
+          "2024-01-01T00:00:00.000Z",
+          "2024-03-01T00:00:00.000Z",
+          "2024-06-01T00:00:00.000Z",
+          "2024-09-01T00:00:00.000Z",
+          "2024-12-01T00:00:00.000Z",
+          "2025-03-01T00:00:00.000Z",
+          "2025-06-01T00:00:00.000Z",
+          "2025-08-31T00:00:00.000Z"
+        ],
+        "values": [40, 55, 80, 75, 45, 60, 85, 90],
+        "ageSegments": {
+          "18-24": 30,
+          "25-34": 40,
+          "35-44": 20,
+          "45+": 10
+        }
+      }
+    },
+    {
+      "title": "Floral Maxi Dresses",
+      "description": "Long, flowing dresses with floral patterns are making a huge comeback this summer",
+      "type": "Clothing",
+      "imageUrls": [
+        "https://gentlemath.s3.amazonaws.com/trends/floral-maxi-1.jpg",
+        "https://gentlemath.s3.amazonaws.com/trends/floral-maxi-2.jpg",
+        "https://gentlemath.s3.amazonaws.com/trends/floral-maxi-3.jpg"
+      ],
+      "mainImageIndex": 0,
+      "categorySlug": "summer-fashion",
+      "analytics": {
+        "dates": [
+          "2024-01-01",
+          "2024-02-01",
+          "2024-03-01",
+          "2024-04-01",
+          "2024-05-01",
+          "2024-06-01"
+        ],
+        "values": [45, 48, 52, 60, 75, 85],
+        "ageSegments": [
+          { "name": "18-24", "value": 35 },
+          { "name": "25-34", "value": 40 },
+          { "name": "35-44", "value": 15 },
+          { "name": "45+", "value": 10 }
+        ]
+      }
+    },
+    {
+      "title": "Designer Swimwear",
+      "description": "Luxury swimwear with unique patterns and sustainable materials",
+      "type": "Beachwear",
+      "imageUrls": [
+        "https://gentlemath.s3.amazonaws.com/trends/swimwear-1.jpg",
+        "https://gentlemath.s3.amazonaws.com/trends/swimwear-2.jpg"
+      ],
+      "mainImageIndex": 0,
+      "categorySlug": "beachwear",
+      "analytics": {
+        "dates": [
+          "2024-01-01",
+          "2024-02-01",
+          "2024-03-01",
+          "2024-04-01"
+        ],
+        "values": [30, 35, 45, 55],
+        "ageSegments": [
+          { "name": "18-24", "value": 25 },
+          { "name": "25-34", "value": 45 },
+          { "name": "35-44", "value": 20 },
+          { "name": "45+", "value": 10 }
+        ]
+      }
+    },
+    {
+      "title": "Limited Edition Sneakers",
+      "description": "Exclusive sneaker collaborations and limited releases trending in urban fashion",
+      "type": "Footwear",
+      "imageUrls": [
+        "https://gentlemath.s3.amazonaws.com/trends/sneakers-1.jpg",
+        "https://gentlemath.s3.amazonaws.com/trends/sneakers-2.jpg",
+        "https://gentlemath.s3.amazonaws.com/trends/sneakers-3.jpg",
+        "https://gentlemath.s3.amazonaws.com/trends/sneakers-4.jpg"
+      ],
+      "mainImageIndex": 0,
+      "categorySlug": "sneakers",
+      "analytics": {
+        "dates": ["2024-01-01", "2024-02-01", "2024-03-01", "2024-04-01", "2024-05-01"],
+        "values": [65, 70, 85, 90, 95],
+        "ageSegments": [
+          { "name": "18-24", "value": 45 },
+          { "name": "25-34", "value": 35 },
+          { "name": "35-44", "value": 15 },
+          { "name": "45+", "value": 5 }
+        ]
+      }
+    },
+    {
+      "title": "Recycled Denim",
+      "description": "Sustainable denim made from recycled materials gaining popularity",
+      "type": "Sustainable",
+      "imageUrls": [
+        "https://gentlemath.s3.amazonaws.com/trends/recycled-denim-1.jpg",
+        "https://gentlemath.s3.amazonaws.com/trends/recycled-denim-2.jpg"
+      ],
+      "mainImageIndex": 0,
+      "categorySlug": "eco-materials",
+      "analytics": {
+        "dates": ["2024-01-01", "2024-02-01", "2024-03-01", "2024-04-01"],
+        "values": [40, 45, 55, 65],
+        "ageSegments": [
+          { "name": "18-24", "value": 30 },
+          { "name": "25-34", "value": 35 },
+          { "name": "35-44", "value": 25 },
+          { "name": "45+", "value": 10 }
+        ]
+      }
+    },
+    {
+      "title": "Statement Chains",
+      "description": "Oversized chain accessories trending in street fashion",
+      "type": "Accessories",
+      "imageUrls": [
+        "https://gentlemath.s3.amazonaws.com/trends/chains-1.jpg",
+        "https://gentlemath.s3.amazonaws.com/trends/chains-2.jpg",
+        "https://gentlemath.s3.amazonaws.com/trends/chains-3.jpg"
+      ],
+      "mainImageIndex": 0,
+      "categorySlug": "urban-accessories",
+      "analytics": {
+        "dates": ["2024-01-01", "2024-02-01", "2024-03-01", "2024-04-01"],
+        "values": [55, 60, 70, 75],
+        "ageSegments": [
+          { "name": "18-24", "value": 40 },
+          { "name": "25-34", "value": 35 },
+          { "name": "35-44", "value": 20 },
+          { "name": "45+", "value": 5 }
+        ]
+      }
+    }
+  ],
+  "colors": [
+    {
+      "name": "Digital Teal",
+      "hex": "#008080",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/trends/aea3c4c4-74f2-4945-bae5-ca9a3f630fb7-frame-1-79-.png",
+      "popularity": 92,
+      "analytics": {
+        "dates": [
+          "2024-01-01T00:00:00.000Z",
+          "2024-03-01T00:00:00.000Z",
+          "2024-06-01T00:00:00.000Z",
+          "2024-09-01T00:00:00.000Z",
+          "2024-12-01T00:00:00.000Z",
+          "2025-03-01T00:00:00.000Z",
+          "2025-06-01T00:00:00.000Z",
+          "2025-08-31T00:00:00.000Z"
+        ],
+        "values": [85, 87, 90, 92, 93, 94, 95, 96],
+        "ageSegments": {
+          "18-24": 40,
+          "25-34": 35,
+          "35-44": 15,
+          "45+": 10
+        }
+      }
+    },
+    {
+      "name": "Urban Slate",
+      "hex": "#708090",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/trends/bdb675b6-96ea-4625-a166-049f182051c9-d903b4e6fff91e7131e195da4032cee1.jpg",
+      "popularity": 88,
+      "analytics": {
+        "dates": [
+          "2024-01-01T00:00:00.000Z",
+          "2024-03-01T00:00:00.000Z",
+          "2024-06-01T00:00:00.000Z",
+          "2024-09-01T00:00:00.000Z",
+          "2024-12-01T00:00:00.000Z",
+          "2025-03-01T00:00:00.000Z",
+          "2025-06-01T00:00:00.000Z",
+          "2025-08-31T00:00:00.000Z"
+        ],
+        "values": [80, 82, 85, 87, 88, 90, 92, 93],
+        "ageSegments": {
+          "18-24": 35,
+          "25-34": 40,
+          "35-44": 15,
+          "45+": 10
+        }
+      }
+    },
+    {
+      "name": "Sunset Orange",
+      "hex": "#FF7E47",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/colors/sunset-orange.jpg",
+      "popularity": 85
+    },
+    {
+      "name": "Ocean Blue",
+      "hex": "#0077BE",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/colors/ocean-blue.jpg",
+      "popularity": 78
+    },
+    {
+      "name": "Mint Green",
+      "hex": "#98FF98",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/colors/mint-green.jpg",
+      "popularity": 72
+    },
+    {
+      "name": "Urban Gray",
+      "hex": "#808080",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/colors/urban-gray.jpg",
+      "popularity": 88
+    },
+    {
+      "name": "Neon Pink",
+      "hex": "#FF6EC7",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/colors/neon-pink.jpg",
+      "popularity": 70
+    },
+    {
+      "name": "Earth Brown",
+      "hex": "#964B00",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/colors/earth-brown.jpg",
+      "popularity": 65
+    },
+    {
+      "name": "Digital Purple",
+      "hex": "#9932CC",
+      "imageUrl": "https://gentlemath.s3.amazonaws.com/colors/digital-purple.jpg",
+      "popularity": 75
+    }
+  ]
+} 

@@ -12,6 +12,11 @@
       "path": "Gentle-math/apps/next/src/app/api/",
       "badge": "⚙️",
       "color": "__blocked__"
+    },
+    {
+      "path": "Gentle-math/apps/next/src/components/admin/",
+      "color": "__blocked__",
+      "badge": "__blocked__"
     }
   ]
 }

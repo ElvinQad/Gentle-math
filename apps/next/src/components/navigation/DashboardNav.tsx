@@ -21,7 +21,7 @@ export function useModal() {
 
 const navItems = [
   {
-    title: 'Tends',
+    title: 'Trends',
     href: '/dashboard',
     icon: TrendingUpIcon,
     adminOnly: false,

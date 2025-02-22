@@ -10,6 +10,7 @@ export interface Trend {
   createdAt: string;
   updatedAt: string;
   spreadsheetUrl?: string;
+  isRestricted?: boolean;
   analytics?: Analytics[];
   data?: Array<{
     month: string;

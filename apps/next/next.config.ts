@@ -7,16 +7,18 @@ const config = {
   reactStrictMode: true,
   transpilePackages: ["@repo/ui"],
   images: {
+    domains: ['*'], // Allow all domains
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**.amazonaws.com',
+        hostname: '**', // Allow all HTTPS domains
         pathname: '/**',
       },
       {
-        protocol: 'https',
-        hostname: '**', // For other external URLs
-      },
+        protocol: 'http',
+        hostname: '**', // Allow all HTTP domains
+        pathname: '/**',
+      }
     ],
     minimumCacheTTL: 60,
   },

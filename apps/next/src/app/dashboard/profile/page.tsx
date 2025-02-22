@@ -201,7 +201,7 @@ export default function ProfilePage() {
                 </>
               ) : (
                 <p className="text-sm text-[color:var(--muted-foreground)]">
-                  Your subscription has expired. Please renew to access premium features.
+                  Your subscription has expired. Please renew to access charts.
                 </p>
               )}
             </div>

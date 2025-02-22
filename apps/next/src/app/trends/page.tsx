@@ -157,7 +157,7 @@ export default function TrendsPage() {
                     fill
                     className="object-cover group-hover:scale-110 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--color-charcoal)]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute inset-0  opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 <div className="p-8">
                   <h3 className="text-2xl font-semibold mb-3 text-[color:var(--card-foreground)]">

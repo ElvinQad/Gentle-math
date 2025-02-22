@@ -8,7 +8,7 @@ import { useModal } from '../navigation/DashboardNav';
 import { TrendChart } from '@/components/ui/TrendChart';
 import { Switch } from '@/components/ui/switch';
 import { AgeSegmentPie } from '@/components/ui/AgeSegmentPie';
-import Link from 'next/link';
+import { SubscriptionRequired } from '@/components/ui/SubscriptionRequired';
 
 interface TrendsGalleryProps {
   trends?: Trend[];
@@ -207,81 +207,6 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
             </div>
           </motion.div>
         ))}
-
-        {/* Subscription Prompt Card */}
-        {trends.length === 3 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.8,
-              delay: trends.length * 0.1,
-              ease: [0.19, 1, 0.22, 1]
-            }}
-            className="row-span-2 col-span-2 relative overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-[color:var(--primary)]/10 via-[color:var(--color-soft-blue)]/10 to-[color:var(--color-teal)]/10 animate-gradient-slow" />
-            <div className="relative h-full w-full p-6 flex flex-col items-center justify-center text-center space-y-6">
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[color:var(--primary)] via-[color:var(--color-soft-blue)] to-[color:var(--color-teal)] opacity-50" />
-              <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[color:var(--color-teal)] via-[color:var(--color-soft-blue)] to-[color:var(--primary)] opacity-50" />
-              
-              <div className="space-y-2">
-                <h3 className="text-2xl md:text-3xl font-bold text-[color:var(--foreground)]">
-                  Unlock All Trends
-                </h3>
-                <p className="text-[color:var(--muted-foreground)] text-lg max-w-md mx-auto">
-                  Subscribe to access our complete collection of trends and exclusive analytics
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6 w-full max-w-lg">
-                <div className="space-y-2 p-4 rounded-lg bg-[color:var(--background)]/50 backdrop-blur-sm">
-                  <div className="text-3xl font-bold text-[color:var(--primary)]">3</div>
-                  <div className="text-sm text-[color:var(--muted-foreground)]">Free Trends</div>
-                </div>
-                <div className="space-y-2 p-4 rounded-lg bg-[color:var(--background)]/50 backdrop-blur-sm">
-                  <div className="text-3xl font-bold text-[color:var(--color-soft-blue)]">
-                    {trends.length > 3 ? trends.length - 3 : '10+'}
-                  </div>
-                  <div className="text-sm text-[color:var(--muted-foreground)]">Premium Trends</div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex flex-wrap gap-3 justify-center text-sm text-[color:var(--muted-foreground)]">
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-[color:var(--color-muted-green)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Detailed Analytics</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-[color:var(--color-muted-green)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Age Demographics</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-[color:var(--color-muted-green)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Historical Data</span>
-                  </div>
-                </div>
-
-                <Link
-                  href="/pricing"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-[color:var(--primary)] text-[color:var(--primary-foreground)] rounded-lg hover:bg-[color:var(--primary)]/90 transition-all duration-300 transform hover:scale-105"
-                >
-                  <span>View Pricing Plans</span>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-        )}
       </div>
 
       {/* Modal Views */}
@@ -472,7 +397,7 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                       </div>
 
                       {/* Chart */}
-                      {selectedTrend?.analytics?.[0]?.dates && selectedTrend?.analytics?.[0]?.values && (
+                      {selectedTrend?.analytics?.[0]?.dates && selectedTrend?.analytics?.[0]?.values && !selectedTrend.isRestricted ? (
                         <div className="space-y-6">
                           {/* View Toggle - Only show if data spans more than 10 months */}
                           {selectedTrend.analytics[0].dates.length > 10 && (
@@ -510,6 +435,15 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                             )}
                           </div>
                         </div>
+                      ) : (
+                        <SubscriptionRequired
+                          title="Analytics Available with Premium"
+                          description="Subscribe to unlock detailed analytics, including historical data, predictions, and age demographics for all trends."
+                          features={[
+                            'Trend Analytics',
+                            'Demographics'
+                          ]}
+                        />
                       )}
 
                       {/* Thumbnail Gallery */}

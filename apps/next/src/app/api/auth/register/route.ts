@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { hashPassword } from '@/lib/auth';
+import { hashPassword, isAdminEmail } from '@/lib/auth';
 
 export async function POST(req: Request) {
   try {
@@ -26,6 +26,7 @@ export async function POST(req: Request) {
         email: normalizedEmail,
         name,
         password: hashedPassword,
+        isAdmin: isAdminEmail(normalizedEmail),
       },
     });
 

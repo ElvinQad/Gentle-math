@@ -1,16 +1,19 @@
 import { Suspense } from 'react';
 import { prisma } from '@/lib/db';
-import { TrendsGallery } from '@/components/dashboard/TrendsGallery';
-import { Skeleton } from '@/components/ui/skeleton';
-import { type Trend } from '@/types/dashboard';
-import { type Analytics } from '@/types/admin';
-import { type JsonValue } from '@prisma/client/runtime/library';
+import { getServerSession } from 'next-auth';
+import { authConfig } from '@/lib/auth';
+// import { TrendsGallery } from '@/components/dashboard/TrendsGallery';
+// import { Skeleton } from '@/components/ui/skeleton';
+import { type Trend } from '@/types/trends';
+import { CategoryViewer } from '@/components/dashboard/CategoryViewer';
+import { isSubscriptionValid } from '@/lib/subscription';
 
 type Category = {
   id: string;
   name: string;
   slug: string;
   description: string | null;
+  imageUrl: string | null;
   parentId: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -19,15 +22,6 @@ type Category = {
 interface CategoryWithRelations extends Category {
   trends: Trend[];
   children: CategoryWithRelations[];
-}
-
-interface DbAnalytics {
-  id: string;
-  createdAt: Date;
-  trendId: string;
-  dates: Date[];
-  values: number[];
-  ageSegments: JsonValue;
 }
 
 interface DbTrend {
@@ -40,28 +34,23 @@ interface DbTrend {
   createdAt: Date;
   updatedAt: Date;
   categoryId: string | null;
-  analytics: DbAnalytics | null;
+  analytics: {
+    id: string;
+    dates: Date[];
+    values: number[];
+    ageSegments: Array<{
+      name: string;
+      value: number;
+    }> | null;
+  } | null;
 }
 
 type DbCategoryWithRelations = Category & {
-  trends: Array<DbTrend & { analytics: DbAnalytics | null }>;
+  trends: DbTrend[];
   children: DbCategoryWithRelations[];
 };
 
-function formatAnalytics(analytics: DbAnalytics | null): Analytics[] {
-  if (!analytics) return [];
-  return [{
-    id: analytics.id,
-    dates: analytics.dates.map((date: Date) => date.toISOString()),
-    values: analytics.values,
-    ageSegments: analytics.ageSegments ? (analytics.ageSegments as Array<{ name: string; value: number }>).map((segment) => ({
-      name: segment.name,
-      value: segment.value,
-    })) : undefined,
-  }];
-}
-
-function formatTrend(trend: DbTrend & { analytics: DbAnalytics | null }): Trend {
+function formatTrend(trend: DbTrend, isSubscribed: boolean): Trend {
   return {
     id: trend.id,
     title: trend.title,
@@ -71,25 +60,29 @@ function formatTrend(trend: DbTrend & { analytics: DbAnalytics | null }): Trend 
     mainImageIndex: trend.mainImageIndex,
     createdAt: trend.createdAt.toISOString(),
     updatedAt: trend.updatedAt.toISOString(),
-    analytics: formatAnalytics(trend.analytics),
+    categoryId: trend.categoryId,
+    isRestricted: !isSubscribed,
+    analytics: isSubscribed && trend.analytics ? [{
+      id: trend.analytics.id,
+      dates: trend.analytics.dates.map(d => d.toISOString()),
+      values: trend.analytics.values,
+      ageSegments: trend.analytics.ageSegments || undefined
+    }] : undefined,
   };
 }
 
-function formatCategory(category: DbCategoryWithRelations): CategoryWithRelations {
+function formatCategory(category: DbCategoryWithRelations, isSubscribed: boolean): CategoryWithRelations {
   return {
-    id: category.id,
-    name: category.name,
-    slug: category.slug,
-    description: category.description,
-    parentId: category.parentId,
-    createdAt: category.createdAt,
-    updatedAt: category.updatedAt,
-    trends: category.trends.map(formatTrend),
-    children: category.children.map(formatCategory),
+    ...category,
+    trends: category.trends.map(trend => formatTrend(trend, isSubscribed)),
+    children: category.children.map(child => formatCategory(child, isSubscribed)),
   };
 }
 
 async function getCategories(): Promise<CategoryWithRelations[]> {
+  const session = await getServerSession(authConfig);
+  const isSubscribed = isSubscriptionValid(session?.user?.subscribedUntil);
+
   const categories = await prisma.category.findMany({
     include: {
       trends: {
@@ -118,74 +111,32 @@ async function getCategories(): Promise<CategoryWithRelations[]> {
     },
   }) as DbCategoryWithRelations[];
 
-  return categories.map(formatCategory);
+  return categories.map(category => formatCategory(category, isSubscribed));
 }
 
 export default async function CategoriesPage() {
   const categories = await getCategories();
 
   return (
-    <div className="space-y-12">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Categories</h1>
-        <p className="text-muted-foreground">Browse trends by category</p>
-      </div>
-
-      {categories.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-lg text-muted-foreground">No categories available yet</p>
-        </div>
-      ) : (
-        categories
-          .filter((category) => !category.parentId)
-          .map((category: CategoryWithRelations) => (
-            <section key={category.id} className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-semibold">{category.name}</h2>
-                  {category.description && (
-                    <p className="text-muted-foreground">{category.description}</p>
-                  )}
+    <div className="space-y-8 animate-fade-in">
+      <Suspense
+        fallback={
+          <div className="space-y-6">
+            <div className="h-8 w-48 bg-[color:var(--muted)] rounded-md animate-pulse" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="space-y-3">
+                  <div className="aspect-video bg-[color:var(--muted)] rounded-lg animate-pulse" />
+                  <div className="h-4 w-3/4 bg-[color:var(--muted)] rounded-md animate-pulse" />
+                  <div className="h-4 w-1/2 bg-[color:var(--muted)] rounded-md animate-pulse" />
                 </div>
-              </div>
-
-              <Suspense
-                fallback={
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {[...Array(4)].map((_, i) => (
-                      <Skeleton key={i} className="aspect-[4/3]" />
-                    ))}
-                  </div>
-                }
-              >
-                <TrendsGallery trends={category.trends} />
-              </Suspense>
-
-              {category.children.map((subcategory: CategoryWithRelations) => (
-                <section key={subcategory.id} className="pl-6 border-l space-y-6">
-                  <div>
-                    <h3 className="text-xl font-medium">{subcategory.name}</h3>
-                    {subcategory.description && (
-                      <p className="text-muted-foreground">{subcategory.description}</p>
-                    )}
-                  </div>
-
-                  <Suspense
-                    fallback={
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {[...Array(4)].map((_, i) => (
-                          <Skeleton key={i} className="aspect-[4/3]" />
-                        ))}
-                      </div>
-                    }
-                  >
-                    <TrendsGallery trends={subcategory.trends} />
-                  </Suspense>
-                </section>
               ))}
-            </section>
-          ))
-      )}
+            </div>
+          </div>
+        }
+      >
+        <CategoryViewer categories={categories} />
+      </Suspense>
     </div>
   );
 } 

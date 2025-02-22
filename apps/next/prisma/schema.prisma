@@ -29,6 +29,7 @@ model Category {
   name        String
   slug        String     @unique
   description String?
+  imageUrl    String?    @default("")
   parentId    String?
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -59,12 +60,13 @@ model Trend {
 model Analytics {
   id          String     @id @default(cuid())
   createdAt   DateTime   @default(now())
-  trendId     String     @unique
+  trendId     String?    @unique
+  colorId     String?    @unique
   dates       DateTime[]
   values      Int[]
   ageSegments Json?
-  trend       Trend      @relation(fields: [trendId], references: [id], map: "Analytics_trend_fkey")
-  colorTrend  ColorTrend? @relation(fields: [trendId], references: [id], map: "Analytics_colorTrend_fkey")
+  trend       Trend?     @relation(fields: [trendId], references: [id], onDelete: Cascade)
+  colorTrend  ColorTrend? @relation(fields: [colorId], references: [id], onDelete: Cascade)
 
   @@index([createdAt])
 }
@@ -78,6 +80,11 @@ model ColorTrend {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   analytics   Analytics?
+  palette1    String?    // First palette color
+  palette2    String?    // Second palette color
+  palette3    String?    // Third palette color
+  palette4    String?    // Fourth palette color
+  palette5    String?    // Fifth palette color
 
   @@index([createdAt])
 }

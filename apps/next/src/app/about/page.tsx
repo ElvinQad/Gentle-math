@@ -133,7 +133,7 @@ export default function AboutPage() {
         </section>
 
         {/* Team Section */}
-        <section className="mb-16 md:mb-32">
+        <section className="mb-16 md:mb-32 hidden">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 md:mb-16 text-[color:var(--foreground)]">
             {t('about.team.title')}
           </h2>

@@ -27,7 +27,7 @@ export default function TrendsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 bg-[color:var(--background)] text-[color:var(--foreground)]">
-      <h1 className="text-3xl font-bold mb-8 text-[color:var(--foreground)]">Trends Analysis</h1>
+   
       <TrendsGallery trends={trends} isLoading={isLoading} />
     </div>
   );

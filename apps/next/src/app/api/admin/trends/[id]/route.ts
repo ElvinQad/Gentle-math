@@ -94,6 +94,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
         type: data.type,
         imageUrls: data.imageUrls,
         mainImageIndex: data.mainImageIndex,
+        categoryId: data.categoryId || null,
       },
     });
 

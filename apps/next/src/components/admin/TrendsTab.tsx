@@ -221,7 +221,7 @@ export function TrendsTab() {
             imageUrls: validImageUrls,
             mainImageIndex: mainImageIndex >= 0 ? mainImageIndex : 0,
             spreadsheetUrl: formData.spreadsheetUrl.trim(),
-            categoryId: formData.categoryId,
+            categoryId: null,
           }),
         },
       );
@@ -397,7 +397,7 @@ export function TrendsTab() {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold text-[color:var(--foreground)]">Trends</h2>
+        <h2 className="text-2xl font-semibold text-[color:var(--foreground)]">Uncategorized Trends</h2>
         <Button 
           onClick={() => setIsModalOpen(true)}
           className="bg-[color:var(--primary)] text-[color:var(--primary-foreground)] hover:bg-[color:var(--primary)]/90 transition-colors"

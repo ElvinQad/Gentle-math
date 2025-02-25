@@ -2,19 +2,18 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, ChevronRight, Upload, Plus, FolderTree, Edit2, MoreVertical, X, ArrowLeft } from 'lucide-react';
+import { Loader2, ChevronRight, Upload, Plus, FolderTree, Edit2, Trash2, ArrowLeft, X } from 'lucide-react';
 import Image from 'next/image';
-import { TrendsGallery } from '@/components/dashboard/TrendsGallery';
 import type { Trend } from '@/types/dashboard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Modal } from '@/components/ui/Modal';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { DetailsTab } from './tabs/DetailsTab';
+import { ImagesTab } from './tabs/ImagesTab';
+import { DataTab } from './tabs/DataTab';
+import { Spinner } from '@/components/ui/spinner';
 
 interface Category {
   id: string;
@@ -46,6 +45,22 @@ export function CategoriesTab() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  
+  const [selectedTrend, setSelectedTrend] = useState<Trend | null>(null);
+  const [isEditingTrend, setIsEditingTrend] = useState(false);
+  const [isTrendModalOpen, setIsTrendModalOpen] = useState(false);
+  const [currentTab, setCurrentTab] = useState<'details' | 'images' | 'data'>('details');
+  const [trendFormData, setTrendFormData] = useState({
+    title: '',
+    description: '',
+    type: '',
+    imageUrls: [''],
+    mainImageIndex: 0,
+    spreadsheetUrl: '',
+    categoryId: '',
+  });
+  const [imageUrls, setImageUrls] = useState<Array<{ url: string; isMain: boolean }>>([{ url: '', isMain: true }]);
+  const [isProcessingSpreadsheet, setIsProcessingSpreadsheet] = useState(false);
 
   useEffect(() => {
     fetchCategories();
@@ -67,7 +82,6 @@ export function CategoriesTab() {
 
   const handleImageUpload = async (file: File) => {
     try {
-      // First, get the presigned URL from our API
       const contentHash = await crypto.subtle.digest('SHA-256', await file.arrayBuffer())
         .then(hash => Array.from(new Uint8Array(hash))
           .map(b => b.toString(16).padStart(2, '0'))
@@ -91,12 +105,10 @@ export function CategoriesTab() {
 
       const { presignedUrl, publicUrl, isDuplicate } = await response.json();
 
-      // If it's a duplicate, just return the existing URL
       if (isDuplicate) {
         return publicUrl;
       }
 
-      // Upload the file using the presigned URL
       const uploadResponse = await fetch(presignedUrl, {
         method: 'PUT',
         body: file,
@@ -257,22 +269,287 @@ export function CategoriesTab() {
     });
   };
 
+  const handleDeleteCategory = async (category: Category) => {
+    if (!confirm(`Are you sure you want to delete "${category.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/categories?id=${category.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+
+      setCategories(prev => {
+        const removeCategory = (categories: Category[]): Category[] => {
+          return categories.filter(c => {
+            if (c.id === category.id) return false;
+            if (c.children.length > 0) {
+              c.children = removeCategory(c.children);
+            }
+            return true;
+          });
+        };
+        return removeCategory([...prev]);
+      });
+
+      if (selectedCategory?.id === category.id) {
+        handleBreadcrumbClick(-1);
+      }
+
+      toast.success('Category deleted successfully');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete category');
+    }
+  };
+
   const CategoryActions = ({ category }: { category: Category }) => {
+    const hasChildren = category.children.length > 0;
+    const hasTrends = category.trends.length > 0;
+    const canDelete = !hasChildren && !hasTrends;
+
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => handleEditClick(category)}>
-            <Edit2 className="mr-2 h-4 w-4" />
-            Edit
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleEditClick(category)}
+          className="h-8"
+        >
+          <Edit2 className="w-4 h-4 mr-2" />
+          Edit
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleDeleteCategory(category)}
+          disabled={!canDelete}
+          className="h-8 text-destructive hover:text-destructive"
+          title={!canDelete ? "Cannot delete category with subcategories or trends" : undefined}
+        >
+          <Trash2 className="w-4 h-4 mr-2" />
+          Delete
+        </Button>
+      </div>
     );
+  };
+
+  const handleTrendClick = (trend: Trend) => {
+    setSelectedTrend(trend);
+    setIsEditingTrend(true);
+    setTrendFormData({
+      title: trend.title,
+      description: trend.description,
+      type: trend.type || '',
+      imageUrls: trend.imageUrls || [''],
+      mainImageIndex: trend.mainImageIndex || 0,
+      spreadsheetUrl: trend.spreadsheetUrl || '',
+      categoryId: selectedCategory?.id || '',
+    });
+    setImageUrls(
+      (trend.imageUrls || ['']).map((url, index) => ({
+        url,
+        isMain: index === (trend.mainImageIndex || 0),
+      }))
+    );
+    setIsTrendModalOpen(true);
+  };
+
+  const handleTrendFormDataChange = (data: Partial<typeof trendFormData>) => {
+    setTrendFormData(prev => ({ ...prev, ...data }));
+  };
+
+  const handleTrendSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const validImageUrls = imageUrls.filter((img) => img.url).map((img) => img.url);
+      if (validImageUrls.length === 0) {
+        throw new Error('At least one valid image URL is required');
+      }
+
+      const mainImageIndex = imageUrls.findIndex((img) => img.isMain);
+
+      if (trendFormData.spreadsheetUrl && !trendFormData.spreadsheetUrl.includes('docs.google.com/spreadsheets')) {
+        throw new Error('Please provide a valid Google Spreadsheet URL');
+      }
+
+      const response = await fetch(
+        `/api/admin/trends${selectedTrend ? `/${selectedTrend.id}` : ''}`,
+        {
+          method: selectedTrend ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: trendFormData.title,
+            description: trendFormData.description,
+            type: trendFormData.type,
+            imageUrls: validImageUrls,
+            mainImageIndex: mainImageIndex >= 0 ? mainImageIndex : 0,
+            spreadsheetUrl: trendFormData.spreadsheetUrl.trim(),
+            categoryId: selectedCategory?.id || trendFormData.categoryId,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `Failed to ${selectedTrend ? 'update' : 'create'} trend`);
+      }
+
+      const updatedTrend = await response.json();
+
+      if (selectedCategory) {
+        if (selectedTrend) {
+          setSelectedCategory({
+            ...selectedCategory,
+            trends: selectedCategory.trends.map(t => 
+              t.id === updatedTrend.id ? updatedTrend : t
+            )
+          });
+        } else {
+          setSelectedCategory({
+            ...selectedCategory,
+            trends: [...selectedCategory.trends, updatedTrend]
+          });
+        }
+      }
+
+      resetTrendForm();
+      setIsTrendModalOpen(false);
+      toast.success(`Trend ${selectedTrend ? 'updated' : 'created'} successfully`);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : `Failed to ${selectedTrend ? 'update' : 'create'} trend`
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetTrendForm = () => {
+    setTrendFormData({
+      title: '',
+      description: '',
+      type: '',
+      imageUrls: [''],
+      mainImageIndex: 0,
+      spreadsheetUrl: '',
+      categoryId: '',
+    });
+    setImageUrls([{ url: '', isMain: true }]);
+    setIsEditingTrend(false);
+    setSelectedTrend(null);
+    setCurrentTab('details');
+  };
+
+  const handleTrendFileUpload = async (files: File[]) => {
+    try {
+      const uploadedUrls: string[] = [];
+
+      for (const file of files) {
+        const contentHash = await crypto.subtle.digest('SHA-256', await file.arrayBuffer())
+          .then(hash => Array.from(new Uint8Array(hash))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join(''));
+
+        const response = await fetch('/api/admin/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: file.name,
+            contentType: file.type,
+            contentHash
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get upload URL');
+        }
+
+        const data = await response.json();
+        
+        if (data.isDuplicate) {
+          uploadedUrls.push(data.publicUrl);
+          continue;
+        }
+
+        const uploadResponse = await fetch(data.presignedUrl, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': file.type,
+          },
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error(`Upload failed: ${uploadResponse.statusText}`);
+        }
+
+        uploadedUrls.push(data.publicUrl);
+      }
+
+      setImageUrls((prev) =>
+        [...prev, ...uploadedUrls.map((url) => ({ url, isMain: prev.length === 0 }))]
+      );
+
+      toast.success('Images uploaded successfully');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to upload images');
+    }
+  };
+
+  const handleProcessSpreadsheet = async () => {
+    if (!trendFormData.spreadsheetUrl) {
+      toast.error('No spreadsheet URL provided');
+      return;
+    }
+
+    try {
+      setIsProcessingSpreadsheet(true);
+      const trendId = selectedTrend?.id;
+      if (!trendId) {
+        throw new Error('No trend selected');
+      }
+
+      const response = await fetch(`/api/admin/trends/${trendId}/spreadsheet`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spreadsheetUrl: trendFormData.spreadsheetUrl }),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = responseData?.message || 'Failed to process spreadsheet';
+        throw new Error(errorMessage);
+      }
+
+      setSelectedTrend(responseData);
+      
+      if (selectedCategory) {
+        setSelectedCategory({
+          ...selectedCategory,
+          trends: selectedCategory.trends.map(t => 
+            t.id === responseData.id ? responseData : t
+          )
+        });
+      }
+      
+      toast.success('Spreadsheet data processed successfully');
+    } catch (error) {
+      console.error('Failed to process spreadsheet:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to process spreadsheet data');
+    } finally {
+      setIsProcessingSpreadsheet(false);
+    }
   };
 
   if (isLoading) {
@@ -408,7 +685,6 @@ export function CategoriesTab() {
 
   return (
     <div className="space-y-8">
-      {/* Breadcrumb Navigation */}
       <nav className="flex items-center space-x-2 text-sm">
         <motion.button
           whileHover={{ scale: 1.02 }}
@@ -434,7 +710,6 @@ export function CategoriesTab() {
         ))}
       </nav>
 
-      {/* Add New Category Form */}
       <Card className="border-[color:var(--border)] bg-[color:var(--background)]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg font-medium">
@@ -529,7 +804,6 @@ export function CategoriesTab() {
         </CardContent>
       </Card>
 
-      {/* Category Content */}
       <AnimatePresence mode="wait">
         {selectedCategory ? (
           <motion.div
@@ -566,7 +840,6 @@ export function CategoriesTab() {
               </Button>
             </div>
 
-            {/* Subcategories */}
             {selectedCategory.children.length > 0 && (
               <div className="space-y-4">
                 <h3 className="text-lg font-medium flex items-center gap-2">
@@ -624,11 +897,63 @@ export function CategoriesTab() {
               </div>
             )}
 
-            {/* Trends */}
             {selectedCategory.trends.length > 0 && (
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Trends</h3>
-                <TrendsGallery trends={selectedCategory.trends} />
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Trends</h3>
+                  <Button 
+                    onClick={() => {
+                      setSelectedTrend(null);
+                      setIsEditingTrend(false);
+                      setTrendFormData({
+                        ...trendFormData,
+                        categoryId: selectedCategory.id,
+                      });
+                      setIsTrendModalOpen(true);
+                    }}
+                    size="sm"
+                    className="bg-[color:var(--primary)] text-[color:var(--primary-foreground)] hover:bg-[color:var(--primary)]/90"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Trend
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {selectedCategory.trends.map((trend) => (
+                    <Card
+                      key={trend.id}
+                      className="group hover:shadow-lg transition-all duration-300 ease-out-expo bg-[color:var(--card)] border-[color:var(--border)] overflow-hidden cursor-pointer"
+                      onClick={() => handleTrendClick(trend)}
+                    >
+                      <div className="aspect-video relative overflow-hidden">
+                        {trend.imageUrls?.[trend.mainImageIndex || 0] ? (
+                          <Image
+                            src={trend.imageUrls[trend.mainImageIndex || 0]}
+                            alt={trend.title || 'Trend image'}
+                            fill
+                            className="object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-[color:var(--muted)] flex items-center justify-center">
+                            <span className="text-[color:var(--muted-foreground)]">No image</span>
+                          </div>
+                        )}
+                      </div>
+                      <CardContent className="p-4">
+                        <h3 className="text-lg font-semibold mb-2 text-[color:var(--card-foreground)]">{trend.title}</h3>
+                        <p className="text-sm text-[color:var(--muted-foreground)] mb-4 line-clamp-2">{trend.description}</p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-[color:var(--muted-foreground)]">
+                            {new Date(trend.createdAt).toLocaleDateString()}
+                          </span>
+                          <span className="px-2 py-1 text-xs rounded-full bg-[color:var(--primary)]/10 text-[color:var(--primary)]">
+                            {trend.type}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -726,11 +1051,115 @@ export function CategoriesTab() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Modal
+        isOpen={isTrendModalOpen}
+        onClose={() => {
+          setIsTrendModalOpen(false);
+          resetTrendForm();
+        }}
+        title={isEditingTrend ? 'Edit Trend' : 'Create New Trend'}
+        className="bg-[color:var(--background)] border border-[color:var(--border)] shadow-lg rounded-lg max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto"
+      >
+        <form onSubmit={handleTrendSubmit} className="space-y-4">
+          <Tabs
+            value={currentTab}
+            onValueChange={(value) => setCurrentTab(value as 'details' | 'images' | 'data')}
+            className="w-full"
+          >
+            <div className="sticky top-0 z-10 bg-[color:var(--background)] pb-4">
+              <TabsList className="w-full grid grid-cols-3 bg-[color:var(--muted)] rounded-lg p-1">
+                <TabsTrigger 
+                  value="details"
+                  className="rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out-expo
+                    data-[state=active]:bg-[color:var(--background)] data-[state=active]:text-[color:var(--foreground)]
+                    data-[state=active]:shadow-sm data-[state=active]:scale-[0.98]
+                    hover:text-[color:var(--foreground)]/90"
+                >
+                  Details
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="images"
+                  className="rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out-expo
+                    data-[state=active]:bg-[color:var(--background)] data-[state=active]:text-[color:var(--foreground)]
+                    data-[state=active]:shadow-sm data-[state=active]:scale-[0.98]
+                    hover:text-[color:var(--foreground)]/90"
+                >
+                  Images
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="data"
+                  className="rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out-expo
+                    data-[state=active]:bg-[color:var(--background)] data-[state=active]:text-[color:var(--foreground)]
+                    data-[state=active]:shadow-sm data-[state=active]:scale-[0.98]
+                    hover:text-[color:var(--foreground)]/90"
+                >
+                  Data
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <div className="mt-4">
+              <TabsContent value="details" className="focus-visible:outline-none">
+                <DetailsTab formData={trendFormData} setFormData={handleTrendFormDataChange} />
+              </TabsContent>
+
+              <TabsContent value="images" className="focus-visible:outline-none">
+                <ImagesTab 
+                  imageUrls={imageUrls} 
+                  setImageUrls={setImageUrls} 
+                  onFileUpload={handleTrendFileUpload} 
+                />
+              </TabsContent>
+
+              <TabsContent value="data" className="focus-visible:outline-none">
+                <DataTab 
+                  formData={trendFormData}
+                  setFormData={handleTrendFormDataChange}
+                  selectedTrend={selectedTrend}
+                  isProcessingSpreadsheet={isProcessingSpreadsheet}
+                  onProcessSpreadsheet={handleProcessSpreadsheet}
+                  isEditMode={isEditingTrend}
+                />
+              </TabsContent>
+            </div>
+          </Tabs>
+
+          <div className="sticky bottom-0 z-10 bg-[color:var(--background)] pt-4 border-t border-[color:var(--border)] mt-6">
+            <div className="flex justify-end gap-3">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => {
+                  setIsTrendModalOpen(false);
+                  resetTrendForm();
+                }}
+                className="text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] transition-colors"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-[color:var(--primary)] text-[color:var(--primary-foreground)] hover:bg-[color:var(--primary)]/90 transition-colors"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Spinner className="mr-2 h-4 w-4" />
+                    {isEditingTrend ? 'Updating...' : 'Creating...'}
+                  </>
+                ) : (
+                  isEditingTrend ? 'Update Trend' : 'Create Trend'
+                )}
+              </Button>
+            </div>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
 
-// Helper function to check if a category is a descendant of another category
 function isDescendant(category: Category, targetId: string): boolean {
   if (category.children.some(child => child.id === targetId)) return true;
   return category.children.some(child => isDescendant(child, targetId));

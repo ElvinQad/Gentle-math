@@ -30,7 +30,7 @@ export function ColorModal({
   if (!trend) return null;
 
   const paletteColors = [trend.palette1, trend.palette2, trend.palette3, trend.palette4, trend.palette5]
-    .filter(Boolean);
+    .filter((color): color is string => Boolean(color));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

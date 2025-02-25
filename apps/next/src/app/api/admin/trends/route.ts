@@ -13,6 +13,9 @@ export async function GET() {
     }
 
     const trends = await prisma.trend.findMany({
+      where: {
+        categoryId: null // Only get trends without a category
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -95,6 +98,7 @@ export async function POST(req: Request) {
         type: data.type,
         imageUrls: data.imageUrls,
         mainImageIndex: data.mainImageIndex,
+        categoryId: data.categoryId || null,
         analytics: {
           create: {
             dates: [],

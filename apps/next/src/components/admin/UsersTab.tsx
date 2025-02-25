@@ -2,7 +2,6 @@ import { Fragment } from 'react';
 import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { User, UserDetails } from '@/types/admin';
-import { ActivityStats } from './ActivityStats';
 import { MostVisitedPaths } from './MostVisitedPaths';
 import { ActivityTimeline } from './ActivityTimeline';
 
@@ -261,7 +260,6 @@ export function UsersTab({
                                   </div>
                                 </div>
 
-                                <ActivityStats stats={userDetails[user.id].activities.stats} />
 
                                 <div className="grid md:grid-cols-2 gap-6">
                                   <div>

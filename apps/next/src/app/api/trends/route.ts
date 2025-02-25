@@ -11,6 +11,9 @@ export async function GET() {
     const isSubscribed = isSubscriptionValid(session?.user?.subscribedUntil);
 
     const trends = await prisma.trend.findMany({
+      where: {
+        categoryId: null // Only get trends without a category
+      },
       orderBy: {
         createdAt: 'desc',
       },

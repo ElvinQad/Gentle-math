@@ -1,20 +1,18 @@
-export interface UserSession {
-  id: string;
-  expires: string;
-  lastUsed: string;
-}
+import { 
+  Analytics, 
+  BaseTrend, 
+  TrendData, 
+  BaseUser, 
+  BaseUserActivity,
+  BaseUserSession,
+  BaseUserAccount 
+} from './shared-types';
 
-export interface UserAccount {
-  provider: string;
-  type: string;
-  providerAccountId: string;
-  expiresAt: string | null;
-}
+export type UserSession = BaseUserSession;
 
-export interface UserActivity {
-  id: string;
-  type: string;
-  timestamp: string;
+export type UserAccount = BaseUserAccount;
+
+export interface UserActivity extends BaseUserActivity {
   metadata: {
     path?: string;
     userAgent?: string;
@@ -47,40 +45,11 @@ export interface UserDetails {
   };
 }
 
-export interface User {
-  id: string;
-  name: string | null;
-  email: string | null;
+export interface User extends BaseUser {
   isAdmin: boolean;
-  createdAt: string;
   subscribedUntil: string | null;
 }
 
-export interface TrendData {
-  month: string;
-  actual: number | null;
-  forecast: number;
-}
+export type { Analytics, TrendData };
 
-export interface Analytics {
-  id: string;
-  dates: string[];
-  values: number[];
-  ageSegments?: Array<{
-    name: string;
-    value: number;
-  }>;
-}
-
-export interface Trend {
-  id: string;
-  title: string;
-  description: string;
-  type: string;
-  imageUrls: string[];
-  mainImageIndex: number;
-  createdAt: string;
-  updatedAt: string;
-  spreadsheetUrl?: string;
-  analytics?: Analytics[];
-}
+export type Trend = BaseTrend;

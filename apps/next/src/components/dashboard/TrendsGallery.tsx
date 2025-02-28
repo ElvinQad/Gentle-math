@@ -109,14 +109,14 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
     'cursor-pointer break-inside-avoid group transform transition-all duration-500 ease-out-expo ' +
     'hover:shadow-lg hover:-translate-y-1 hover:shadow-[color:var(--color-soft-blue)]/10';
 
-  const imageOverlayClasses = 'absolute inset-0 bg-gradient-to-t from-[color:var(--color-charcoal)]/60 to-transparent ' +
-    'transition-opacity duration-500 ease-out-expo';
+  const imageOverlayClasses = 'absolute inset-0 bg-gradient-to-t from-[color:var(--color-charcoal)]/80 via-[color:var(--color-charcoal)]/40 to-transparent ' +
+    'opacity-70 group-hover:opacity-90 transition-all duration-500 ease-out-expo';
 
   const titleClasses = 'font-semibold text-base md:text-lg text-white line-clamp-2 ' +
-    'transition-transform duration-500 ease-out-expo group-hover:translate-y-0';
+    'transition-all duration-500 ease-out-expo transform group-hover:translate-y-0 group-hover:scale-105';
 
   const descriptionClasses = 'text-sm text-white/80 line-clamp-2 ' +
-    'transition-transform duration-500 ease-out-expo group-hover:translate-y-0';
+    'transition-all duration-500 ease-out-expo transform group-hover:translate-y-0';
 
   const tagClasses = 'inline-block px-2 py-1 text-xs rounded-full ' +
     'bg-[color:var(--color-soft-blue)]/10 text-[color:var(--color-soft-blue)] ' +
@@ -172,7 +172,9 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
             }}
             whileHover={{ 
               y: -8,
-              transition: { duration: 0.5, ease: [0.19, 1, 0.22, 1] }
+              scale: 1.02,
+              boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+              transition: { duration: 0.4, ease: [0.19, 1, 0.22, 1] }
             }}
             className={`${cardClasses} ${index % 5 === 0 ? 'row-span-2 col-span-2' : ''}`}
             onClick={(e) => handleTrendSelect(trend, e)}
@@ -180,8 +182,8 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
             <div className="relative h-full w-full overflow-hidden">
               <motion.div
                 initial={{ scale: 1 }}
-                whileHover={{ scale: 1.08 }}
-                transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.6, ease: [0.19, 1, 0.22, 1] }}
                 className="relative h-full w-full"
               >
                 <Image
@@ -195,10 +197,10 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
               </motion.div>
               <div className={imageOverlayClasses} />
               <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                whileHover={{ y: 0, opacity: 1 }}
+                initial={{ y: 0, opacity: 1 }}
+                whileHover={{ y: -5, opacity: 1 }}
                 transition={{ duration: 0.5, ease: [0.19, 1, 0.22, 1] }}
-                className="absolute bottom-0 left-0 right-0 p-4 space-y-2"
+                className="absolute bottom-0 left-0 right-0 p-4 space-y-2 z-10"
               >
                 <h3 className={titleClasses}>{trend.title}</h3>
                 <p className={descriptionClasses}>{trend.description}</p>
@@ -250,7 +252,7 @@ export function TrendsGallery({ trends = [], isLoading = false }: TrendsGalleryP
                     }
                   : {
                       position: 'fixed',
-                      top: '50%',
+                      top: `calc(48vh + ${window.scrollY}px)`,
                       left: '50%',
                       width: 'min(1400px, 95vw)',
                       height: 'min(800px, 90vh)',

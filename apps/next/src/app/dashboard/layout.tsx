@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import { PageTransition } from '@/components/animations/PageTransition';
 import { AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
+import { BottomNav } from '@/components/navigation/BottomNav';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,6 +29,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </main>
         </div>
+        <BottomNav />
       </ModalContext.Provider>
     </ThemeProvider>
   );

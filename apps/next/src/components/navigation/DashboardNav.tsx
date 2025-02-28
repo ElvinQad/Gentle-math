@@ -51,7 +51,6 @@ export function DashboardNav() {
   const { data: session } = useSession();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const { isModalOpen } = useModal();
   const isAdmin = session?.user && isUserAdmin(session.user);
 
   useEffect(() => {
@@ -70,37 +69,9 @@ export function DashboardNav() {
     return pathname === path;
   };
 
+  // Hide the entire component on mobile
   if (isMobile) {
-    if (isModalOpen) return null;
-
-    return (
-      <nav className="fixed bottom-0 left-0 right-0 bg-[color:var(--card)] border-t border-[color:var(--border)] z-30">
-        <div className="flex justify-around items-center h-16">
-          <Link
-            href="/dashboard/profile"
-            className={`flex flex-col items-center justify-center px-3 py-2 rounded-md transition-colors
-              ${
-                pathname === '/dashboard/profile'
-                  ? 'text-[color:var(--primary)]'
-                  : 'text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)]'
-              }`}
-          >
-            <div className="w-5 h-5 rounded-full bg-[color:var(--primary)]/10 flex items-center justify-center text-xs font-medium text-[color:var(--primary)]">
-              {session?.user?.name?.[0] || session?.user?.email?.[0] || '?'}
-            </div>
-            <span className="text-xs mt-1">Profile</span>
-          </Link>
-
-          <button
-            onClick={() => signOut()}
-            className="flex flex-col items-center justify-center px-3 py-2 text-[color:var(--muted-foreground)] hover:text-[color:var(--destructive)] transition-colors"
-          >
-            <LogOutIcon className="w-5 h-5" />
-            <span className="text-xs mt-1">Sign out</span>
-          </button>
-        </div>
-      </nav>
-    );
+    return null;
   }
 
   return (

@@ -110,19 +110,19 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-20 md:pb-0">
       <div>
-        <h1 className="text-3xl font-bold mb-2 text-[color:var(--foreground)]">Profile Settings</h1>
-        <p className="text-[color:var(--muted-foreground)]">Manage your account settings and preferences</p>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2 text-[color:var(--foreground)]">Profile Settings</h1>
+        <p className="text-sm md:text-base text-[color:var(--muted-foreground)]">Manage your account settings and preferences</p>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid gap-6 md:gap-8 grid-cols-1 md:grid-cols-2">
         {/* Profile Information */}
-        <section className="bg-[color:var(--card)] rounded-lg p-6 shadow-xs border border-[color:var(--border)]">
-          <h2 className="text-2xl font-bold mb-6 text-[color:var(--card-foreground)]">Profile Information</h2>
-          <div className="space-y-6">
+        <section className="bg-[color:var(--card)] rounded-lg p-4 md:p-6 shadow-xs border border-[color:var(--border)]">
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-[color:var(--card-foreground)]">Profile Information</h2>
+          <div className="space-y-4 md:space-y-6">
             <div className="flex items-center space-x-4">
-              <div className="w-20 h-20 rounded-full bg-[color:var(--primary)]/10 flex items-center justify-center text-2xl font-medium text-[color:var(--primary)]">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-[color:var(--primary)]/10 flex items-center justify-center text-xl md:text-2xl font-medium text-[color:var(--primary)]">
                 {session?.user?.name?.[0] || session?.user?.email?.[0] || '?'}
               </div>
               <div>
@@ -169,9 +169,9 @@ export default function ProfilePage() {
         </section>
 
         {/* Subscription Information */}
-        <section className="bg-[color:var(--card)] rounded-lg p-6 shadow-sm border border-[color:var(--border)]">
-          <h2 className="text-2xl font-bold mb-6 text-[color:var(--card-foreground)]">Subscription</h2>
-          <div className="space-y-6">
+        <section className="bg-[color:var(--card)] rounded-lg p-4 md:p-6 shadow-sm border border-[color:var(--border)]">
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-[color:var(--card-foreground)]">Subscription</h2>
+          <div className="space-y-4 md:space-y-6">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <div
@@ -209,9 +209,9 @@ export default function ProfilePage() {
         </section>
 
         {/* Preferences */}
-        <section className="bg-[color:var(--card)] rounded-lg p-6 shadow-sm border border-[color:var(--border)]">
-          <h2 className="text-2xl font-bold mb-6 text-[color:var(--card-foreground)]">Preferences</h2>
-          <div className="space-y-6">
+        <section className="bg-[color:var(--card)] rounded-lg p-4 md:p-6 shadow-sm border border-[color:var(--border)]">
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-[color:var(--card-foreground)]">Preferences</h2>
+          <div className="space-y-4 md:space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-medium text-[color:var(--card-foreground)]">Email Notifications</h3>
@@ -249,9 +249,9 @@ export default function ProfilePage() {
         </section>
 
         {/* Security */}
-        <section className="bg-[color:var(--card)] rounded-lg p-6 shadow-sm border border-[color:var(--border)]">
-          <h2 className="text-2xl font-bold mb-6 text-[color:var(--card-foreground)]">Security</h2>
-          <div className="space-y-6">
+        <section className="bg-[color:var(--card)] rounded-lg p-4 md:p-6 shadow-sm border border-[color:var(--border)]">
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-[color:var(--card-foreground)]">Security</h2>
+          <div className="space-y-4 md:space-y-6">
             <div>
               <h3 className="font-medium mb-4 text-[color:var(--card-foreground)]">Change Password</h3>
               <div className="space-y-4">
@@ -295,13 +295,13 @@ export default function ProfilePage() {
         </section>
 
         {/* Connected Accounts */}
-        <section className="bg-[color:var(--card)] rounded-lg p-6 shadow-sm border border-[color:var(--border)]">
-          <h2 className="text-2xl font-bold mb-6 text-[color:var(--card-foreground)]">Connected Accounts</h2>
+        <section className="bg-[color:var(--card)] rounded-lg p-4 md:p-6 shadow-sm border border-[color:var(--border)]">
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-[color:var(--card-foreground)]">Connected Accounts</h2>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg border-[color:var(--border)]">
+            <div className="flex items-center justify-between p-3 md:p-4 border rounded-lg border-[color:var(--border)]">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-[color:var(--color-soft-blue)] rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-[color:var(--color-white)]" viewBox="0 0 24 24">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-[color:var(--color-soft-blue)] rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 md:w-5 md:h-5 text-[color:var(--color-white)]" viewBox="0 0 24 24">
                     <path
                       fill="currentColor"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -322,12 +322,12 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <h3 className="font-medium text-[color:var(--card-foreground)]">Google</h3>
-                  <p className="text-sm text-[color:var(--muted-foreground)]">Connected</p>
+                  <p className="text-xs md:text-sm text-[color:var(--muted-foreground)]">Connected</p>
                 </div>
               </div>
               <button
                 onClick={() => toast.info('Google account disconnection not implemented yet')}
-                className="text-sm text-[color:var(--destructive)] hover:text-[color:var(--destructive-foreground)] hover:bg-[color:var(--destructive)]/10 px-3 py-1 rounded-lg transition-colors"
+                className="text-xs md:text-sm text-[color:var(--destructive)] hover:text-[color:var(--destructive-foreground)] hover:bg-[color:var(--destructive)]/10 px-2 md:px-3 py-1 rounded-lg transition-colors"
               >
                 Disconnect
               </button>
@@ -336,8 +336,8 @@ export default function ProfilePage() {
         </section>
 
         {/* Danger Zone */}
-        <section className="bg-[color:var(--card)] rounded-lg p-6 shadow-sm border border-[color:var(--destructive)]/20">
-          <h2 className="text-2xl font-bold mb-6 text-[color:var(--destructive)]">Danger Zone</h2>
+        <section className="bg-[color:var(--card)] rounded-lg p-4 md:p-6 shadow-sm border border-[color:var(--destructive)]/20">
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-[color:var(--destructive)]">Danger Zone</h2>
           <div className="space-y-4">
             <button
               onClick={handleDeleteAccount}

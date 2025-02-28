@@ -1,4 +1,3 @@
-
 interface SubscriptionRequiredProps {
   title?: string;
   description?: string;
@@ -43,7 +42,7 @@ export function SubscriptionRequired({
 
       <div className="flex justify-center pt-2">
         <a
-          href="https://t.me/@e1918_1918"
+          href="https://t.me/e1918_1918"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-6 py-3 bg-[#0088cc] text-white rounded-lg hover:bg-[#0088cc]/90 transition-all duration-300 transform hover:scale-105 shadow-lg"

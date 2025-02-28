@@ -26,8 +26,7 @@ export default function TrendsPage() {
   }, []);
 
   return (
-    <div className="container mx-auto px-4 py-8 bg-[color:var(--background)] text-[color:var(--foreground)]">
-   
+    <div className="container mx-auto px-4 py-8 pb-20 md:pb-8 bg-[color:var(--background)] text-[color:var(--foreground)]">
       <TrendsGallery trends={trends} isLoading={isLoading} />
     </div>
   );

@@ -7,7 +7,7 @@ import { useTranslation } from '@/lib/i18n';
 
 export function BottomNav() {
   const { data: session } = useSession();
-  const pathname = usePathname();
+  const pathname = usePathname() || '';
   const { t } = useTranslation();
 
   const navItems = [
@@ -25,6 +25,8 @@ export function BottomNav() {
         </svg>
       ),
       requiresAuth: false,
+      showInDashboard: false,
+      priority: 1,
     },
     {
       href: '/trends',
@@ -40,6 +42,8 @@ export function BottomNav() {
         </svg>
       ),
       requiresAuth: false,
+      showInDashboard: false,
+      priority: 2,
     },
     {
       href: '/about',
@@ -55,6 +59,8 @@ export function BottomNav() {
         </svg>
       ),
       requiresAuth: false,
+      showInDashboard: false,
+      priority: 3,
     },
     {
       href: '/dashboard',
@@ -70,6 +76,42 @@ export function BottomNav() {
         </svg>
       ),
       requiresAuth: true,
+      showInDashboard: true,
+      priority: 1,
+    },
+    {
+      href: '/dashboard/categories',
+      label: t('common.categories'),
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+          />
+        </svg>
+      ),
+      requiresAuth: true,
+      showInDashboard: true,
+      priority: 3,
+    },
+    {
+      href: '/dashboard/colors',
+      label: t('common.colors'),
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 8 6.5 8s1.5.67 1.5 1.5S7.33 11 6.5 11zm3-4C8.67 7 8 6.33 8 5.5S8.67 4 9.5 4s1.5.67 1.5 1.5S10.33 7 9.5 7zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 4 14.5 4s1.5.67 1.5 1.5S15.33 7 14.5 7zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 8 17.5 8s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"
+          />
+        </svg>
+      ),
+      requiresAuth: true,
+      showInDashboard: true,
+      priority: 4,
     },
     {
       href: '/dashboard/profile',
@@ -85,6 +127,8 @@ export function BottomNav() {
         </svg>
       ),
       requiresAuth: true,
+      showInDashboard: true,
+      priority: 2,
     },
   ];
 
@@ -92,13 +136,31 @@ export function BottomNav() {
     if (path === '/dashboard') {
       return pathname === '/dashboard' || pathname === '/dashboard/trends';
     }
-    return pathname === path;
+    return pathname === path || (path !== '/' && pathname.startsWith(path));
   };
 
+  // Check if we're in the dashboard
+  const isDashboard = pathname.startsWith('/dashboard');
+
+  // Filter items based on whether we're in the dashboard
+  let filteredItems = navItems.filter(item => {
+    if (isDashboard) {
+      return item.showInDashboard;
+    }
+    return !item.showInDashboard || item.href === '/dashboard';
+  });
+
+  // Limit to 4 items maximum to avoid overcrowding
+  if (filteredItems.length > 4) {
+    filteredItems = filteredItems
+      .sort((a, b) => a.priority - b.priority)
+      .slice(0, 4);
+  }
+
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[hsl(var(--background))]/80 backdrop-blur-lg border-t border-[hsl(var(--border))]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[color:var(--background)]/80 backdrop-blur-lg border-t border-[color:var(--border)]">
       <div className="flex justify-around items-center h-16">
-        {navItems.map(({ href, label, icon, requiresAuth }) => {
+        {filteredItems.map(({ href, label, icon, requiresAuth }) => {
           if (requiresAuth && !session) return null;
 
           return (
@@ -107,8 +169,8 @@ export function BottomNav() {
               href={href}
               className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
                 isPathActive(href) 
-                  ? 'text-[hsl(var(--primary))]' 
-                  : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'
+                  ? 'text-[color:var(--primary)]' 
+                  : 'text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)]'
               }`}
             >
               {icon}

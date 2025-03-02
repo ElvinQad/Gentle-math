@@ -57,29 +57,49 @@ export function DataTab({
       })
     : [];
 
-  // No need for additional connection logic since January 2025 already has both values
   const chartData = rawChartData;
 
   return (
     <div className="space-y-6">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Label htmlFor="spreadsheet" className="text-sm font-medium text-[color:var(--muted-foreground)]">
-            Google Spreadsheet URL
-          </Label>
+          <div>
+            <h3 className="text-lg font-medium text-[color:var(--foreground)]">Analytics Data</h3>
+            <p className="text-sm text-[color:var(--muted-foreground)]">
+              Connect a Google Spreadsheet to visualize trend data
+            </p>
+          </div>
           <RequestSheetsAccess />
         </div>
-        <div className="flex gap-2">
-          <Input
-            id="spreadsheet"
-            type="url"
-            value={formData.spreadsheetUrl}
-            onChange={(e) => setFormData({ ...formData, spreadsheetUrl: e.target.value })}
-            placeholder="Enter Google Spreadsheet URL"
-            className="flex-1 bg-[color:var(--background)] border border-[color:var(--border)]
-              focus:ring-2 focus:ring-[color:var(--primary)]/20 focus:border-[color:var(--primary)]"
-          />
-          {isEditMode && (
+
+        <div className="grid gap-4">
+          <div className="space-y-2">
+            <Label 
+              htmlFor="spreadsheet"
+              className="text-sm font-medium text-[color:var(--muted-foreground)]"
+            >
+              Google Spreadsheet URL
+            </Label>
+            <Input
+              id="spreadsheet"
+              type="url"
+              value={formData.spreadsheetUrl}
+              onChange={(e) => setFormData({ ...formData, spreadsheetUrl: e.target.value })}
+              placeholder="Enter Google Spreadsheet URL"
+              className="flex-1 bg-[color:var(--background)] border border-[color:var(--border)]
+                focus:ring-2 focus:ring-[color:var(--primary)]/20 focus:border-[color:var(--primary)]"
+            />
+            <p className="text-sm text-[color:var(--muted-foreground)]">
+              The spreadsheet should have &apos;trend&apos; and &apos;date&apos; columns
+            </p>
+            {!session?.accessToken && (
+              <p className="text-[color:var(--color-warm-orange)] dark:text-[color:var(--color-warm-orange)]/90">
+                Please connect your Google account using the button above to access spreadsheet data.
+              </p>
+            )}
+          </div>
+
+          {formData.spreadsheetUrl && isEditMode && (
             <Button
               type="button"
               onClick={onProcessSpreadsheet}
@@ -96,16 +116,6 @@ export function DataTab({
                 'Process Data'
               )}
             </Button>
-          )}
-        </div>
-        <div className="text-sm space-y-1">
-          <p className="text-[color:var(--muted-foreground)]">
-            The spreadsheet should have &apos;trend&apos; and &apos;date&apos; columns
-          </p>
-          {!session?.accessToken && (
-            <p className="text-[color:var(--color-warm-orange)] dark:text-[color:var(--color-warm-orange)]/90">
-              Please connect your Google account using the button above to access spreadsheet data.
-            </p>
           )}
         </div>
       </div>
@@ -159,11 +169,6 @@ export function DataTab({
                   <XAxis
                     dataKey="displayDate"
                     stroke="var(--muted-foreground)"
-                    tickFormatter={(date) => {
-                      const [month, year] = date.split('.');
-                      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                      return `${monthNames[parseInt(month, 10) - 1]} ${year}`;
-                    }}
                     tick={{ fontSize: 12 }}
                   />
                   <YAxis 
@@ -178,30 +183,7 @@ export function DataTab({
                       borderRadius: '0.5rem',
                       fontSize: '12px',
                     }}
-                    formatter={(value: ValueType, name: NameType, entry: { payload?: { date?: string; predicted?: number } }) => {
-                      const payload = entry?.payload;
-                      if (!payload) return [null, null];
-                      
-                      const now = new Date();
-                      const itemDate = new Date(payload.date ?? '');
-                      const isCurrentMonth = itemDate.getMonth() === now.getMonth() && 
-                                         itemDate.getFullYear() === now.getFullYear();
-                      
-                      // For current month, show Value
-                      if (isCurrentMonth) {
-                        if (name === 'actual') return [null, null];
-                        return [`${(value as number).toFixed(1)}%`, 'Value'];
-                      }
-                      
-                      // For future dates, show Predicted
-                      if (payload.predicted !== undefined && !isCurrentMonth) {
-                        if (name === 'actual') return [null, null];
-                        return [`${(value as number).toFixed(1)}%`, 'Predicted'];
-                      }
-                      
-                      // For past dates, show Actual
-                      return [`${(value as number).toFixed(1)}%`, 'Actual'];
-                    }}
+                    formatter={(value: ValueType, name: NameType) => [`${value}%`, name]}
                     labelFormatter={(date) => date}
                   />
                   <Legend 

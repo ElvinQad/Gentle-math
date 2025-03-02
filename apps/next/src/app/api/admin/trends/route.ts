@@ -12,6 +12,9 @@ export async function GET() {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
+    console.log('Admin: Fetching uncategorized trends');
+
+    // Only get trends without a category (categoryId is null)
     const trends = await prisma.trend.findMany({
       where: {
         categoryId: null // Only get trends without a category
@@ -23,6 +26,8 @@ export async function GET() {
         analytics: true,
       },
     });
+
+    console.log(`Admin: Found ${trends.length} uncategorized trends`);
 
     return NextResponse.json(trends);
   } catch (error) {
@@ -41,6 +46,12 @@ export async function POST(req: Request) {
     }
 
     const data = await req.json();
+
+    // Log category information for debugging
+    console.log('Creating new trend with category:', {
+      categoryId: data.categoryId || 'null',
+      hasCategoryId: !!data.categoryId
+    });
 
     // Verify all images are accessible before creating the trend
     const imageVerificationPromises = data.imageUrls.map(async (url: string) => {
@@ -91,6 +102,8 @@ export async function POST(req: Request) {
     }
 
     // Create the trend with analytics
+    console.log('Creating trend with categoryId:', data.categoryId || null);
+    
     const trend = await prisma.trend.create({
       data: {
         title: data.title,
@@ -110,6 +123,8 @@ export async function POST(req: Request) {
         analytics: true,
       },
     });
+
+    console.log('Trend created successfully with ID:', trend.id, 'Category ID:', trend.categoryId || 'null');
 
     // Only process spreadsheet if URL is provided and not empty
     if (data.spreadsheetUrl && data.spreadsheetUrl.trim()) {

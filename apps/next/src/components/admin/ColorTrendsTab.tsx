@@ -27,7 +27,6 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { RequestSheetsAccess } from '@/components/admin/RequestSheetsAccess';
-import { AgeSegmentPie } from '@/components/ui/AgeSegmentPie';
 
 interface ImagePreview {
   url: string;
@@ -168,9 +167,11 @@ export function ColorTrendsTab() {
       );
 
       toast.success('Images uploaded successfully');
+      return uploadedUrls; // Return the array of uploaded URLs
     } catch (error) {
       console.error('Upload error:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to upload images');
+      return []; // Return empty array on error
     }
   }, []);
 
@@ -530,19 +531,6 @@ export function ColorTrendsTab() {
                             isYearlyView={isYearlyView}
                           />
                         </div>
-                        {selectedTrend.analytics.ageSegments && (
-                          <div className="h-[300px] w-full">
-                            <div className="mb-2 text-sm font-medium text-[color:var(--muted-foreground)]">
-                              Age Distribution
-                            </div>
-                            <AgeSegmentPie
-                              data={selectedTrend.analytics.ageSegments.map(segment => ({
-                                name: segment.name,
-                                value: segment.value
-                              }))}
-                            />
-                          </div>
-                        )}
                       </div>
                     </div>
                   )}
@@ -637,45 +625,76 @@ export function ColorTrendsTab() {
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
         title="Color Trend Details"
-        className="bg-[color:var(--background)] border border-[color:var(--border)] shadow-lg rounded-lg max-w-4xl w-[95vw]"
+        className="bg-[color:var(--background)] border border-[color:var(--border)] shadow-lg rounded-lg max-w-3xl w-[90vw] max-h-[85vh] overflow-y-auto"
       >
         {selectedTrend && (
-          <div className="space-y-6">
-            <div className="relative h-[300px] rounded-lg overflow-hidden">
-              <Image
-                src={selectedTrend.imageUrl}
-                alt={selectedTrend.name}
-                fill
-                className="object-cover"
-              />
-              <div
-                className="absolute inset-0 opacity-75"
-                style={{ backgroundColor: selectedTrend.hex }}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-4">
+          <div className="space-y-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="relative md:w-1/3 h-[200px] rounded-lg overflow-hidden">
+                <Image
+                  src={selectedTrend.imageUrl}
+                  alt={selectedTrend.name}
+                  fill
+                  className="object-cover"
+                />
+                <div
+                  className="absolute inset-0 opacity-75"
+                  style={{ backgroundColor: selectedTrend.hex }}
+                />
+              </div>
+              
+              <div className="md:w-2/3 space-y-3">
                 <div>
                   <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Name</h3>
                   <p className="text-lg font-medium text-[color:var(--foreground)]">{selectedTrend.name}</p>
                 </div>
 
-                <div>
-                  <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Hex Color</h3>
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-6 h-6 rounded-full border-2 border-[color:var(--border)]"
-                      style={{ backgroundColor: selectedTrend.hex }}
-                    />
-                    <span className="text-[color:var(--foreground)]">{selectedTrend.hex}</span>
+                <div className="flex flex-wrap gap-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Hex Color</h3>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-5 h-5 rounded-full border border-[color:var(--border)]"
+                        style={{ backgroundColor: selectedTrend.hex }}
+                      />
+                      <span className="text-sm text-[color:var(--foreground)]">{selectedTrend.hex}</span>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Popularity</h3>
+                    <p className="text-sm text-[color:var(--foreground)]">{selectedTrend.popularity}%</p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Created</h3>
+                    <p className="text-sm text-[color:var(--foreground)]">
+                      {new Date(selectedTrend.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
                 </div>
+              </div>
+            </div>
 
+            <Tabs defaultValue="palette" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4 bg-[color:var(--muted)] rounded-lg p-1">
+                <TabsTrigger value="palette" className="rounded-md px-3 py-1.5 text-sm font-medium transition-all 
+                  data-[state=active]:bg-[color:var(--background)] data-[state=active]:text-[color:var(--foreground)]
+                  data-[state=active]:shadow-sm hover:text-[color:var(--foreground)]/90">
+                  Color Palette
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="rounded-md px-3 py-1.5 text-sm font-medium transition-all 
+                  data-[state=active]:bg-[color:var(--background)] data-[state=active]:text-[color:var(--foreground)]
+                  data-[state=active]:shadow-sm hover:text-[color:var(--foreground)]/90">
+                  Analytics
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="palette" className="focus-visible:outline-none">
                 {(selectedTrend.palette1 || selectedTrend.palette2 || selectedTrend.palette3 || 
-                  selectedTrend.palette4 || selectedTrend.palette5) && (
-                  <div>
-                    <h3 className="text-sm font-medium text-[color:var(--muted-foreground)] mb-2">Color Palette</h3>
+                  selectedTrend.palette4 || selectedTrend.palette5) ? (
+                  <div className="p-3 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
+                    <h3 className="text-sm font-medium text-[color:var(--muted-foreground)] mb-3">Color Palette</h3>
                     <div className="flex flex-wrap gap-3">
                       {[
                         selectedTrend.palette1,
@@ -686,62 +705,60 @@ export function ColorTrendsTab() {
                       ].filter(Boolean).map((color, index) => (
                         <div key={index} className="flex items-center gap-2">
                           <div
-                            className="w-6 h-6 rounded-full border border-[color:var(--border)]"
+                            className="w-5 h-5 rounded-full border border-[color:var(--border)]"
                             style={{ backgroundColor: color || undefined }}
                           />
-                          <span className="text-sm font-mono text-[color:var(--muted-foreground)]">
+                          <span className="text-xs font-mono text-[color:var(--muted-foreground)]">
                             {color}
                           </span>
                         </div>
                       ))}
                     </div>
                   </div>
+                ) : (
+                  <div className="text-center py-6 text-[color:var(--muted-foreground)]">
+                    No palette colors defined
+                  </div>
                 )}
-              </div>
+              </TabsContent>
 
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Popularity</h3>
-                  <p className="text-lg font-medium text-[color:var(--foreground)]">{selectedTrend.popularity}%</p>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Created</h3>
-                  <p className="text-[color:var(--foreground)]">
-                    {new Date(selectedTrend.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {selectedTrend.analytics?.dates && selectedTrend.analytics.values && (
-              <div className="p-4 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Trend Analytics</h3>
-                  {selectedTrend.analytics.dates.length > 10 && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-[color:var(--muted-foreground)]">
-                        {isYearlyView ? 'Yearly View' : 'Monthly View'}
-                      </span>
-                      <Switch
-                        checked={isYearlyView}
-                        onCheckedChange={setIsYearlyView}
-                        className="data-[state=checked]:bg-[color:var(--primary)]"
+              <TabsContent value="analytics" className="focus-visible:outline-none">
+                {selectedTrend.analytics?.dates && selectedTrend.analytics.values ? (
+                  <div className="p-3 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Trend Analytics</h3>
+                      {selectedTrend.analytics.dates.length > 10 && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-[color:var(--muted-foreground)]">
+                            {isYearlyView ? 'Yearly' : 'Monthly'}
+                          </span>
+                          <Switch
+                            checked={isYearlyView}
+                            onCheckedChange={setIsYearlyView}
+                            className="data-[state=checked]:bg-[color:var(--primary)]"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="h-[200px] w-full">
+                      <TrendChart
+                        dates={selectedTrend.analytics.dates}
+                        values={selectedTrend.analytics.values}
+                        isYearlyView={isYearlyView}
                       />
                     </div>
-                  )}
-                </div>
-                <div className="h-[300px] w-full">
-                  <TrendChart
-                    dates={selectedTrend.analytics.dates}
-                    values={selectedTrend.analytics.values}
-                    isYearlyView={isYearlyView}
-                  />
-                </div>
-              </div>
-            )}
+                    
+               
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-[color:var(--muted-foreground)]">
+                    No analytics data available
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-[color:var(--border)]">
+            <div className="flex justify-end gap-3 mt-24 pt-4 border-t border-[color:var(--border)]">
               <Button
                 variant="secondary"
                 onClick={() => handleEditClick(selectedTrend)}

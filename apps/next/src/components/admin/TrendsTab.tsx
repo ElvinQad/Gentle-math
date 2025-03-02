@@ -27,6 +27,7 @@ import { TrendChart } from '@/components/ui/TrendChart';
 import { calculateGrowthRate, getLatestValue } from '@/utils/trends';
 import { Switch } from '@/components/ui/switch';
 import { AgeSegmentPie } from '@/components/ui/AgeSegmentPie';
+import { useFileUpload } from '@/hooks/useFileUpload';
 
 type Trend = Omit<DashboardTrend & ApiTrend, 'categoryId'> & {
   categoryId: string;
@@ -45,14 +46,6 @@ const isValidUrl = (url: string) => {
     return false;
   }
 };
-
-// Function to calculate content hash using Web Crypto API
-async function calculateContentHash(file: File): Promise<string> {
-  const buffer = await file.arrayBuffer();
-  const hashBuffer = await window.crypto.subtle.digest('SHA-256', buffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
 
 interface TrendFormData extends Omit<Partial<Trend>, 'title' | 'description'> {
   title: string;
@@ -83,6 +76,32 @@ export function TrendsTab() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isProcessingSpreadsheet, setIsProcessingSpreadsheet] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
+
+  const { uploadFiles } = useFileUpload({
+    onSuccess: (urls) => {
+      setImageUrls((prev) =>
+        [...prev, ...urls.map((url) => ({ url, isMain: prev.length === 0 }))].filter(
+          (img) => isValidUrl(img.url),
+        ),
+      );
+      toast.success('Images uploaded successfully');
+    }
+  });
+
+  const fetchTrendDetails = async (trendId: string) => {
+    try {
+      const response = await fetch(`/api/admin/trends/${trendId}`);
+      if (!response.ok) throw new Error('Failed to fetch trend details');
+      
+      const trendWithAnalytics = await response.json();
+      return trendWithAnalytics;
+    } catch (error) {
+      console.error('Error fetching trend details:', error);
+      toast.error('Failed to load trend details');
+      return null;
+    }
+  };
 
   const handleFormDataChange = useCallback((data: Partial<typeof formData>) => {
     setFormData(prev => ({ ...prev, ...data }));
@@ -105,92 +124,28 @@ export function TrendsTab() {
     fetchTrends();
   }, []);
 
-  const handleFileUpload = useCallback(async (files: File[]) => {
+  // Updated function to handle trend selection and fetch complete details
+  const handleTrendClick = async (trend: Trend) => {
+    setIsLoading(true);
     try {
-      const uploadedUrls: string[] = [];
-      const uniqueFiles = new Map<string, File>();
-
-      // First, filter out duplicate files by comparing their sizes and names
-      for (const file of files) {
-        const key = `${file.size}-${file.name}`;
-        if (!uniqueFiles.has(key)) {
-          uniqueFiles.set(key, file);
-        } else {
-          console.log('Skipping potential duplicate file:', file.name);
-        }
-      }
-
-      for (const file of Array.from(uniqueFiles.values())) {
-        // Calculate content hash
-        const contentHash = await calculateContentHash(file);
-
-        console.log('Uploading file:', {
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          contentHash
+      const trendDetails = await fetchTrendDetails(trend.id);
+      if (trendDetails) {
+        // Debug: Log the structure of the trend details and analytics
+        console.log('Fetched trend details:', {
+          id: trendDetails.id,
+          hasAnalytics: !!trendDetails.analytics,
+          analytics: trendDetails.analytics,
+          analyticsType: typeof trendDetails.analytics,
         });
-
-        const response = await fetch('/api/admin/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filename: file.name,
-            contentType: file.type,
-            contentHash
-          }),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Failed to get upload URL:', errorText);
-          throw new Error('Failed to get upload URL');
-        }
-
-        const data = await response.json();
         
-        // If duplicate was found, use the existing URL
-        if (data.isDuplicate) {
-          console.log('Using existing file:', data.publicUrl);
-          toast.info(`File "${file.name}" already exists, using existing file`);
-          uploadedUrls.push(data.publicUrl);
-          continue;
-        }
-
-        // Upload the file
-        const uploadResponse = await fetch(data.presignedUrl, {
-          method: 'PUT',
-          body: file,
-          headers: {
-            'Content-Type': file.type,
-          },
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error(`Upload failed: ${uploadResponse.statusText}`);
-        }
-
-        if (!isValidUrl(data.publicUrl)) {
-          throw new Error(`Invalid URL received from server: ${data.publicUrl}`);
-        }
-
-        uploadedUrls.push(data.publicUrl);
+        setSelectedTrend(trendDetails);
+        setSelectedImageIndex(trendDetails.mainImageIndex || 0);
+        setIsDetailModalOpen(true);
       }
-
-      // Update imageUrls state with the new URLs
-      setImageUrls((prev) =>
-        [...prev, ...uploadedUrls.map((url) => ({ url, isMain: prev.length === 0 }))].filter(
-          (img) => isValidUrl(img.url),
-        ),
-      );
-
-      toast.success('Images uploaded successfully');
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to upload images');
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
-
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,7 +176,7 @@ export function TrendsTab() {
             imageUrls: validImageUrls,
             mainImageIndex: mainImageIndex >= 0 ? mainImageIndex : 0,
             spreadsheetUrl: formData.spreadsheetUrl.trim(),
-            categoryId: null,
+            categoryId: formData.categoryId || null,
           }),
         },
       );
@@ -274,26 +229,32 @@ export function TrendsTab() {
     setCurrentTab('details');
   };
 
-  const handleEditClick = (trend: Trend) => {
-    setSelectedTrend(trend);
-    setIsEditMode(true);
-    setFormData({
-      title: trend.title,
-      description: trend.description,
-      type: trend.type,
-      imageUrls: trend.imageUrls,
-      mainImageIndex: trend.mainImageIndex,
-      spreadsheetUrl: trend.spreadsheetUrl || '',
-      categoryId: trend.categoryId,
-    });
-    setImageUrls(
-      trend.imageUrls.map((url, index) => ({
-        url,
-        isMain: index === trend.mainImageIndex,
-      })),
-    );
-    setIsModalOpen(true);
-    setIsDetailModalOpen(false);
+  const handleEditClick = async (trend: Trend) => {
+    // Fetch the latest trend data with complete analytics
+    const refreshedTrend = await fetchTrendDetails(trend.id);
+    if (refreshedTrend) {
+      setSelectedTrend(refreshedTrend);
+      setIsEditMode(true);
+      setFormData({
+        title: refreshedTrend.title,
+        description: refreshedTrend.description,
+        type: refreshedTrend.type,
+        imageUrls: refreshedTrend.imageUrls,
+        mainImageIndex: refreshedTrend.mainImageIndex,
+        spreadsheetUrl: refreshedTrend.spreadsheetUrl || '',
+        categoryId: refreshedTrend.categoryId,
+      });
+      setImageUrls(
+        refreshedTrend.imageUrls.map((url: string, index: number) => ({
+          url,
+          isMain: index === refreshedTrend.mainImageIndex,
+        })),
+      );
+      setIsModalOpen(true);
+      setIsDetailModalOpen(false);
+    } else {
+      toast.error('Failed to load trend details for editing');
+    }
   };
 
   const handleProcessSpreadsheet = async () => {
@@ -357,9 +318,10 @@ export function TrendsTab() {
         return newTrends;
       });
 
-      // Also update the selected trend if it's the one being modified
-      if (selectedTrend?.id === responseData.id) {
-        setSelectedTrend(responseData);
+      // Fetch fresh trend data with analytics to update the selected trend
+      const refreshedTrend = await fetchTrendDetails(trendId);
+      if (refreshedTrend) {
+        setSelectedTrend(refreshedTrend);
       }
       
       toast.success('Spreadsheet data processed successfully');
@@ -462,7 +424,7 @@ export function TrendsTab() {
                 <ImagesTab 
                   imageUrls={imageUrls} 
                   setImageUrls={setImageUrls} 
-                  onFileUpload={handleFileUpload} 
+                  onFileUpload={uploadFiles} 
                 />
               </TabsContent>
 
@@ -524,8 +486,7 @@ export function TrendsTab() {
               key={trend.id}
               className="group hover:shadow-lg transition-all duration-300 ease-out-expo bg-[color:var(--card)] border-[color:var(--border)] overflow-hidden"
               onClick={() => {
-                setSelectedTrend(trend);
-                setIsDetailModalOpen(true);
+                handleTrendClick(trend);
               }}
             >
               <div className="aspect-video relative overflow-hidden">
@@ -562,85 +523,153 @@ export function TrendsTab() {
       {/* Detail Modal */}
       <Modal
         isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedImageIndex(selectedTrend?.mainImageIndex || 0);
+        }}
         title="Trend Details"
-        className="bg-[color:var(--background)] border border-[color:var(--border)] shadow-lg rounded-lg max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto"
+        className="bg-[color:var(--background)] border border-[color:var(--border)] shadow-lg rounded-lg max-w-7xl w-[95vw] max-h-[95vh] overflow-y-auto"
       >
         {selectedTrend && (
-          <div className="space-y-4">
-            {/* Trend Images */}
-            <div className="h-[300px] sm:h-[400px] relative rounded-lg overflow-hidden bg-[color:var(--muted)]">
-              {selectedTrend.imageUrls?.[selectedTrend.mainImageIndex] ? (
-                <Image
-                  src={selectedTrend.imageUrls[selectedTrend.mainImageIndex]}
-                  alt={selectedTrend.title || 'Trend image'}
-                  fill
-                  className="object-cover transition-transform duration-700 ease-out-expo hover:scale-105"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <span className="text-[color:var(--muted-foreground)]">No image</span>
+          <div className="space-y-6">
+            {/* Hero Section with Main Image and Gallery */}
+            <div className="-mt-6 -mx-6 mb-8">
+              <div className="relative aspect-[16/9]">
+                <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-transparent z-10" />
+                {selectedTrend.imageUrls?.[selectedImageIndex] ? (
+                  <Image
+                    src={selectedTrend.imageUrls[selectedImageIndex]}
+                    alt={selectedTrend.title || 'Trend image'}
+                    fill
+                    className="object-contain bg-[color:var(--muted)]"
+                    priority
+                  />
+                ) : (
+                  <div className="w-full h-full bg-[color:var(--muted)] flex items-center justify-center">
+                    <span className="text-[color:var(--muted-foreground)]">No image</span>
+                  </div>
+                )}
+                {/* Overlay Content */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 z-20 bg-gradient-to-t from-black/80 to-transparent">
+                  <h2 className="text-3xl font-bold text-white mb-2">{selectedTrend.title}</h2>
+                  <p className="text-white/80 text-lg line-clamp-2">{selectedTrend.description}</p>
                 </div>
-              )}
+              </div>
+
+              {/* Image Gallery Strip */}
+              <div className="bg-[color:var(--card)] border-t border-[color:var(--border)] p-4">
+                <div className="flex gap-3 overflow-x-auto pb-2 px-2 snap-x">
+                  {selectedTrend.imageUrls?.map((url, index) => {
+                    if (!url) return null;
+                    return (
+                      <button 
+                        key={index} 
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={`relative flex-shrink-0 w-32 aspect-video rounded-lg overflow-hidden border-2 transition-all duration-200 snap-start
+                          ${index === selectedImageIndex
+                            ? 'border-[color:var(--primary)] ring-2 ring-[color:var(--primary)]/20' 
+                            : 'border-transparent hover:border-[color:var(--muted)]'}`}
+                      >
+                        <Image
+                          src={url}
+                          alt={`${selectedTrend.title || 'Trend'} - Image ${index + 1}`}
+                          fill
+                          className="object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
+                        />
+                        {index === selectedTrend.mainImageIndex && (
+                          <div className="absolute top-1 right-1 bg-[color:var(--primary)] text-[color:var(--primary-foreground)] text-[10px] px-1.5 py-0.5 rounded-full">
+                            Main
+                          </div>
+                        )}
+                        {index === selectedImageIndex && (
+                          <div className="absolute inset-0 bg-[color:var(--primary)]/10 pointer-events-none" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
-            {/* Trend Information and Analytics */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Left Column - Basic Info */}
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Title</h3>
-                  <p className="text-lg font-medium text-[color:var(--foreground)]">{selectedTrend.title}</p>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Description</h3>
-                  <p className="text-base text-[color:var(--foreground)]">{selectedTrend.description}</p>
-                </div>
-
-                <div className="flex gap-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Type</h3>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[color:var(--primary)]/10 text-[color:var(--primary)]">
-                      {selectedTrend.type}
-                    </span>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Created</h3>
-                    <p className="text-sm text-[color:var(--foreground)]">
-                      {new Date(selectedTrend.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Analytics Summary */}
+            {/* Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left Column - Info & Stats */}
+              <div className="space-y-6">
+                {/* Quick Stats */}
                 {selectedTrend.analytics?.[0] && (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
-                      <h4 className="text-sm font-medium text-[color:var(--muted-foreground)]">Latest Value</h4>
-                      <p className="mt-1 text-xl font-semibold text-[color:var(--foreground)]">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-[color:var(--primary)]/5 border border-[color:var(--primary)]/10">
+                      <h4 className="text-sm font-medium text-[color:var(--primary)]">Latest Value</h4>
+                      <p className="mt-1 text-2xl font-bold text-[color:var(--primary)]">
                         {getLatestValue(selectedTrend.analytics[0].values)}%
                       </p>
                     </div>
-                    <div className="p-3 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
-                      <h4 className="text-sm font-medium text-[color:var(--muted-foreground)]">Growth Rate</h4>
-                      <p className="mt-1 text-xl font-semibold text-[color:var(--foreground)]">
+                    <div className="p-4 rounded-xl bg-[color:var(--accent)]/5 border border-[color:var(--accent)]/10">
+                      <h4 className="text-sm font-medium text-[color:var(--accent)]">Growth Rate</h4>
+                      <p className="mt-1 text-2xl font-bold text-[color:var(--accent)]">
                         {calculateGrowthRate(selectedTrend.analytics[0].values).toFixed(1)}%
                       </p>
                     </div>
                   </div>
                 )}
+
+                {/* Detailed Info */}
+                <div className="space-y-4 p-6 rounded-xl bg-[color:var(--card)] border border-[color:var(--border)]">
+                  <div>
+                    <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Type</h3>
+                    <span className="mt-1 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[color:var(--primary)]/10 text-[color:var(--primary)]">
+                      {selectedTrend.type}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Created</h3>
+                    <p className="mt-1 text-[color:var(--foreground)]">
+                      {new Date(selectedTrend.createdAt).toLocaleDateString(undefined, {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Description</h3>
+                    <p className="mt-1 text-[color:var(--foreground)] whitespace-pre-wrap">{selectedTrend.description}</p>
+                  </div>
+                </div>
               </div>
 
-              {/* Right Column - Chart and Images */}
-              <div className="space-y-4">
+              {/* Right Column - Analytics */}
+              <div className="space-y-6">
                 {/* Analytics Chart */}
-                {selectedTrend.analytics?.[0] && (
-                  <div className="p-4 rounded-lg bg-[color:var(--card)] border border-[color:var(--border)]">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-medium text-[color:var(--muted-foreground)]">Trend Analytics</h3>
-                      {selectedTrend.analytics[0].dates.length > 10 && (
+                {(() => {
+                  // Debug info - wrapped in self-executing function to avoid JSX issues
+                  console.log('Analytics render check:', {
+                    analytics: selectedTrend.analytics,
+                    hasAnalytics: !!selectedTrend.analytics,
+                    isArray: Array.isArray(selectedTrend.analytics),
+                    analyticsType: typeof selectedTrend.analytics
+                  });
+                  
+                  // Get analytics data safely, handling both array and direct object formats
+                  const analyticsData = Array.isArray(selectedTrend.analytics) 
+                    ? selectedTrend.analytics[0] 
+                    : selectedTrend.analytics;
+                    
+                  const hasValidData = !!analyticsData?.values?.length;
+                  
+                  return hasValidData;
+                })() ? (
+                  <div className="p-6 rounded-xl bg-[color:var(--card)] border border-[color:var(--border)]">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-lg font-medium text-[color:var(--card-foreground)]">Analytics</h3>
+                      {(() => {
+                        const analyticsData = Array.isArray(selectedTrend.analytics) 
+                          ? selectedTrend.analytics[0] 
+                          : selectedTrend.analytics;
+                        
+                        const datesLength = analyticsData?.dates?.length || 0;
+                        return datesLength > 10;
+                      })() && (
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-[color:var(--muted-foreground)]">
                             {isYearlyView ? 'Yearly View' : 'Monthly View'}
@@ -653,60 +682,87 @@ export function TrendsTab() {
                         </div>
                       )}
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-6">
                       <div className="h-[300px] w-full">
                         <TrendChart
-                          dates={selectedTrend.analytics[0].dates}
-                          values={selectedTrend.analytics[0].values}
+                          dates={(() => {
+                            const analyticsData = Array.isArray(selectedTrend.analytics) 
+                              ? selectedTrend.analytics[0] 
+                              : selectedTrend.analytics;
+                            return analyticsData?.dates || [];
+                          })()}
+                          values={(() => {
+                            const analyticsData = Array.isArray(selectedTrend.analytics) 
+                              ? selectedTrend.analytics[0] 
+                              : selectedTrend.analytics;
+                            return analyticsData?.values || [];
+                          })()}
                           isYearlyView={isYearlyView}
                         />
                       </div>
-                      {selectedTrend.analytics[0].ageSegments && (
-                        <div className="h-[300px] w-full">
-                          <div className="mb-2 text-sm font-medium text-[color:var(--muted-foreground)]">
-                            Age Distribution
+                      {(() => {
+                        const analyticsData = Array.isArray(selectedTrend.analytics) 
+                          ? selectedTrend.analytics[0] 
+                          : selectedTrend.analytics;
+                        
+                        return !!analyticsData?.ageSegments?.length;
+                      })() && (
+                        <div>
+                          <h4 className="text-sm font-medium text-[color:var(--muted-foreground)] mb-4">Age Distribution</h4>
+                          <div className="h-[300px] w-full">
+                            <AgeSegmentPie
+                              data={(() => {
+                                const analyticsData = Array.isArray(selectedTrend.analytics) 
+                                  ? selectedTrend.analytics[0] 
+                                  : selectedTrend.analytics;
+                                
+                                return analyticsData?.ageSegments?.map((segment: {name: string; value: number}) => ({
+                                  name: segment.name,
+                                  value: segment.value
+                                })) || [];
+                              })()}
+                            />
                           </div>
-                          <AgeSegmentPie
-                            data={selectedTrend.analytics[0].ageSegments.map(segment => ({
-                              name: segment.name,
-                              value: segment.value
-                            }))}
-                          />
                         </div>
                       )}
                     </div>
                   </div>
-                )}
-
-                {/* Image Gallery */}
-                <div>
-                  <h3 className="text-sm font-medium text-[color:var(--muted-foreground)] mb-3">Image Gallery</h3>
-                  <div className="grid grid-cols-3 gap-3">
-                    {selectedTrend.imageUrls?.map((url, index) => {
-                      if (!url) return null;
-                      return (
-                        <div key={index} className="group relative aspect-video rounded-lg overflow-hidden bg-[color:var(--muted)]">
-                          <Image
-                            src={url}
-                            alt={`${selectedTrend.title || 'Trend'} - Image ${index + 1}`}
-                            fill
-                            className="object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
-                          />
-                          {index === selectedTrend.mainImageIndex && (
-                            <div className="absolute top-2 right-2 bg-[color:var(--primary)] text-[color:var(--primary-foreground)] text-xs px-2 py-0.5 rounded-full">
-                              Main
-                            </div>
+                ) : (
+                  <div className="p-6 rounded-xl bg-[color:var(--card)] border border-[color:var(--border)]">
+                    <div className="text-center py-8">
+                      <svg className="w-12 h-12 mx-auto text-[color:var(--muted-foreground)]/50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      <h4 className="mt-4 text-base font-medium text-[color:var(--foreground)]">No Analytics Data</h4>
+                      <p className="mt-2 text-sm text-[color:var(--muted-foreground)]">
+                        Process a spreadsheet to view analytics data for this trend.
+                      </p>
+                      {selectedTrend.spreadsheetUrl && (
+                        <button
+                          onClick={handleProcessSpreadsheet}
+                          disabled={isProcessingSpreadsheet}
+                          className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-[color:var(--primary)] hover:bg-[color:var(--primary)]/90 transition-colors"
+                        >
+                          {isProcessingSpreadsheet ? (
+                            <>
+                              <Spinner className="mr-2 h-4 w-4" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>Process Spreadsheet</>
                           )}
-                        </div>
-                      );
-                    })}
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
+                
+
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-[color:var(--border)]">
+            <div className="flex justify-end gap-3 pt-6 border-t border-[color:var(--border)]">
               <Button 
                 variant="secondary" 
                 onClick={() => handleEditClick(selectedTrend)}

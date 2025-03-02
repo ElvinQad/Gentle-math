@@ -5,6 +5,8 @@ interface SubscriptionRequiredProps {
   className?: string;
 }
 
+// #TODO lets change the way to handle subscription request, offer to leave  a mail or telegram, write it to tew table in db and show users requested subsciption inside UsersTab
+
 export function SubscriptionRequired({
   title = 'Premium Feature',
   description = 'Contact us on Telegram to unlock premium features.',

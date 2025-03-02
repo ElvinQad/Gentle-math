@@ -10,6 +10,9 @@ export async function GET() {
     const session = await getServerSession(authConfig);
     const isSubscribed = isSubscriptionValid(session?.user?.subscribedUntil);
 
+    console.log('Fetching uncategorized trends for trends page');
+    
+    // Explicitly fetch only trends without a category (categoryId is null)
     const trends = await prisma.trend.findMany({
       where: {
         categoryId: null // Only get trends without a category
@@ -22,6 +25,8 @@ export async function GET() {
       },
     });
 
+    console.log(`Found ${trends.length} uncategorized trends`);
+    
     // Transform the data to include subscription status
     const transformedTrends: Trend[] = trends.map(trend => ({
       id: trend.id,

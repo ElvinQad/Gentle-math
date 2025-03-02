@@ -8,6 +8,66 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
+export async function GET(request: Request, { params }: RouteContext) {
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json({ error: 'Missing id parameter' }, { status: 400 });
+  }
+
+  try {
+    const session = await getServerSession(authConfig);
+
+    if (!session?.user?.isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Fetch trend with analytics data
+    const trend = await prisma.trend.findUnique({
+      where: { id },
+      include: {
+        analytics: true,
+      },
+    });
+
+    if (!trend) {
+      return NextResponse.json({ error: 'Trend not found' }, { status: 404 });
+    }
+
+    // Enhanced logging for debugging
+    console.log(`Admin: Fetched trend ${id} with analytics:`, { 
+      hasAnalytics: !!trend.analytics,
+      analyticsType: typeof trend.analytics,
+      analyticsIsArray: Array.isArray(trend.analytics?.values),
+      dataPoints: Array.isArray(trend.analytics?.values) ? trend.analytics.values.length : 0,
+      datePoints: Array.isArray(trend.analytics?.dates) ? trend.analytics.dates.length : 0,
+      sampleDate: Array.isArray(trend.analytics?.dates) && trend.analytics.dates.length > 0 
+        ? (trend.analytics.dates[0] instanceof Date 
+            ? trend.analytics.dates[0].toISOString() 
+            : trend.analytics.dates[0]) 
+        : null,
+      hasAgeSegments: Array.isArray(trend.analytics?.ageSegments) ? trend.analytics.ageSegments.length > 0 : false
+    });
+    
+    // Ensure dates are properly serialized if they exist
+    if (trend.analytics && Array.isArray(trend.analytics.dates) && trend.analytics.dates.length > 0) {
+      // Create a copy with dates converted to ISO strings
+      const datesCopy = [...trend.analytics.dates];
+      const serializedDates = datesCopy.map(date => 
+        date instanceof Date ? date.toISOString() : String(date)
+      );
+      
+      // Update the analytics object with the serialized dates
+      // Use unknown as an intermediate type to avoid type errors
+      ((trend.analytics as unknown) as { dates: string[] }).dates = serializedDates;
+    }
+
+    return NextResponse.json(trend);
+  } catch (error) {
+    console.error('Failed to fetch trend:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: Request, { params }: RouteContext) {
   const { id } = await params;
   if (!id) {
@@ -85,6 +145,12 @@ export async function PUT(request: Request, { params }: RouteContext) {
     }
 
     const data = await request.json();
+    
+    // Log detailed information about the category assignment
+    console.log(`Updating trend ID ${id} with category:`, { 
+      providedCategoryId: data.categoryId,
+      finalCategoryId: data.categoryId || null
+    });
 
     const trend = await prisma.trend.update({
       where: { id },
@@ -97,6 +163,8 @@ export async function PUT(request: Request, { params }: RouteContext) {
         categoryId: data.categoryId || null,
       },
     });
+
+    console.log(`Trend updated successfully. Category ID set to: ${trend.categoryId || 'null'}`);
 
     return NextResponse.json(trend);
   } catch (error) {

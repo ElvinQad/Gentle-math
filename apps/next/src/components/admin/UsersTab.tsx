@@ -1,9 +1,6 @@
 import { Fragment } from 'react';
-import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { User, UserDetails } from '@/types/admin';
-import { MostVisitedPaths } from './MostVisitedPaths';
-import { ActivityTimeline } from './ActivityTimeline';
 
 interface UsersTabProps {
   users: User[];
@@ -36,32 +33,6 @@ export function UsersTab({
   isUpdating,
   setCustomMonths,
 }: UsersTabProps) {
-  const handleClearActivities = async (userId: string) => {
-    if (
-      !window.confirm(
-        'Are you sure you want to clear all activities for this user? This action cannot be undone.',
-      )
-    ) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/admin/users/${userId}/activities`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) throw new Error('Failed to clear activities');
-
-      // Refresh user details
-      await toggleUserExpanded(userId);
-      await toggleUserExpanded(userId);
-
-      toast.success('Activities cleared successfully');
-    } catch {
-      toast.error('Failed to clear activities');
-    }
-  };
-
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-[color:var(--foreground)]">User Management</h2>
@@ -260,30 +231,6 @@ export function UsersTab({
                                   </div>
                                 </div>
 
-
-                                <div className="grid md:grid-cols-2 gap-6">
-                                  <div>
-                                    <MostVisitedPaths
-                                      paths={userDetails[user.id].activities.stats.mostVisitedPaths}
-                                    />
-                                  </div>
-                                  <div>
-                                    <div className="flex justify-between items-center mb-4">
-                                      <h3 className="text-lg font-semibold text-[color:var(--foreground)]">Recent Activities</h3>
-                                      <button
-                                        onClick={() => handleClearActivities(user.id)}
-                                        className="flex items-center space-x-1 px-2 py-1 text-xs text-[color:var(--destructive)] hover:text-[color:var(--destructive-foreground)] hover:bg-[color:var(--destructive)]/10 rounded transition-colors"
-                                        title="Clear all activities"
-                                      >
-                                        <Trash2 className="w-3 h-3" />
-                                        <span>Clear All</span>
-                                      </button>
-                                    </div>
-                                    <ActivityTimeline
-                                      activities={userDetails[user.id].activities.recent}
-                                    />
-                                  </div>
-                                </div>
                               </div>
                             ) : (
                               <div className="text-center py-4 text-[color:var(--muted-foreground)]">

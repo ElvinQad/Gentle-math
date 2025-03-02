@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, ChevronRight, Upload, Plus, FolderTree, Edit2, Trash2, ArrowLeft, X } from 'lucide-react';
+import { Loader2, ChevronRight, Upload, Plus, FolderTree, Edit2, Trash2, ArrowLeft, X, Unlink } from 'lucide-react';
 import Image from 'next/image';
 import type { Trend } from '@/types/dashboard';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -379,6 +379,12 @@ export function CategoriesTab() {
         throw new Error('Please provide a valid Google Spreadsheet URL');
       }
 
+      const categoryId = selectedCategory?.id || trendFormData.categoryId;
+
+      if (!categoryId) {
+        throw new Error('No category selected');
+      }
+
       const response = await fetch(
         `/api/admin/trends${selectedTrend ? `/${selectedTrend.id}` : ''}`,
         {
@@ -391,7 +397,7 @@ export function CategoriesTab() {
             imageUrls: validImageUrls,
             mainImageIndex: mainImageIndex >= 0 ? mainImageIndex : 0,
             spreadsheetUrl: trendFormData.spreadsheetUrl.trim(),
-            categoryId: selectedCategory?.id || trendFormData.categoryId,
+            categoryId: categoryId,
           }),
         },
       );
@@ -402,6 +408,8 @@ export function CategoriesTab() {
       }
 
       const updatedTrend = await response.json();
+
+      await fetchCategories();
 
       if (selectedCategory) {
         if (selectedTrend) {
@@ -417,11 +425,20 @@ export function CategoriesTab() {
             trends: [...selectedCategory.trends, updatedTrend]
           });
         }
+
+        setCategories(prevCategories => {
+          return updateCategoryInTree(prevCategories, {
+            ...selectedCategory,
+            trends: selectedTrend 
+              ? selectedCategory.trends.map(t => t.id === updatedTrend.id ? updatedTrend : t)
+              : [...selectedCategory.trends, updatedTrend]
+          });
+        });
       }
 
-      resetTrendForm();
       setIsTrendModalOpen(false);
-      toast.success(`Trend ${selectedTrend ? 'updated' : 'created'} successfully`);
+      toast.success(`Trend ${selectedTrend ? 'updated' : 'added to category'} successfully`);
+      resetTrendForm();
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -500,9 +517,11 @@ export function CategoriesTab() {
       );
 
       toast.success('Images uploaded successfully');
+      return uploadedUrls;
     } catch (error) {
       console.error('Upload error:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to upload images');
+      return [];
     }
   };
 
@@ -550,6 +569,75 @@ export function CategoriesTab() {
     } finally {
       setIsProcessingSpreadsheet(false);
     }
+  };
+
+  const handleUnassignTrend = async (trend: Trend) => {
+    try {
+      const toastId = toast.loading('Unassigning trend from category...');
+      
+      const response = await fetch(`/api/admin/trends/${trend.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...trend,
+          categoryId: null
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to unassign trend');
+      }
+
+      await fetchCategories();
+
+      if (selectedCategory) {
+        setSelectedCategory({
+          ...selectedCategory,
+          trends: selectedCategory.trends.filter(t => t.id !== trend.id)
+        });
+
+        setCategories(prevCategories => {
+          return updateCategoryInTree(prevCategories, {
+            ...selectedCategory,
+            trends: selectedCategory.trends.filter(t => t.id !== trend.id)
+          });
+        });
+      }
+
+      toast.success('Trend unassigned from category', { id: toastId });
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to unassign trend'
+      );
+    }
+  };
+
+  const TrendActions = ({ trend }: { trend: Trend }) => {
+    return (
+      <div className="flex items-center gap-2" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleTrendClick(trend)}
+          className="h-8"
+        >
+          <Edit2 className="w-4 h-4 mr-2" />
+          Edit
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleUnassignTrend(trend)}
+          className="h-8 text-destructive hover:text-destructive"
+        >
+          <Unlink className="w-4 h-4 mr-2" />
+          Unassign
+        </Button>
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -918,20 +1006,16 @@ export function CategoriesTab() {
                     Add Trend
                   </Button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {selectedCategory.trends.map((trend) => (
-                    <Card
-                      key={trend.id}
-                      className="group hover:shadow-lg transition-all duration-300 ease-out-expo bg-[color:var(--card)] border-[color:var(--border)] overflow-hidden cursor-pointer"
-                      onClick={() => handleTrendClick(trend)}
-                    >
-                      <div className="aspect-video relative overflow-hidden">
+                    <Card key={trend.id} className="relative overflow-hidden group">
+                      <div className="aspect-video relative">
                         {trend.imageUrls?.[trend.mainImageIndex || 0] ? (
                           <Image
                             src={trend.imageUrls[trend.mainImageIndex || 0]}
                             alt={trend.title || 'Trend image'}
                             fill
-                            className="object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
+                            className="object-cover"
                           />
                         ) : (
                           <div className="w-full h-full bg-[color:var(--muted)] flex items-center justify-center">
@@ -940,15 +1024,20 @@ export function CategoriesTab() {
                         )}
                       </div>
                       <CardContent className="p-4">
-                        <h3 className="text-lg font-semibold mb-2 text-[color:var(--card-foreground)]">{trend.title}</h3>
-                        <p className="text-sm text-[color:var(--muted-foreground)] mb-4 line-clamp-2">{trend.description}</p>
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs text-[color:var(--muted-foreground)]">
-                            {new Date(trend.createdAt).toLocaleDateString()}
-                          </span>
-                          <span className="px-2 py-1 text-xs rounded-full bg-[color:var(--primary)]/10 text-[color:var(--primary)]">
-                            {trend.type}
-                          </span>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-medium">{trend.title}</h4>
+                            <span className="px-2 py-1 text-xs rounded-full bg-[color:var(--primary)]/10 text-[color:var(--primary)]">
+                              {trend.type}
+                            </span>
+                          </div>
+                          <p className="text-sm text-[color:var(--muted-foreground)] line-clamp-2">
+                            {trend.description}
+                          </p>
+                          
+                          <div className="pt-2 flex justify-end">
+                            <TrendActions trend={trend} />
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
